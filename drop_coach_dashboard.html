@@ -33,6 +33,9 @@
   .brand{font-weight:900;font-size:19px;letter-spacing:-.3px}
   .brand small{display:block;font-size:11px;font-weight:700;letter-spacing:1px;opacity:.75}
   .status{margin-left:auto;font-size:13px;opacity:.9}
+  .nav{display:flex;gap:4px;background:rgba(255,255,255,.12);border-radius:10px;padding:3px}
+  .nav button{border:none;background:transparent;color:#fff;font-weight:800;padding:7px 14px;border-radius:8px;cursor:pointer;opacity:.8}
+  .nav button.on{background:#fff;color:var(--struct);opacity:1}
   .btn{border:1px solid var(--struct2);background:#fff;color:var(--struct);border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
   .btn.pri{background:var(--struct);color:#fff;border-color:var(--struct)}
   .btn.on-dark{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
@@ -43,7 +46,8 @@
   .banner.info{background:var(--info-bg);border:1px solid #bcd6f5}
 
   /* 読み込み */
-  .loader{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+  .loader{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+  @media (max-width:1100px){ .loader{grid-template-columns:repeat(2,1fr)} }
   .loader .card{margin:0}
   .loader h3{margin:0 0 6px;font-size:15px;color:var(--struct)}
   .loader p{margin:0 0 10px;color:var(--ink2);font-size:13px}
@@ -152,6 +156,53 @@
   .pill{display:inline-block;border-radius:999px;padding:0 7px;font-size:11.5px;font-weight:700;border:1px solid var(--line);color:var(--gray-ink);white-space:nowrap}
   .vsym{font-weight:800}
 
+
+  /* チャットの設定（編集画面） */
+  #setPane{margin:14px 0 30px}
+  #setPane .card{margin-bottom:12px}
+  .set-status{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px;margin:6px 0}
+  .set-status span{color:var(--gray-ink)}
+  .badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800}
+  .badge.dirty{background:var(--hyp-bg);color:#6b4b00;border:1px solid #f0d58f}
+  .badge.saved{background:#eef3f5;color:var(--struct2)}
+  .set-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .set-actions input{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .set-msg{background:var(--info-bg);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:13.5px}
+  .set-login{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;background:#f8fafa;border:1px dashed var(--line);border-radius:10px;padding:10px;margin-top:8px}
+  .set-login input{border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+  .guide{font-size:13.5px;line-height:1.75}
+  .guide summary{cursor:pointer;color:var(--struct)}
+  .guide table{max-width:640px;margin:6px 0}
+  .guide ul{margin:6px 0;padding-left:20px}
+  .subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
+  .subtabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-weight:700;cursor:pointer;color:var(--ink2)}
+  .subtabs button.on{background:var(--struct);color:#fff;border-color:var(--struct)}
+  .set-scroll{overflow-x:auto}
+  .set-tbl{width:100%;border-collapse:collapse;font-size:13px}
+  .set-tbl th{position:static;background:#f8fafa;font-size:12px;white-space:nowrap}
+  .set-tbl td{vertical-align:middle;padding:4px 5px}
+  .set-tbl input[type=text]{width:100%;min-width:130px;border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+  .set-tbl select{border:1px solid var(--line);border-radius:6px;padding:5px 4px;background:#fff;min-width:118px}
+  .set-tbl input.wnum{width:66px;border:1px solid var(--line);border-radius:6px;padding:5px 4px;text-align:right;font-variant-numeric:tabular-nums}
+  .set-tbl input.wnum.nz{font-weight:800;background:#eef3f5;border-color:var(--struct2)}
+  .set-tbl tr.off td{opacity:.45}
+  .set-tbl tr.off td:first-child{opacity:1}
+  .ops{white-space:nowrap}
+  .ops button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 8px;cursor:pointer;margin-right:2px;font-size:12px}
+  .ops button:disabled{opacity:.35;cursor:default}
+  .fixed-note{font-size:11px;color:var(--gray-ink2);white-space:nowrap}
+  tr.tg-row > td{background:#fafbfc;padding:6px 8px 12px 28px}
+  .tg-box{border-left:3px solid var(--struct2);padding:6px 12px}
+  .tg-box .field input{max-width:520px}
+  .add-btn{margin-top:8px}
+  .sim .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+  .sim .chip{border:1px solid var(--line);border-radius:999px;padding:5px 12px;background:#fff;cursor:pointer;font-weight:700;font-size:13px;color:var(--ink)}
+  .sim .chip.on{border-color:var(--struct);background:#e6eef1}
+  .sim .chip .ord{display:inline-block;min-width:18px;height:18px;border-radius:9px;background:var(--struct);color:#fff;font-size:11px;text-align:center;line-height:18px;margin-right:4px}
+  .sim h4{margin:10px 0 2px;font-size:13px;color:var(--struct2)}
+  .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:980px){ .sim-grid{grid-template-columns:1fr} }
+  .sim td.nz{font-weight:800}
   #tip{position:fixed;z-index:50;pointer-events:none;background:#fff;border:1px solid var(--line);box-shadow:0 6px 18px rgba(0,0,0,.12);border-radius:8px;padding:7px 10px;font-size:12.5px;max-width:300px;display:none}
   #tip b{display:block;font-size:15px;color:var(--ink)}
   #tip span{color:var(--gray-ink)}
@@ -161,11 +212,12 @@
 <body>
 <header class="top">
   <div class="wrap">
-    <div class="brand">DROP. Coach 分析ダッシュボード<small>CULTURE SNACK × 投稿づくりチャット v3 の記録</small></div>
+    <div class="brand">DROP. Coach 分析ダッシュボード<small>CULTURE SNACK × 投稿づくりチャットの記録と設定</small></div>
+    <nav class="nav" aria-label="画面の切りかえ"><button class="on" id="navMain" type="button">分析</button><button id="navSet" type="button">チャットの設定</button></nav>
     <div class="status" id="status">記録を読み込んでください</div>
+    <button class="btn on-dark" id="switchBtn" hidden>← データの読み込み方を選ぶ</button>
     <button class="btn on-dark" id="reloadBtn" hidden>最新を読み込む</button>
     <button class="btn on-dark" id="csvBtn" hidden>この絞り込みを CSV で保存</button>
-    <button class="btn on-dark" id="switchBtn" hidden>読み込みなおす</button>
   </div>
 </header>
 
@@ -173,10 +225,12 @@
   <div class="banner warn">管理者用の画面です。参加者の名前とひとことが表示されます。画面を共有・印刷するときは注意してください。</div>
   <div class="banner hyp" id="demoBanner" hidden>いま表示しているのは <b>デモデータ（架空）</b> です。画面の見え方を確かめるためのもので、実際の記録ではありません。</div>
 
+  <div class="banner info" id="loaderBack" hidden>いま読み込んでいるデータ：<b id="loaderCur"></b>　<button class="btn" id="loaderBackBtn" type="button">このデータの分析にもどる</button></div>
   <section class="loader" id="loader">
     <div class="card">
       <h3>1. 記録用 GAS から読み込む</h3>
       <p>LOG_DROP_COACH（chat_v3 シート）の記録を直接読み込みます。<b>管理者パスワード</b>（GAS の ADMIN_PASSWORD）が必要です。参加者用のパスワードでは読めません。</p>
+      <div id="aQuick" hidden><p class="note">管理者としてログイン中です。</p><button class="btn pri" id="aQuickBtn" type="button">そのまま読み込む</button><p class="note">別のパスワードで入りなおすときは下へ</p></div>
       <form id="fLogin">
         <div class="field"><label for="aName">名前</label><input id="aName" autocomplete="username" value="admin" maxlength="40" /></div>
         <div class="field"><label for="aPw">管理者パスワード</label><input id="aPw" type="password" autocomplete="current-password" /></div>
@@ -194,6 +248,11 @@
       <h3>3. デモデータで見る</h3>
       <p>記録がまだ無いときに、画面の見え方を確かめるための架空のデータ（140 件）を表示します。</p>
       <button class="btn" id="demoBtn">デモデータを表示</button>
+    </div>
+    <div class="card">
+      <h3>チャットの設定を変える</h3>
+      <p>選択肢の言葉・KPI の重み・気持ちごとの「どこが」の候補を、画面で変えられます（保存には管理者パスワード）。</p>
+      <button class="btn" id="openSetBtn" type="button">チャットの設定をひらく</button>
     </div>
   </section>
 
@@ -214,6 +273,7 @@
       <div class="field"><label for="fProfile">属性</label><select id="fProfile"><option value="">すべて</option></select></div>
       <div class="field"><label for="fLevel">コーチの関与</label><select id="fLevel"><option value="">すべて</option><option>ひとことのみ</option><option>選択あり</option><option>AI仕上げ</option></select></div>
       <div class="field"><label for="fState">状態</label><select id="fState"><option value="">すべて</option><option value="reached">投稿文まで</option><option value="copied">コピーした</option><option value="dropped">途中でやめた</option></select></div>
+      <div class="field"><label for="fWeight">KPI・気持ちの向きの重み</label><select id="fWeight"><option value="rec">記録したときの重み</option><option value="now">いまの設定で計算し直す</option></select></div>
       <button class="btn" id="fReset" type="button">絞り込みを解除</button>
       <span class="cnt" id="fCount"></span>
     </div>
@@ -223,17 +283,18 @@
 
       <div class="sec">1. チャットの使われ方（どこで止まる・どこに時間がかかる）</div>
       <div class="card c4"><h2>到達のようす</h2><p class="why">ひとことを書いた人のうち、投稿文までたどり着いた人・コピーした人。</p><div id="funnel"></div></div>
-      <div class="card c4"><h2>問いごとの回答率</h2><p class="why">投稿文までたどり着いた人のうち、その問いに答えた（とばさなかった）割合。</p><div id="answerRate"></div></div>
+      <div class="card c4"><h2>問いごとの回答率</h2><p class="why">投稿文までたどり着いた人のうち、その問いに答えた（とばさなかった）割合。「このあと」は任意の問い。</p><div id="answerRate"></div></div>
       <div class="card c4"><h2>問いごとにかかった時間</h2><p class="why">問いが出てから答えるまでの秒数（中央値）。長い問いは、選択肢や言い方を見直す候補です。</p><div id="stepSec"></div></div>
       <div class="card c6"><h2>途中でやめた場所</h2><p class="why">投稿文の前に画面を閉じた人が、最後に見ていた問い。</p><div id="dropAt"></div></div>
       <div class="card c6"><h2>時間帯</h2><p class="why">チャットを始めた時刻（1 時間ごと）。</p><div id="hours"></div></div>
 
-      <div class="sec">2. 投稿の中身（だれと・どこが・どんな気持ち・このあと）</div>
+      <div class="sec">2. 投稿の中身（気持ち・どこが・だれと・このあと）</div>
       <div class="card c6"><h2>どんな気持ちになったか</h2><p class="why">選ばれた気持ちの数（1 人で複数）。色は気持ちの向き。</p><div id="feels"></div></div>
       <div class="card c6"><h2>気持ちの向き（1 人ごと）</h2><p class="why">選んだ気持ちを、選んだ順の重みで平均した値（−1〜1）。AI の読み取りとの一致も見ます。</p><div id="valence"></div></div>
+      <div class="card c12"><h2>気持ちの中身（「どこが」の候補・近い順の重み）</h2><p class="why">たとえば「かわいい」と答えた人が、何をかわいいと思ったのか。近い順に選んだものに 1・0.75・0.5・0.25 の重みをつけて足しています（重みは「チャットの設定」で変えられます）。</p><div id="targets"></div></div>
       <div class="card c4"><h2>だれと一緒だったか</h2><p class="why">②属性横断・③心理的安全性の手がかり。</p><div id="who"></div></div>
-      <div class="card c4"><h2>どこがよかったか</h2><p class="why">「写真から」= AI の候補から選ばれたもの。</p><div id="why"></div></div>
-      <div class="card c4"><h2>このあと、どうしたいか</h2><p class="why">①挑戦・街への愛着の手がかり。</p><div id="next"></div></div>
+      <div class="card c4"><h2>どこが（全体）</h2><p class="why">気持ちを問わず、選ばれた「どこが」の数。「写真から」= AI の候補から選ばれたもの。</p><div id="why"></div></div>
+      <div class="card c4"><h2>このあと、どうしたいか（任意）</h2><p class="why">①挑戦・街への愛着の手がかり。最低限の問いのあとに「もう1つ答える」を選んだ人だけに聞いています。</p><div id="next"></div></div>
       <div class="card c4"><h2>話題（ひとことから）</h2><p class="why">ひとことの話題（AI のヒント → 画面の読み取り）。</p><div id="subjects"></div></div>
       <div class="card c4"><h2>投稿の材料の数</h2><p class="why">投稿文に入った材料（ひとこと＋だれと・どこが・気持ち・このあと）の数。</p><div id="richness"></div></div>
       <div class="card c4"><h2>属性</h2><p class="why">「あなたについて」の答え（端末ごとに 1 回）。</p><div id="profile"></div></div>
@@ -261,9 +322,12 @@
       </div>
     </div>
   </main>
-  <footer>DROP. Coach dashboard v1.0（2026-11-13）— 記録用 GAS（DROP_COACH_LOG v7）の chat_v3 シートの列名で読み込みます。同じセッション ID の行は、いちばん新しい行を使います（コピーした・投稿文まで行ったかは全行から判定）。</footer>
+  <section id="setPane" hidden></section>
+  <footer>DROP. Coach dashboard v1.1（2026-11-13）— 記録用 GAS（DROP_COACH_LOG v8）の chat_v3 シートの列名で読み込みます。同じセッション ID の行は、いちばん新しい行を使います（コピーした・投稿文まで行ったかは全行から判定）。</footer>
 </div>
 <div id="tip" role="status"></div>
+<!-- チャットの選択肢と重みの初期値（json/coach_settings_default.json と同じ。チャットの HTML にも同じものが入っている） -->
+<script type="application/json" id="defaultSettings">{"schema":"drop_coach_settings_v1","note":"初期値。運営は分析画面（drop_coach_dashboard.html）の「チャットの設定」で変更・保存する。保存した設定は記録用 GAS に入り、全員のチャットに反映される","rank":{"feel":[1,0.6,0.45,0.35],"why":[1,0.75,0.5,0.25],"next":[1,0.8]},"why_q_default":"{話題}の、とくに印象に残ったのは、どこですか？","feel":[{"id":"oishii","label":"おいしい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"{話題}の、どこがおいしかったですか？","targets":[{"label":"味","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"香り","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"見た目","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"作った人のこだわり","layer":"人","w":{"c1":0.2,"c2":0.3,"c3":0,"att":0}},{"label":"食べた場所の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"tanoshii","label":"たのしい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"なにがたのしかったですか？","targets":[{"label":"体験・ワークショップ","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"音楽・演奏","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"いっしょに行った人","layer":"人","w":{"c1":0,"c2":0,"c3":0.3,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"kawaii","label":"かわいい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがかわいかったですか？","targets":[{"label":"商品","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"ショッパー（袋）","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"お店の飾りつけ","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"お店の人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}}]},{"id":"sugoi","label":"すごい","val":1,"w":{"c1":0.3,"c2":0,"c3":0,"att":0},"q":"{話題}の、どこがすごかったですか？","targets":[{"label":"技・うまさ","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"細かさ・作りこみ","layer":"コンテンツ","w":{"c1":0.2,"c2":0,"c3":0,"att":0}},{"label":"作った人・演じた人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"平日とのギャップ","layer":"人","w":{"c1":0.2,"c2":0,"c3":0.2,"att":0}}]},{"id":"kirei","label":"きれい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがきれいでしたか？","targets":[{"label":"色","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"形・デザイン","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"飾りつけ・照明","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"品川の景色","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}]},{"id":"hokkori","label":"ほっこり","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0.2},"q":"なにに、ほっこりしましたか？","targets":[{"label":"お店の人とのやりとり","layer":"人","w":{"c1":0,"c2":0.3,"c3":0.2,"att":0}},{"label":"子ども・家族づれ","layer":"人","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"味・あたたかさ","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"igai","label":"意外","val":0.3,"w":{"c1":0,"c2":0.2,"c3":0.2,"att":0},"q":"なにが意外でしたか？","targets":[{"label":"作った人の本業","layer":"人","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"label":"出会った人","layer":"人","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"label":"品物・作品","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"品川にこんな場所","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}]},{"id":"shigeki","label":"刺激をもらった","val":0.8,"w":{"c1":0.5,"c2":0,"c3":0,"att":0},"q":"なにに刺激をもらいましたか？","targets":[{"label":"挑戦している姿","layer":"人","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"作った人の生き方","layer":"人","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"技・発想","layer":"コンテンツ","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}}]},{"id":"futsuu","label":"ふつう","val":0,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"","targets":[]},{"id":"zannen","label":"いまいち","val":-1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがいまいちでしたか？","targets":[{"label":"待ち時間・混雑","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"案内のわかりにくさ","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"値段","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"品ぞろえ","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}}]}],"why_default":[{"label":"味・香り","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"見た目・色・形","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"手づくり感・技","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"作った人・演じた人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"平日とのギャップ","layer":"人","w":{"c1":0.2,"c2":0,"c3":0.2,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}},{"label":"品川の景色・街","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}],"who":[{"id":"maker","label":"作った人・お店の人と話した","w":{"c1":0.3,"c2":0.5,"c3":0,"att":0}},{"id":"work","label":"職場の人（上司・同僚）と","w":{"c1":0,"c2":0.3,"c3":0.7,"att":0}},{"id":"otherco","label":"ちがう会社の人と話した","w":{"c1":0,"c2":1,"c3":0,"att":0}},{"id":"local","label":"近所の人・学生と話した","w":{"c1":0,"c2":1,"c3":0,"att":0.3}},{"id":"family","label":"家族・友だちと","w":{"c1":0,"c2":0,"c3":0,"att":0.3}},{"id":"alone","label":"ひとりで","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"id":"other","label":"その他","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"next":[{"id":"try","label":"自分もやってみたい","w":{"c1":1,"c2":0,"c3":0,"att":0}},{"id":"again","label":"あの人とまた話したい","w":{"c1":0,"c2":1,"c3":0,"att":0}},{"id":"work","label":"職場でも話してみたい","w":{"c1":0,"c2":0,"c3":1,"att":0}},{"id":"tell","label":"誰かに教えたい","w":{"c1":0,"c2":0,"c3":0,"att":0.7}},{"id":"revisit","label":"また来たい","w":{"c1":0,"c2":0,"c3":0,"att":1}},{"id":"walk","label":"品川をもっと歩きたい","w":{"c1":0,"c2":0,"c3":0,"att":1}},{"id":"wish","label":"運営に伝えたいことがある","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"id":"none","label":"とくにない","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"profile":[{"id":"worker","label":"品川で働いている"},{"id":"resident","label":"品川の近くに住んでいる"},{"id":"exhibitor","label":"出展・出演している"},{"id":"staff","label":"運営・スタッフ"},{"id":"student","label":"学生"},{"id":"visitor","label":"遊びに来た（品川以外から）"},{"id":"other","label":"その他"}]}</script>
 
 <script>
 "use strict";
@@ -280,7 +344,14 @@ const mean = a => { const b = a.filter(x => typeof x === "number" && isFinite(x)
 const num = v => { if (v === "" || v == null) return null; const n = Number(v); return isFinite(n) ? n : null; };
 const split = (v, sep) => String(v || "").split(sep).map(s => s.trim()).filter(Boolean);
 const countBy = (arr) => { const m = new Map(); arr.forEach(k => m.set(k, (m.get(k) || 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); };
-const STEP_ORDER = ["ひとこと", "だれと", "どこが", "気持ち", "このあと", "あなたについて"];
+const STEP_ORDER = ["ひとこと", "気持ち", "どこが", "だれと", "任意の問いの前", "このあと", "あなたについて"];
+/** 「どこがの重み」（例「商品 1 / ショッパー（袋） 0.75」）→ [{label, w}]。列が無い古い記録は、どこがの順に 1・0.75・0.5・0.25 */
+function parseRanks(cell, labels) {
+  const t = String(cell || "").trim();
+  if (t) return t.split(" / ").map(x => { const m = x.match(/^(.*\S)\s+([\d.]+)$/); return m ? { label: m[1], w: Number(m[2]) } : { label: x.trim(), w: null }; }).filter(x => x.label);
+  const d = [1, .75, .5, .25];
+  return (labels || []).map((l, i) => ({ label: l, w: d[i] ?? .25 }));
+}
 const STEP_KEY = { text1: "ひとこと", who: "だれと", why: "どこが", feel: "気持ち", next: "このあと", profile: "あなたについて", score: "点数" };
 const LAYERS = ["人", "コンテンツ", "空間", "感情", "意向"];
 const SOFT = [["c1", "①挑戦"], ["c2", "②属性横断"], ["c3", "③心理的安全性"], ["att", "街への愛着"]];
@@ -344,8 +415,25 @@ $("fLogin").addEventListener("submit", async e => {
   $("aErr").textContent = r.ok ? "" : (r.message || "読み込めませんでした");
 });
 $("reloadBtn").addEventListener("click", async () => { const t = getToken(); if (!t) { showLoader(); $("aErr").textContent = "ログインの有効期限が切れました。もう一度ログインしてください"; return; } const r = await loadFromGas(t); if (!r.ok) { showLoader(); $("aErr").textContent = r.message || "読み込めませんでした"; } });
+/* ---------- 画面の切りかえ：読み込み方の選択／分析／チャットの設定 ---------- */
+let VIEW = "loader";
+function showView(v) {
+  VIEW = v;
+  $("loader").hidden = v !== "loader"; $("main").hidden = v !== "main"; $("setPane").hidden = v !== "settings";
+  $("navMain").classList.toggle("on", v !== "settings"); $("navSet").classList.toggle("on", v === "settings");
+  $("switchBtn").hidden = v !== "main"; $("csvBtn").hidden = v !== "main"; $("reloadBtn").hidden = !(v === "main" && /^GAS/.test(META.source || ""));
+  $("demoBanner").hidden = !(v === "main" && META.demo);
+  $("loaderBack").hidden = !(v === "loader" && SESS.length);
+  if (v === "loader") { $("loaderCur").textContent = META.source ? `${META.source}・${SESS.length} 件` : ""; const t = getToken(); $("aQuick").hidden = !t; }
+  window.scrollTo({ top: 0 });
+}
+function showLoader() { showView("loader"); }
 $("switchBtn").addEventListener("click", showLoader);
-function showLoader() { $("loader").hidden = false; window.scrollTo({ top: 0 }); }
+$("loaderBackBtn").addEventListener("click", () => showView("main"));
+$("navMain").addEventListener("click", () => { if (VIEW === "settings" && !confirmLeave()) return; showView(SESS.length ? "main" : "loader"); });
+$("navSet").addEventListener("click", () => openSettings());
+$("openSetBtn").addEventListener("click", () => openSettings());
+$("aQuickBtn").addEventListener("click", async () => { const t = getToken(); if (!t) { $("aQuick").hidden = true; return; } const r = await loadFromGas(t); if (!r.ok) { $("aErr").textContent = r.message || "読み込めませんでした"; $("aQuick").hidden = true; } });
 
 /** CSV（RFC 4180：引用符・改行入りのセルに対応） */
 function parseCSV(text) {
@@ -378,6 +466,15 @@ $("demoBtn").addEventListener("click", () => { const d = makeDemo(); useData(d.h
    行 → セッション（同じセッション ID はいちばん新しい行。到達・コピーは全行から）
 ===================================================================== */
 let SESS = [], META = {};
+/* 分析で「いまの設定で計算し直す」ときに使う設定（記録用 GAS のいまの設定 → 無ければ初期値） */
+let CURSET = null, CURSET_VER = "初期値";
+async function loadAnalysisSettings() {
+  if (CURSET) return;
+  CURSET = normSet(DEFAULT_SETTINGS);
+  const r = await post({ action: "settings" });
+  if (r.ok && r.settings) { CURSET = normSet(r.settings); CURSET_VER = r.version || ""; if ($("fWeight").value === "now") render(); }
+  $("fWeight").options[1].textContent = `いまの設定（${CURSET_VER}）で計算し直す`;
+}
 function useData(header, rows, meta) {
   const H = header.map(h => String(h).trim()), ix = n => H.indexOf(n);
   const get = (r, n) => { const i = ix(n); return i < 0 ? "" : (r[i] == null ? "" : r[i]); };
@@ -417,13 +514,14 @@ function useData(header, rows, meta) {
       w5h: String(g("AI 5W1H")), aiLevel: String(g("AI評価")), headline: String(g("AIひとこと")), photoMatch: String(g("写真と本文")), caveats: String(g("AI注意")),
       hintOk: /^OK/.test(String(g("ヒント状態"))), hintSec: hintM ? Number(hintM[2]) : null, hintState: String(g("ヒント状態")),
       exViews: num(String(g("ほかの人の例を見た")).split("回")[0]) || 0, exText: String(g("ほかの人の例を見た")), previewOpens: num(g("投稿イメージを開いた")) || 0,
-      secs, aiSec: num(g("AI秒")), model: String(g("AIモデル")), promptVer: String(g("プロンプト版")), app: String(g("アプリ版"))
+      secs, aiSec: num(g("AI秒")), model: String(g("AIモデル")), promptVer: String(g("プロンプト版")), app: String(g("アプリ版")),
+      whyFor: String(g("どこがの気持ち")), whyRanks: parseRanks(g("どこがの重み"), split(g("どこが"), "、")), setVer: String(g("設定版")),
+      extra: String(g("任意の問い")), postNo: num(g("この端末で何本目"))
     };
   });
   META = meta;
-  $("demoBanner").hidden = !meta.demo;
-  $("loader").hidden = true; $("main").hidden = false;
-  $("reloadBtn").hidden = !/^GAS/.test(meta.source); $("csvBtn").hidden = false; $("switchBtn").hidden = false;
+  showView("main");
+  loadAnalysisSettings();
   // フィルターの選択肢
   const profs = countBy(SESS.map(s => s.profile)).map(x => x[0]);
   $("fProfile").innerHTML = '<option value="">すべて</option>' + profs.map(p => `<option>${esc(p)}</option>`).join("");
@@ -435,7 +533,18 @@ function useData(header, rows, meta) {
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 /* ---------- 絞り込み（すべての図・表が同じ絞り込みで描き直される） ---------- */
-["fFrom", "fTo", "fPhoto", "fProfile", "fLevel", "fState"].forEach(id => $(id).addEventListener("change", render));
+["fFrom", "fTo", "fPhoto", "fProfile", "fLevel", "fState", "fWeight"].forEach(id => $(id).addEventListener("change", render));
+/** KPI・気持ちの向き：記録したときの値／いまの設定で計算し直した値 を s.softU・s.valU・s.topU に入れる */
+function applyWeightMode(F) {
+  const now = $("fWeight").value === "now" && CURSET;
+  F.forEach(s => {
+    if (now) {
+      const c = calcKpi(CURSET, { feel: s.feels, why: s.whyRanks.map(x => x.label), whyFor: s.whyFor, who: s.who, next: s.next });
+      s.softU = c.total ? c.share : { c1: null, c2: null, c3: null, att: null }; s.valU = c.valence == null ? null : Math.round(c.valence * 100) / 100;
+    } else { s.softU = s.soft; s.valU = s.valence; }
+    s.topU = Object.values(s.softU).some(v => v) ? SOFT.map(x => [x[0], s.softU[x[0]] || 0]).sort((a, b) => b[1] - a[1])[0][0] : "";
+  });
+}
 $("fReset").addEventListener("click", () => { ["fPhoto", "fProfile", "fLevel", "fState"].forEach(id => { $(id).value = ""; }); const days = SESS.map(s => s.started).filter(Boolean).map(d => d.getTime()); if (days.length) { $("fFrom").value = ymd(new Date(Math.min(...days))); $("fTo").value = ymd(new Date(Math.max(...days))); } render(); });
 function filtered() {
   const from = $("fFrom").value, to = $("fTo").value, ph = $("fPhoto").value, pr = $("fProfile").value, lv = $("fLevel").value, st = $("fState").value;
@@ -488,9 +597,10 @@ function rankItems(pairs, n, total, unit = "件") {
 ===================================================================== */
 function render() {
   const F = filtered();
+  applyWeightMode(F);
   $("fCount").textContent = `${F.length} / ${SESS.length} 件のチャット`;
   renderTiles(F); renderFunnel(F); renderAnswerRate(F); renderStepSec(F); renderDropAt(F); renderHours(F);
-  renderFeels(F); renderValence(F); renderWho(F); renderWhy(F); renderNext(F); renderSubjects(F); renderRichness(F); renderProfile(F);
+  renderFeels(F); renderValence(F); renderTargets(F); renderWho(F); renderWhy(F); renderNext(F); renderSubjects(F); renderRichness(F); renderProfile(F);
   renderNet(F); renderSoft(F); renderAgree(F); renderLevels(F); renderExamples(F); renderPosts(F);
 }
 function renderTiles(F) {
@@ -509,7 +619,9 @@ function renderTiles(F) {
     t("文を手で直した", fmtP(R.filter(s => s.edited).length, R.length), "投稿文まで行った人のうち") +
     t("AI の待ち時間", median(R.map(s => s.aiSec)) == null ? "−" : median(R.map(s => s.aiSec)).toFixed(1) + "秒", "投稿文づくり（中央値）") +
     t("ヒントが間に合った", fmtP(F.filter(s => s.hintOk).length, F.filter(s => s.hintState).length), "裏で呼ぶ AI ヒントの成功率") +
-    t("「ほかの人の例」を見た", fmtP(F.filter(s => s.exViews > 0).length, F.length), `投稿イメージを開いた ${fmtP(F.filter(s => s.previewOpens > 0).length, F.length)}`);
+    t("「ほかの人の例」を見た", fmtP(F.filter(s => s.exViews > 0).length, F.length), `投稿イメージを開いた ${fmtP(F.filter(s => s.previewOpens > 0).length, F.length)}`) +
+    t("2本以上コピーした人", (() => { const m = countBy(C.map(s => s.name).filter(Boolean)); return fmtP(m.filter(x => x[1] >= 2).length, m.length); })(), "コピーした人のうち（名前ごと）") +
+    t("任意の問いにも答えた", fmtP(R.filter(s => s.extra === "答えた").length, R.filter(s => s.extra).length), "最低限の問いのあと「もう1つ答える」");
 }
 function renderFunnel(F) {
   const n = F.length, r = F.filter(s => s.reached).length, c = F.filter(s => s.copied).length;
@@ -521,16 +633,16 @@ function renderFunnel(F) {
 }
 function renderAnswerRate(F) {
   const R = F.filter(s => s.reached);
-  const q = [["だれと", s => !!s.who], ["どこが", s => s.why.length > 0], ["気持ち", s => s.feels.length > 0], ["このあと", s => s.next.length > 0]];
+  const q = [["気持ち", s => s.feels.length > 0], ["どこが", s => s.why.length > 0], ["だれと", s => !!s.who], ["このあと（任意）", s => s.next.length > 0]];
   const vals = q.map(([k, f]) => pct(R.filter(f).length, R.length));
   const e = R.length ? argmin(vals) : -1;
   const early = R.filter(s => s.early).length;
   $("answerRate").innerHTML = hbars(q.map(([k, f], i) => ({ label: k, v: vals[i], vText: `${vals[i].toFixed(0)}%`, tv: `${vals[i].toFixed(0)}%`, tl: `${k}：${R.filter(f).length} / ${R.length} 人が回答` })),
     { emph: e, max: 100, cap: R.length ? `いちばん答えられていない問い：${q[e][0]}` : "", tcols: ["問い", "回答率（%）"] }) +
-    `<p class="note">「ここまでで投稿文をつくる」で途中から投稿文へ進んだ人：${early} 件（${fmtP(early, R.length)}）</p>`;
+    `<p class="note">「ここまでで投稿文をつくる」で途中から投稿文へ進んだ人：${early} 件（${fmtP(early, R.length)}）。最低限の問いのあと「もう1つ答える」を選んだ人：${R.filter(s => s.extra === "答えた").length} 件／「投稿文をつくる」を選んだ人：${R.filter(s => s.extra === "投稿文へ").length} 件</p>`;
 }
 function renderStepSec(F) {
-  const steps = ["ひとこと", "だれと", "どこが", "気持ち", "このあと"];
+  const steps = ["ひとこと", "気持ち", "どこが", "だれと", "このあと"];
   const vals = steps.map(k => median(F.map(s => s.secs[k])));
   const ok = vals.map(v => v ?? 0), e = vals.some(v => v != null) ? argmax(ok) : -1;
   $("stepSec").innerHTML = hbars(steps.map((k, i) => ({ label: k, v: ok[i], vText: vals[i] == null ? "−" : vals[i].toFixed(1) + "秒", tv: vals[i] == null ? "−" : vals[i].toFixed(1) + "秒", tl: `${k}（中央値・${F.filter(s => s.secs[k] != null).length} 人）` })),
@@ -559,17 +671,33 @@ function renderFeels(F) {
   $("feels").innerHTML = hbars(items.slice(0, 12), { emph: -1, tcols: ["気持ち", "回数（1 番目に選んだ数）"] }) + `<p class="note">◎○△× と色は気持ちの向き。「・」は自分の言葉で書かれた気持ち（向きは AI の読み取りで見ます）。</p>`;
 }
 function renderValence(F) {
-  const V = F.map(s => s.valence).filter(v => v != null);
+  const V = F.map(s => s.valU).filter(v => v != null);
   const bins = [["× ネガティブ（〜−0.25）", v => v < -.25, "var(--bad)"], ["△ ふつう（−0.25〜0.25）", v => v >= -.25 && v <= .25, "var(--mid)"], ["○ ややポジティブ（〜0.75）", v => v > .25 && v < .75, "var(--good2)"], ["◎ ポジティブ（0.75〜）", v => v >= .75, "var(--good)"]];
   const items = bins.map(([k, f, c]) => { const v = V.filter(f).length; return { label: k, v, color: c, vText: `${v}人`, tv: `${v}人（${fmtP(v, V.length)}）`, tl: k }; });
   // AI の読み取りとの一致（符号）
-  const both = F.filter(s => s.valence != null && s.aiSent != null);
+  const both = F.filter(s => s.valU != null && s.aiSent != null);
   const sgn = v => (v > .25 ? 1 : v < -.25 ? -1 : 0);
-  const agree = both.filter(s => sgn(s.valence) === sgn(s.aiSent)).length;
-  const neg = F.filter(s => s.valence != null && s.valence < 0);
+  const agree = both.filter(s => sgn(s.valU) === sgn(s.aiSent)).length;
+  const neg = F.filter(s => s.valU != null && s.valU < 0);
   $("valence").innerHTML = hbars(items, { emph: -1, tcols: ["向き", "人数"] }) +
     (both.length ? `<div class="box ${pct(agree, both.length) >= 70 ? "ok" : "hyp"}">${pct(agree, both.length) >= 70 ? "✓" : "△"} 本人の気持ちと AI の読み取りの向きが同じ：${agree} / ${both.length} 件（${fmtP(agree, both.length)}）</div>` : "") +
     (neg.length ? `<div class="box ng">× ネガティブな向きの投稿 ${neg.length} 件。一覧で中身を確認し、運営の改善点として拾います（投稿文はネガティブなまま残しています）。</div>` : "");
+}
+let TG_FEEL = "";
+function renderTargets(F) {
+  const rows = F.filter(s => s.whyFor && s.whyRanks.length);
+  const feels = countBy(rows.map(s => s.whyFor));
+  if (!feels.length) { $("targets").innerHTML = '<p class="note">「どこがの気持ち」が記録されたデータがまだありません（チャット v3.1 からの記録）</p>'; return; }
+  if (!feels.some(f => f[0] === TG_FEEL)) TG_FEEL = feels[0][0];
+  const R = rows.filter(s => s.whyFor === TG_FEEL), agg = new Map();
+  R.forEach(s => s.whyRanks.forEach((x, i) => { const a = agg.get(x.label) || { score: 0, n: 0, first: 0 }; a.score += x.w ?? 0; a.n++; if (i === 0) a.first++; agg.set(x.label, a); }));
+  const list = [...agg.entries()].sort((a, b) => b[1].score - a[1].score);
+  const st = valStyle(TG_FEEL in FEEL_VAL ? FEEL_VAL[TG_FEEL] : null);
+  $("targets").innerHTML = `<div class="keys"><label>気持ち：<select id="tgFeel">${feels.map(([f, n]) => `<option value="${esc(f)}"${f === TG_FEEL ? " selected" : ""}>${esc(f)}（${n} 件）</option>`).join("")}</select></label><span>${esc(st.s)} ${esc(st.t)}</span></div>` +
+    hbars(list.map(([l, a]) => ({ label: l, v: Math.round(a.score * 100) / 100, vText: a.score.toFixed(2), tv: `重みの合計 ${a.score.toFixed(2)}`, tl: `${l}：選んだ人 ${a.n}（いちばん近いと選んだ人 ${a.first}）`, tText: `${a.score.toFixed(2)}（${a.n} 人・1 番目 ${a.first}）` })),
+      { emph: 0, cap: `「${TG_FEEL}」のいちばんの中身：${list[0][0]}`, tcols: ["どこが", "重みの合計（選んだ人・1 番目に選んだ人）"] }) +
+    `<p class="note">「${esc(TG_FEEL)}」で「どこが」に答えた ${R.length} 人。重みの合計 ＝ 近い順の重み（1・0.75・0.5・0.25）を足したもの。</p>`;
+  $("tgFeel").addEventListener("change", e => { TG_FEEL = e.target.value; renderTargets(filtered()); });
 }
 function renderWho(F) {
   const P = countBy(F.map(s => s.who).filter(Boolean));
@@ -624,21 +752,25 @@ function renderNet(F) {
   // 線が多すぎないように、最小の回数を自動で決める（手で変えられる）
   if (!NET.userMin) { let m = 1; while (G.edges.filter(e => e.c >= m).length > 70 && m < 10) m++; $("netMin").value = m; }
   const min = Number($("netMin").value); $("netMinV").textContent = min;
-  if (!NET.sel || !G.cnt.has(NET.sel)) NET.sel = (G.cols[3][0] || G.cols.find(c => c.length)[0])[0];
+  if (NET.sel && !G.cnt.has(NET.sel)) NET.sel = null;
   const W = 1000, colX = LAYERS.map((_, i) => 60 + i * 192), rowH = 46, H = Math.max(...G.cols.map(c => c.length)) * rowH + 70;
   const pos = new Map(); G.cols.forEach((c, i) => c.forEach(([n], j) => pos.set(n, { x: colX[i], y: 62 + j * rowH })));
   const maxC = Math.max(...[...G.cnt.values()]);
   const E = G.edges.filter(e => e.c >= min && pos.has(e.a) && pos.has(e.b));
   const maxE = Math.max(1, ...E.map(e => e.c));
   const sel = NET.sel, nb = new Set(E.filter(e => e.a === sel || e.b === sel).map(e => (e.a === sel ? e.b : e.a)));
+  // 何も選んでいないときは、いちばん多い組み合わせを注目（マゼンタ）にする
+  const top = !sel && E.length ? E.reduce((m, e) => (e.c > m.c || (e.c === m.c && e.lift > m.lift) ? e : m), E[0]) : null;
+  const isOn = e => (sel ? e.a === sel || e.b === sel : e === top);
   const path = (p, q) => { const [l, r] = p.x <= q.x ? [p, q] : [q, p]; const dx = (r.x - l.x) / 2; return `M${l.x},${l.y} C${l.x + dx},${l.y} ${r.x - dx},${r.y} ${r.x},${r.y}`; };
   const ink = (e, on) => `<path d="${path(pos.get(e.a), pos.get(e.b))}" fill="none" stroke="${on ? "#BE258D" : "#B9C4C9"}" stroke-opacity="${on ? .85 : .45}" stroke-width="${(on ? 1.5 : 1) + e.c / maxE * (on ? 6 : 4)}" stroke-linecap="round"><title>${esc(e.a.split(":")[1])} × ${esc(e.b.split(":")[1])}：${e.c} 回</title></path>`;
   const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="共起ネットワーク（選択中：${esc(sel)}）">
     ${LAYERS.map((L, i) => `<text x="${colX[i]}" y="24" text-anchor="middle" font-size="15" font-weight="800" fill="#0E3B4A">${L}</text><line x1="${colX[i]}" y1="34" x2="${colX[i]}" y2="${H - 10}" stroke="#e3e8ea" stroke-width="1"/>`).join("")}
-    ${E.filter(e => !(e.a === sel || e.b === sel)).map(e => ink(e, false)).join("")}
-    ${E.filter(e => e.a === sel || e.b === sel).map(e => ink(e, true)).join("")}
+    <rect class="net-bg" x="0" y="0" width="${W}" height="${H}" fill="transparent"/>
+    ${E.filter(e => !isOn(e)).map(e => ink(e, false)).join("")}
+    ${E.filter(isOn).map(e => ink(e, true)).join("")}
     ${[...pos.entries()].map(([n, p]) => {
-      const c = G.cnt.get(n), r = 5 + Math.sqrt(c / maxC) * 13, on = n === sel, near = nb.has(n);
+      const c = G.cnt.get(n), r = 5 + Math.sqrt(c / maxC) * 13, on = n === sel, near = sel ? nb.has(n) : !!top && (n === top.a || n === top.b);
       const fill = on ? "#BE258D" : near ? "#ffffff" : "#B9C4C9", stroke = on ? "#ffffff" : near ? "#BE258D" : "#ffffff";
       return `<g class="node" tabindex="0" role="button" data-node="${esc(n)}" aria-label="${esc(n.split(":")[1])}（${c} 件）" data-tv="${c} 件" data-tl="${esc(n)}"><circle cx="${p.x}" cy="${p.y}" r="${Math.max(r, 12) + 6}" fill="transparent"/>
         <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${near ? 2.5 : 2}"/>
@@ -646,18 +778,30 @@ function renderNet(F) {
     }).join("")}
   </svg>`;
   $("net").innerHTML = svg;
-  $("net").querySelectorAll("g.node").forEach(g => { const pick = () => { NET.sel = g.dataset.node; renderNet(filtered()); const el = $("net").querySelector(`g.node[data-node="${CSS.escape(NET.sel)}"]`); if (el) el.focus(); }; g.addEventListener("click", pick); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } }); });
+  $("net").querySelectorAll("g.node").forEach(g => { const pick = () => { NET.sel = NET.sel === g.dataset.node ? null : g.dataset.node; renderNet(filtered()); const el = $("net").querySelector(`g.node[data-node="${CSS.escape(NET.sel)}"]`); if (el) el.focus(); }; g.addEventListener("click", pick); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } }); });
   $("netInfo").textContent = `${G.N} 件の投稿・ノード ${pos.size}・線 ${E.length}`;
   // 右：選んだノードとよくいっしょに出るもの
+  if (!sel) {
+    const pairs = E.slice().sort((a, b) => b.c - a.c || b.lift - a.lift).slice(0, 10);
+    $("netSide").innerHTML = `<h3>いっしょに多く出た組み合わせ</h3><p class="note" style="margin-top:0">丸を押すと、そのノードとよくいっしょに出るものを表示します。もう一度押すか、図の何もないところを押すと解除します。</p>
+      <table><thead><tr><th>組み合わせ</th><th class="n">回数</th><th class="n">出やすさ</th></tr></thead><tbody>
+      ${pairs.map((e, i) => { const cls = e.c < 3 ? "ref" : e.lift >= 1.5 ? "up" : e.lift <= .67 ? "dn" : "ref"; const ar = cls === "up" ? "↑" : cls === "dn" ? "↓" : ""; return `<tr><td>${i === 0 ? '<span class="sw" style="background:var(--emph)"></span>' : ""}${esc(e.a.split(":")[1])} × ${esc(e.b.split(":")[1])}</td><td class="n">${e.c}</td><td class="n"><span class="lift ${cls}">${ar}${e.lift.toFixed(1)}倍</span></td></tr>`; }).join("")}
+      </tbody></table><p class="note">マゼンタ＝いちばん多い組み合わせ（図でも同じ線）。↑ 1.5 倍以上・↓ 0.67 倍以下。回数 3 未満は参考値。</p>`;
+    return;
+  }
   const rel = G.edges.filter(e => e.a === sel || e.b === sel).map(e => ({ n: e.a === sel ? e.b : e.a, c: e.c, lift: e.lift })).sort((a, b) => b.c - a.c || b.lift - a.lift).slice(0, 12);
   const selC = G.cnt.get(sel);
-  $("netSide").innerHTML = `<h3>選んだノード</h3><div class="sel">● ${esc(sel.replace(":", "：")) }（${selC} 件）</div>
+  $("netSide").innerHTML = `<h3>選んだノード <button class="btn" id="netClear" type="button" style="padding:3px 10px;font-size:12px;margin-left:6px">選択を解除</button></h3><div class="sel">● ${esc(sel.replace(":", "：")) }（${selC} 件）</div>
     <table><thead><tr><th>いっしょに出たもの</th><th class="n">回数</th><th class="n">出やすさ</th></tr></thead><tbody>
     ${rel.map(r => { const small = r.c < 3, cls = small ? "ref" : r.lift >= 1.5 ? "up" : r.lift <= .67 ? "dn" : "ref"; const ar = cls === "up" ? "↑" : cls === "dn" ? "↓" : ""; return `<tr><td>${esc(r.n.replace(":", "："))}</td><td class="n">${r.c}（${fmtP(r.c, selC)}）</td><td class="n"><span class="lift ${cls}">${ar}${r.lift.toFixed(1)}倍</span></td></tr>`; }).join("") || '<tr><td colspan="3">いっしょに出たものはありません</td></tr>'}
     </tbody></table><p class="note">↑ 1.5 倍以上（青緑）・↓ 0.67 倍以下（オレンジ）。回数が 3 未満は参考値（灰色）。少ない件数の「出やすさ」は大きくぶれます。</p>`;
 }
 const trim = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 $("netMin").addEventListener("input", () => { NET.userMin = true; renderNet(filtered()); });
+// 選択の解除：図の何もないところ（丸と線以外）を押す／「選択を解除」／Esc
+$("net").addEventListener("click", e => { if (!NET.sel || e.target.closest("g.node") || e.target.closest("path")) return; NET.sel = null; renderNet(filtered()); });
+$("netSide").addEventListener("click", e => { if (e.target.id === "netClear") { NET.sel = null; renderNet(filtered()); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && NET.sel && VIEW === "main") { NET.sel = null; renderNet(filtered()); } });
 $("netCsv").addEventListener("click", () => {
   const G = NET.G; if (!G) return;
   const rows = [["ノードA", "ノードB", "回数", "出やすさ（倍）", "Aの件数", "Bの件数", "投稿数"]].concat(G.edges.sort((a, b) => b.c - a.c).map(e => [e.a, e.b, e.c, e.lift.toFixed(3), G.cnt.get(e.a), G.cnt.get(e.b), G.N]));
@@ -666,24 +810,24 @@ $("netCsv").addEventListener("click", () => {
 
 /* ---------- KPI ---------- */
 function renderSoft(F) {
-  const R = F.filter(s => Object.values(s.soft).some(v => v != null));
+  const R = F.filter(s => Object.values(s.softU).some(v => v != null));
   const A = F.filter(s => Object.keys(s.aiSoft).length);
-  const u = SOFT.map(([k]) => mean(R.map(s => s.soft[k] || 0)) || 0);
+  const u = SOFT.map(([k]) => mean(R.map(s => s.softU[k] || 0)) || 0);
   // AI のソフト分類は合計 1 ではないので、比べやすいように 1 人ごとに合計 1 に直してから平均
   const a = SOFT.map(([k]) => mean(A.map(s => { const t = SOFT.reduce((x, [kk]) => x + Math.max(0, s.aiSoft[kk] || 0), 0); return t ? Math.max(0, s.aiSoft[k] || 0) / t : 0; })) || 0);
   const max = Math.max(...u, ...a, .01);
-  $("soft").innerHTML = `<div class="keys"><span><i class="sw" style="background:var(--series)"></i>本人の答えから（${R.length} 件）</span><span><i class="sw" style="background:var(--gray)"></i>AI の読み取り（${A.length} 件）</span></div>
+  $("soft").innerHTML = `<div class="keys"><span><i class="sw" style="background:var(--series)"></i>本人の答えから（${R.length} 件・${$("fWeight").value === "now" ? "いまの設定" : "記録したとき"}の重み）</span><span><i class="sw" style="background:var(--gray)"></i>AI の読み取り（${A.length} 件）</span></div>
     <div class="hb two">${SOFT.map(([k, l], i) => `<div class="lab">${l}</div><div class="trk">
       <div class="row2"><div class="bar" tabindex="0" style="width:calc(${u[i] / max * 100}% - 46px * ${u[i] / max});background:var(--series)" data-tv="${u[i].toFixed(2)}" data-tl="${l}・本人の答えから"></div><span class="val"><b>${u[i].toFixed(2)}</b></span></div>
       <div class="row2"><div class="bar" tabindex="0" style="width:calc(${a[i] / max * 100}% - 46px * ${a[i] / max});background:var(--gray)" data-tv="${a[i].toFixed(2)}" data-tl="${l}・AI の読み取り"></div><span class="val">${a[i].toFixed(2)}</span></div></div>`).join("")}</div>` +
     tableHtml(["KPI", "本人の答えから", "AI の読み取り"], SOFT.map(([k, l], i) => [l, u[i].toFixed(3), a[i].toFixed(3)])) +
-    `<p class="note">値は「その KPI らしさ」の割合の平均（4 つの合計が 1）。重みは仮の値なので、記録の JSON から重みを変えて計算し直せます。</p>`;
+    `<p class="note">値は「その KPI らしさ」の割合の平均（4 つの合計が 1）。上の「KPI・気持ちの向きの重み」で「いまの設定で計算し直す」を選ぶと、チャットの設定の重みで過去の記録も計算し直します（選んだ答えと順番から計算）。</p>`;
 }
 function renderAgree(F) {
   const CODE = { A: "c1", B: "c2", C: "c3", D: "att" };
-  const both = F.filter(s => s.softTop && CODE[s.aiCode]);
-  const by = SOFT.map(([k, l]) => { const g = both.filter(s => s.softTop === k); const ok = g.filter(s => CODE[s.aiCode] === k).length; return { k, l, n: g.length, ok }; });
-  const okAll = both.filter(s => CODE[s.aiCode] === s.softTop).length;
+  const both = F.filter(s => s.topU && CODE[s.aiCode]);
+  const by = SOFT.map(([k, l]) => { const g = both.filter(s => s.topU === k); const ok = g.filter(s => CODE[s.aiCode] === k).length; return { k, l, n: g.length, ok }; });
+  const okAll = both.filter(s => CODE[s.aiCode] === s.topU).length;
   $("agree").innerHTML = both.length ? `<div class="seg" role="img" aria-label="一致 ${okAll} 件・不一致 ${both.length - okAll} 件">
       <div style="width:${pct(okAll, both.length)}%;background:var(--good)" data-tv="${okAll}件" data-tl="一致">✓ 一致 ${fmtP(okAll, both.length)}</div>
       <div style="width:${100 - pct(okAll, both.length)}%;background:var(--bad)" data-tv="${both.length - okAll}件" data-tl="不一致">✗ 不一致</div></div>
@@ -693,7 +837,7 @@ function renderAgree(F) {
 }
 function groupStats(G) {
   const R = G.filter(s => s.reached);
-  return { n: G.length, copy: pct(G.filter(s => s.copied).length, G.length), ans: mean(R.map(s => s.answered)), len: median(R.map(s => s.final.length)), val: mean(G.map(s => s.valence)), sec: median(G.map(s => s.duration)) };
+  return { n: G.length, copy: pct(G.filter(s => s.copied).length, G.length), ans: mean(R.map(s => s.answered)), len: median(R.map(s => s.final.length)), val: mean(G.map(s => s.valU)), sec: median(G.map(s => s.duration)) };
 }
 function renderLevels(F) {
   const L = [["ひとことのみ", "var(--o1)", "#351162"], ["選択あり", "var(--o2)", "#fff"], ["AI仕上げ", "var(--o3)", "#fff"]];
@@ -774,11 +918,10 @@ function makeDemo() {
   let seed = 20261113; const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const pick = (a, w) => { if (!w) return a[Math.floor(rnd() * a.length)]; const s = w.reduce((x, y) => x + y, 0); let r = rnd() * s; for (let i = 0; i < a.length; i++) { r -= w[i]; if (r <= 0) return a[i]; } return a[a.length - 1]; };
   const some = (a, n) => { const b = a.slice(), o = []; while (o.length < n && b.length) o.push(b.splice(Math.floor(rnd() * b.length), 1)[0]); return o; };
-  const H = ["タイムスタンプ", "Name", "セッションID", "終了", "開始", "所要秒", "回答数", "最後の問い", "写真", "最初のひとこと", "ひとことから読み取れたもの", "話題", "だれと", "どんな人", "どこが", "どこがの選び方", "気持ち（選んだ順）", "気持ちの向き", "このあと", "属性", "体験の点数", "ノード（共起用）", "ソフト①挑戦", "ソフト②属性横断", "ソフト③心理的安全性", "ソフト愛着", "組み立て文面", "AI文面", "最終文面", "採用", "手で編集", "コーチ関与", "ハッシュタグ", "AI分類", "AIソフト", "AI感情の向き", "AI行動", "AIコンテンツ", "AI空間", "AI 5W1H", "AI評価", "AIひとこと", "写真と本文", "AI注意", "ヒント状態", "ほかの人の例を見た", "投稿イメージを開いた", "表示順", "問いごとの秒", "AIモデル", "プロンプト版", "AI秒", "アプリ版"];
+  const H = ["タイムスタンプ", "Name", "セッションID", "終了", "開始", "所要秒", "回答数", "最後の問い", "写真", "最初のひとこと", "ひとことから読み取れたもの", "話題", "だれと", "どんな人", "どこが", "どこがの選び方", "気持ち（選んだ順）", "気持ちの向き", "このあと", "属性", "体験の点数", "ノード（共起用）", "ソフト①挑戦", "ソフト②属性横断", "ソフト③心理的安全性", "ソフト愛着", "組み立て文面", "AI文面", "最終文面", "採用", "手で編集", "コーチ関与", "ハッシュタグ", "AI分類", "AIソフト", "AI感情の向き", "AI行動", "AIコンテンツ", "AI空間", "AI 5W1H", "AI評価", "AIひとこと", "写真と本文", "AI注意", "ヒント状態", "ほかの人の例を見た", "投稿イメージを開いた", "表示順", "問いごとの秒", "AIモデル", "プロンプト版", "AI秒", "アプリ版", "どこがの気持ち", "どこがの重み", "設定版", "任意の問い", "この端末で何本目"];
   const topics = [["コーヒー", "おいしかった", "おいしい", "eat"], ["カレー", "おいしい！", "おいしい", "eat"], ["豆本", "かわいい", "かわいい", "buy"], ["焼き芋", "あったまる〜", "ほっこり", "eat"], ["会社員バンド", "すごかった", "すごい", "watch"], ["陶芸体験", "たのしい！", "たのしい", "make"], ["古本市", "意外な本があった", "意外", "buy"], ["クラフトビール", "うまい", "おいしい", "eat"], ["似顔絵", "うれしい", "", "make"], ["夕方の品川", "きれい", "きれい", "stroll"], ["ワークショップ", "刺激をもらった", "刺激をもらった", "make"], ["行列", "長くて残念", "いまいち", "stroll"]];
   const tw = [14, 10, 9, 9, 8, 7, 6, 6, 4, 6, 5, 4];
   const WHO = [["職場の人（上司・同僚）と", { c3: .7, c2: .3 }, 26], ["作った人・お店の人と話した", { c2: .5, c1: .3 }, 18], ["ちがう会社の人と話した", { c2: 1 }, 9], ["近所の人・学生と話した", { c2: 1, att: .3 }, 6], ["家族・友だちと", { att: .3 }, 14], ["ひとりで", {}, 20]];
-  const WHY = { eat: ["味・香り", "見た目・色・形", "作った人・演じた人", "その場の雰囲気"], buy: ["見た目・色・形", "手づくり感・技", "作った人・演じた人", "話したこと"], watch: ["作った人・演じた人", "平日とのギャップ", "その場の雰囲気"], make: ["手づくり感・技", "話したこと", "その場の雰囲気"], stroll: ["品川の景色・街", "その場の雰囲気"] };
   const FEELS = ["おいしい", "たのしい", "かわいい", "すごい", "きれい", "ほっこり", "意外", "刺激をもらった", "ふつう"];
   const NEXT = [["また来たい", { att: 1 }, 30], ["自分もやってみたい", { c1: 1 }, 18], ["誰かに教えたい", { att: .7 }, 16], ["職場でも話してみたい", { c3: 1 }, 10], ["あの人とまた話したい", { c2: 1 }, 9], ["品川をもっと歩きたい", { att: 1 }, 8], ["とくにない", {}, 9]];
   const PROF = ["品川で働いている", "品川の近くに住んでいる", "遊びに来た（品川以外から）", "出展・出演している", "学生", "運営・スタッフ"], pw = [52, 14, 18, 6, 6, 4];
@@ -790,16 +933,21 @@ function makeDemo() {
     const tp = pick(topics, tw), text1 = tp[0] + tp[1], neg = tp[2] === "いまいち";
     const photo = rnd() < .86, profile = pick(PROF, pw);
     const exited = rnd(), drop = exited < .13, early = !drop && exited < .25;
-    const stopAt = drop ? pick(["だれと", "どこが", "気持ち", "このあと"], [4, 4, 2, 1]) : early ? pick(["どこが", "気持ち", "このあと"], [3, 3, 2]) : "";
-    const steps = ["だれと", "どこが", "気持ち", "このあと"], upto = stopAt ? steps.indexOf(stopAt) : 4;
+    const stopAt = drop ? pick(["気持ち", "どこが", "だれと", "このあと"], [2, 5, 3, 1]) : early ? pick(["どこが", "だれと"], [3, 3]) : "";
+    const steps = ["気持ち", "どこが", "だれと", "このあと"], upto = stopAt ? steps.indexOf(stopAt) : 4;
+    const declined = !drop && !early && rnd() < .38;   // 最低限の問いのあと「投稿文をつくる」を選んだ
     const allSkip = !drop && rnd() < .05;
-    const ans = k => !allSkip && steps.indexOf(k) < upto && rnd() > ({ だれと: .08, どこが: .1, 気持ち: .04, このあと: .16 }[k]);
+    const ans = k => !allSkip && steps.indexOf(k) < upto && !(k === "このあと" && declined) && rnd() > ({ だれと: .08, どこが: .1, 気持ち: .04, このあと: .1 }[k]);
     const who = ans("だれと") ? pick(WHO, WHO.map(x => x[2])) : null;
-    const why = ans("どこが") ? some(WHY[tp[3]], 1 + (rnd() < .4 ? 1 : 0)) : [];
+    let feels = ans("気持ち") ? [...new Set([tp[2], ...some(FEELS, rnd() < .5 ? 1 : 0)].filter(Boolean))] : (tp[2] ? [tp[2]] : []);
+    if (neg && feels.length) feels = ["いまいち"].concat(rnd() < .3 ? ["意外"] : []);
+    // 「どこが」の候補：いちばん大事な気持ちに設定された候補（初期値の設定）→ なければ共通の候補
+    const df = (DEFAULT_SETTINGS.feel || []).find(x => x.label === feels[0]);
+    const tlist = df && df.targets.length ? df.targets : DEFAULT_SETTINGS.why_default, whyFor = df && df.targets.length ? df.label : "";
+    const why = ans("どこが") ? some(tlist.map(x => x.label), 1 + (rnd() < .45 ? 1 : 0) + (rnd() < .2 ? 1 : 0)) : [];
     const aiWhy = why.length && photo && rnd() < .3 ? pick(["湯気", "店主の手さばき", "色あい", "ラベル"]) : "";
     if (aiWhy) why.unshift(aiWhy);
-    let feels = ans("気持ち") ? [...new Set([tp[2], ...some(FEELS, rnd() < .5 ? 1 : 0)].filter(Boolean))] : [];
-    if (neg && feels.length) feels = ["いまいち"].concat(rnd() < .3 ? ["意外"] : []);
+    const layerOf = l => (tlist.find(x => x.label === l) || {}).layer || "コンテンツ";
     const next = ans("このあと") ? some(NEXT, 1 + (rnd() < .35 ? 1 : 0)).map(x => x[0]) : [];
     const answered = [who, why.length, feels.length, next.length].filter(Boolean).length;
     const vmap = { おいしい: 1, たのしい: 1, かわいい: 1, すごい: 1, きれい: 1, ほっこり: 1, 意外: .3, 刺激をもらった: .8, ふつう: 0, いまいち: -1 }, ow = [1, .6, .45, .35];
@@ -820,7 +968,7 @@ function makeDemo() {
     const sec = { text1: 8 + rnd() * 30, who: 3 + rnd() * 9, why: 5 + rnd() * 14, feel: 3 + rnd() * 8, next: 3 + rnd() * 9 };
     const secTxt = Object.keys(sec).filter(k => ({ text1: 1, who: who ? 1 : 0, why: why.length ? 1 : 0, feel: feels.length ? 1 : 0, next: next.length ? 1 : 0 }[k])).map(k => `${k}=${sec[k].toFixed(1)}`).join(" / ");
     const dur = Object.values(sec).reduce((a, b) => a + b, 0) + (aiOk ? 12 : 0);
-    const nodes = [`コンテンツ:${tp[0]}`, who ? "人:" + who[0] : "", ...why.map(w => (["作った人・演じた人", "話したこと", "平日とのギャップ"].includes(w) ? "人:" : ["その場の雰囲気", "品川の景色・街"].includes(w) ? "空間:" : "コンテンツ:") + w), ...feels.map(f => "感情:" + f), ...next.map(n => "意向:" + n)].filter(Boolean);
+    const nodes = [`コンテンツ:${tp[0]}`, who ? "人:" + who[0] : "", ...why.map(w => layerOf(w) + ":" + w), ...feels.map(f => "感情:" + f), ...next.map(n => "意向:" + n)].filter(Boolean);
     const ex = rnd() < .3 ? `1回：${pick(["どこが", "気持ち", "投稿文"])}（${Math.round(20 + rnd() * 60)}秒）` : "";
     const hint = rnd() < .9 ? `OK（${(2 + rnd() * 6).toFixed(1)}秒）` : "TIMEOUT（90秒）";
     const base = { "タイムスタンプ": "", "Name": `参加者${String(1 + Math.floor(i * .85)).padStart(3, "0")}`, "セッションID": "demo" + String(i).padStart(4, "0"), "開始": t0.toISOString(), "所要秒": Math.round(dur * 10) / 10, "回答数": answered,
@@ -831,11 +979,333 @@ function makeDemo() {
       "AI分類": aiOk ? `${code} ${label}` : "", "AIソフト": aiOk ? `①${(raw.c1 / (tot || 1)).toFixed(2)} ②${(raw.c2 / (tot || 1)).toFixed(2)} ③${(raw.c3 / (tot || 1)).toFixed(2)} 愛${((raw.att + .2) / (tot || 1)).toFixed(2)}` : "",
       "AI感情の向き": aiOk && valence !== "" ? Math.max(-1, Math.min(1, Math.round((valence + (rnd() - .5) * .6) * 100) / 100)) : "", "AI行動": aiOk ? ACTL[tp[3]] : "", "AIコンテンツ": aiOk ? tp[0] : "", "AI空間": aiOk && rnd() < .5 ? pick(["屋台", "広場", "品川駅前"]) : "",
       "AI 5W1H": aiOk ? "何○ なぜ○ 誰○ どう○ いつ− どこ−" : "", "AI評価": aiOk ? pick(["高", "中", "中", "低"]) : "", "AIひとこと": aiOk ? "様子が伝わる投稿です" : "", "写真と本文": aiOk && photo ? "一致：写真の内容" : "", "AI注意": "",
-      "ヒント状態": hint, "ほかの人の例を見た": ex, "投稿イメージを開いた": rnd() < .35 ? 1 : 0, "表示順": "", "問いごとの秒": secTxt, "AIモデル": aiOk ? "gpt-6-luna" : "", "プロンプト版": aiOk ? "demo" : "", "AI秒": aiOk ? Math.round((9 + rnd() * 10) * 10) / 10 : "", "アプリ版": "chat-v3.0（デモ）" };
+      "ヒント状態": hint, "ほかの人の例を見た": ex, "投稿イメージを開いた": rnd() < .35 ? 1 : 0, "表示順": "", "問いごとの秒": secTxt, "AIモデル": aiOk ? "gpt-6-luna" : "", "プロンプト版": aiOk ? "demo" : "", "AI秒": aiOk ? Math.round((9 + rnd() * 10) * 10) / 10 : "", "アプリ版": "chat-v3.1（デモ）",
+      "どこがの気持ち": why.length ? whyFor : "", "どこがの重み": why.map((l, i) => `${l} ${[1, .75, .5, .25][i] ?? .25}`).join(" / "), "設定版": "初期値",
+      "任意の問い": drop || early ? "" : declined ? "投稿文へ" : "答えた", "この端末で何本目": 1 + (i % 7 === 0 ? 1 : 0) + (i % 19 === 0 ? 1 : 0) };
     const ends = drop ? ["途中離脱"] : rnd() < .8 ? ["完了", "コピー"] : ["完了"];
     ends.forEach((e, k) => { const r = { ...base, "終了": e, "タイムスタンプ": new Date(t0.getTime() + (dur + k * 30) * 1000).toISOString(), "最後の問い": drop ? stopAt : early ? `途中で投稿文へ（${stopAt}）` : "最後まで" }; rows.push(H.map(c => r[c] ?? "")); });
   }
   return { header: H, rows };
+}
+
+
+/* =====================================================================
+   チャットの設定（選択肢と重み）— 非エンジニアでも変えられる編集画面
+   - 読み込み：記録用 GAS の action:"settings"（だれでも読める）。まだ保存が無ければ初期値（json/coach_settings_default.json）
+   - 保存：action:"save_settings"（管理者パスワードでログインしたときだけ）。settings シートに履歴が 1 行ずつ残る
+   - チャットは起動時にいまの設定を読む（答えている途中の人は、次のチャットから）
+===================================================================== */
+const DEFAULT_SETTINGS = JSON.parse($("defaultSettings").textContent);
+const KPI = [["c1", "①挑戦"], ["c2", "②属性横断"], ["c3", "③心理的安全性"], ["att", "街への愛着"]];
+const LAYER_OPTS = ["コンテンツ", "人", "空間"];
+const VAL_PRESETS = [[1, "◎ とてもポジティブ"], [0.8, "◎ ポジティブ"], [0.5, "○ ややポジティブ"], [0.3, "○ 少しポジティブ"], [0, "△ ふつう"], [-0.5, "× ややネガティブ"], [-1, "× ネガティブ"]];
+const clone = o => JSON.parse(JSON.stringify(o));
+const W0 = () => ({ c1: 0, c2: 0, c3: 0, att: 0 });
+const isBuiltin = (kind, id) => (DEFAULT_SETTINGS[kind] || []).some(x => x.id === id);
+const FIXED_IDS = ["alone", "other", "none", "futsuu", "zannen"];
+const newId = pre => pre + "_" + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 5);
+
+/** 設定の形をそろえる（チャットの normSettings と同じ考え方） */
+function normSet(raw) {
+  const d = DEFAULT_SETTINGS, s = raw && typeof raw === "object" ? raw : {};
+  const n = (v, lo, hi, def) => { const x = Number(v); return isFinite(x) ? Math.min(hi, Math.max(lo, x)) : def; };
+  const w = v => { const o = W0(); if (v && typeof v === "object") Object.keys(o).forEach(k => { o[k] = n(v[k], 0, 1, 0); }); return o; };
+  const lab = v => String(v ?? "").replace(/\s+/g, " ").slice(0, 24);
+  const list = (a, def, f) => (Array.isArray(a) ? a : def || []).map(f);
+  const tg = t => ({ label: lab(t.label), layer: LAYER_OPTS.includes(t.layer) ? t.layer : "コンテンツ", w: w(t.w), off: !!t.off });
+  const rk = (a, def) => (Array.isArray(a) && a.length ? a : def).slice(0, 6).map(v => n(v, 0, 1, 0));
+  const r = s.rank || {};
+  return {
+    schema: "drop_coach_settings_v1",
+    rank: { feel: rk(r.feel, d.rank.feel), why: rk(r.why, d.rank.why), next: rk(r.next, d.rank.next) },
+    why_q_default: String(s.why_q_default ?? d.why_q_default ?? "").slice(0, 60),
+    feel: list(s.feel, d.feel, x => ({ id: String(x.id || newId("uf")), label: lab(x.label), val: n(x.val, -1, 1, 0), w: w(x.w), off: !!x.off, q: String(x.q || "").slice(0, 60), targets: (Array.isArray(x.targets) ? x.targets : []).map(tg) })),
+    why_default: list(s.why_default, d.why_default, tg),
+    who: list(s.who, d.who, x => ({ id: String(x.id || newId("uw")), label: lab(x.label), w: w(x.w), off: !!x.off })),
+    next: list(s.next, d.next, x => ({ id: String(x.id || newId("un")), label: lab(x.label), w: w(x.w), off: !!x.off })),
+    profile: list(s.profile, d.profile, x => ({ id: String(x.id || newId("up")), label: lab(x.label), off: !!x.off }))
+  };
+}
+/** KPI のソフト分類と気持ちの向きを、設定と答え（ラベル・選んだ順）から計算する（分析の計算し直し・ためしに計算で共通） */
+function calcKpi(set, a) {
+  const raw = W0(), rows = [];
+  const rk = (k, i) => { const r = set.rank[k] || []; return r.length ? (r[i] ?? r[r.length - 1]) : 0; };
+  const add = (what, label, w, k) => { const c = {}; Object.keys(raw).forEach(d => { const v = ((w || {})[d] || 0) * k; c[d] = v; raw[d] += v; }); rows.push({ what, label, k, c }); };
+  const fl = l => set.feel.find(x => x.label === l);
+  (a.feel || []).forEach((l, i) => { const f = fl(l); add("気持ち", l, f && f.w, rk("feel", i)); });
+  const tf = a.whyFor ? fl(a.whyFor) : null, tl = tf && tf.targets.some(t => !t.off) ? tf.targets : set.why_default;
+  (a.why || []).forEach((l, i) => { const t = tl.find(x => x.label === l) || set.why_default.find(x => x.label === l); add("どこが", l, t && t.w, rk("why", i)); });
+  if (a.who) { const w = set.who.find(x => x.label === a.who); add("だれと", a.who, w && w.w, 1); }
+  (a.next || []).forEach((l, i) => { const x = set.next.find(y => y.label === l); add("このあと", l, x && x.w, rk("next", i)); });
+  const total = Object.values(raw).reduce((x, y) => x + y, 0), share = {};
+  Object.keys(raw).forEach(k => { share[k] = total ? raw[k] / total : 0; });
+  let vs = 0, vw = 0; (a.feel || []).forEach((l, i) => { const f = fl(l); if (!f) return; const k = rk("feel", i); vs += f.val * k; vw += k; });
+  return { raw, share, total, rows, valence: vw ? vs / vw : null };
+}
+function validateSet(c) {
+  const errs = [];
+  const chk = (list, what, min) => {
+    const seen = {};
+    list.forEach((x, i) => { if (!String(x.label).trim()) errs.push(`${what}の ${i + 1} 行目：表示名が空です`); else if (seen[x.label.trim()]) errs.push(`${what}：「${x.label}」が 2 つあります`); seen[String(x.label).trim()] = 1; });
+    if (min && list.filter(x => !x.off).length < min) errs.push(`${what}：表示するものを ${min} つ以上にしてください`);
+  };
+  chk(c.feel, "気持ち", 2); c.feel.forEach(f => chk(f.targets, `「${f.label}」の「どこが」の候補`, 0));
+  chk(c.why_default, "「どこが」の共通の候補", 2); chk(c.who, "だれと", 2); chk(c.next, "このあと", 2); chk(c.profile, "あなたについて", 2);
+  return errs;
+}
+
+const ED = { base: null, cur: null, version: "", savedAt: "", savedBy: "", source: "", dirty: false, tab: "feel", open: -1, msg: "", hist: null, sim: { feel: [], why: [], who: "", next: [] } };
+const getP = (o, path) => path.split(".").reduce((a, k) => (a == null ? a : a[k]), o);
+function setP(o, path, v) { const ks = path.split("."), last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; }
+const fmtTime = iso => { const d = new Date(iso); return isNaN(d) ? "" : `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+function confirmLeave() { return !ED.dirty || confirm("チャットの設定に、保存していない変更があります。このまま移動しますか？（変更はこの画面に残ります）"); }
+window.addEventListener("beforeunload", e => { if (ED.dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+async function openSettings() {
+  showView("settings");
+  if (!ED.cur) await reloadSettings(); else renderSettings();
+}
+async function reloadSettings() {
+  $("setPane").innerHTML = '<div class="card"><p>設定を読み込んでいます…</p></div>';
+  const r = await post({ action: "settings" });
+  if (r.ok) { ED.version = r.version || ""; ED.savedAt = r.saved_at || ""; ED.savedBy = r.saved_by || ""; ED.base = normSet(r.settings || DEFAULT_SETTINGS); ED.source = r.settings ? "gas" : "default"; }
+  else { ED.version = ""; ED.savedAt = ""; ED.savedBy = ""; ED.base = normSet(DEFAULT_SETTINGS); ED.source = "offline"; }
+  ED.cur = clone(ED.base); ED.dirty = false; ED.hist = null;
+  renderSettings();
+}
+function markDirty() { ED.dirty = JSON.stringify(ED.cur) !== JSON.stringify(ED.base); const b = $("sBadge"); if (b) { b.className = "badge " + (ED.dirty ? "dirty" : "saved"); b.textContent = ED.dirty ? "保存していない変更があります" : "保存済みと同じ"; } }
+
+/* ---------- 画面 ---------- */
+const wCells = (path, w) => KPI.map(([k]) => `<td><input type="number" class="wnum${w[k] ? " nz" : ""}" min="0" max="1" step="0.05" value="${w[k]}" data-path="${path}.w.${k}" data-num aria-label="${k}"></td>`).join("");
+const kpiHead = () => KPI.map(([, l]) => `<th>${l}</th>`).join("");
+function opsCell(listPath, i, len, canDel) {
+  return `<td class="ops"><button type="button" data-act="up" data-list="${listPath}" data-i="${i}" ${i === 0 ? "disabled" : ""} title="上へ">↑</button><button type="button" data-act="down" data-list="${listPath}" data-i="${i}" ${i === len - 1 ? "disabled" : ""} title="下へ">↓</button>${canDel ? `<button type="button" data-act="del" data-list="${listPath}" data-i="${i}" title="削除">削除</button>` : ""}</td>`;
+}
+const showCell = (path, off) => `<td><input type="checkbox" data-path="${path}.off" data-inv ${off ? "" : "checked"} aria-label="表示する"></td>`;
+const labCell = (path, v, ph) => `<td><input type="text" maxlength="24" value="${esc(v)}" data-path="${path}.label" placeholder="${esc(ph || "表示名")}"></td>`;
+function targetsTable(path, list) {
+  return `<div class="set-scroll"><table class="set-tbl"><thead><tr><th>表示</th><th>候補の表示名</th><th>ノードの層</th>${kpiHead()}<th></th></tr></thead><tbody>
+    ${list.map((t, j) => `<tr class="${t.off ? "off" : ""}">${showCell(`${path}.${j}`, t.off)}${labCell(`${path}.${j}`, t.label, "例：ショッパー（袋）")}
+      <td><select data-path="${path}.${j}.layer">${LAYER_OPTS.map(l => `<option${l === t.layer ? " selected" : ""}>${l}</option>`).join("")}</select></td>${wCells(`${path}.${j}`, t.w)}${opsCell(path, j, list.length, true)}</tr>`).join("")}
+    </tbody></table></div><button type="button" class="btn add-btn" data-act="add" data-list="${path}" data-kind="target">＋ 候補を足す</button>`;
+}
+function bodyHtml() {
+  const c = ED.cur, t = ED.tab;
+  if (t === "feel") {
+    return `<p class="note" style="margin-top:0">気持ちの選択肢です。「向き」は投稿の気持ちの向き（◎ ポジティブ〜× ネガティブ）。① ② ③ 愛着 は、その気持ちが KPI のサインになる強さ（0〜1。0 ＝ 関係なし）。<br>「どこが」の候補を押すと、その気持ちを選んだ人に「どこが？」で見せる候補を変えられます（例：かわいい → 商品／ショッパー（袋）／お店の飾りつけ／お店の人）。候補が無い気持ちは「共通の候補」を使います。</p>
+      <div class="set-scroll"><table class="set-tbl"><thead><tr><th>表示</th><th>表示名</th><th>気持ちの向き</th>${kpiHead()}<th>「どこが」の候補</th><th></th></tr></thead><tbody>
+      ${c.feel.map((f, i) => {
+        const opts = VAL_PRESETS.some(([v]) => v === f.val) ? VAL_PRESETS : VAL_PRESETS.concat([[f.val, `（${f.val}）`]]);
+        const nT = f.targets.filter(x => !x.off).length, fixed = FIXED_IDS.includes(f.id);
+        return `<tr class="${f.off ? "off" : ""}">${showCell(`feel.${i}`, f.off)}${labCell(`feel.${i}`, f.label, "例：うれしい")}
+          <td><select data-path="feel.${i}.val" data-num>${opts.map(([v, l]) => `<option value="${v}"${v === f.val ? " selected" : ""}>${l}（${v}）</option>`).join("")}</select></td>${wCells(`feel.${i}`, f.w)}
+          <td><button type="button" class="btn" data-act="open" data-i="${i}" style="padding:4px 10px">${ED.open === i ? "▾ とじる" : `▸ ${nT ? `候補 ${nT} つ` : "共通の候補"}`}</button></td>${opsCell("feel", i, c.feel.length, !isBuiltin("feel", f.id))}</tr>
+          ${fixed ? "" : ""}${ED.open === i ? `<tr class="tg-row"><td colspan="${9 + KPI.length - 4 + 1}"><div class="tg-box">
+            <div class="field"><label>「どこが」の問い文（{話題} はひとことの話題に置きかわる。例「{話題}の、どこがおいしかったですか？」→「コーヒーの、どこがおいしかったですか？」。空なら共通の問い文）</label><input type="text" maxlength="60" value="${esc(f.q)}" data-path="feel.${i}.q" placeholder="${esc(c.why_q_default)}"></div>
+            ${targetsTable(`feel.${i}.targets`, f.targets)}<p class="note">選んだ順の重み（${c.rank.why.join("・")}）は「選んだ順の重み」でまとめて変えられます。</p></div></td></tr>` : ""}`;
+      }).join("")}
+      </tbody></table></div><button type="button" class="btn add-btn" data-act="add" data-list="feel" data-kind="feel">＋ 気持ちを足す</button>
+      <p class="note">「ふつう」「いまいち」は、チャットでいつも最後に表示されます（ほかはシャッフル）。初期値の選択肢は削除できません（「表示」を外すと出なくなります）。</p>`;
+  }
+  if (t === "why") {
+    return `<p class="note" style="margin-top:0">気持ちに「どこが」の候補を設定していないとき（または気持ちがわからないとき）に見せる候補です。</p>
+      <div class="field"><label>共通の問い文（{話題} はひとことの話題に置きかわる）</label><input type="text" maxlength="60" value="${esc(c.why_q_default)}" data-path="why_q_default" style="max-width:520px"></div>
+      ${targetsTable("why_default", c.why_default)}`;
+  }
+  if (t === "who" || t === "next") {
+    const what = t === "who" ? "だれと" : "このあと";
+    return `<p class="note" style="margin-top:0">「${what}」の選択肢と、それぞれの KPI の重み（0〜1）。${t === "next" ? "このあと は任意の問い（最低限の問いのあと、本人が「もう1つ答える」を選んだときだけ聞く）。" : ""}</p>
+      <div class="set-scroll"><table class="set-tbl"><thead><tr><th>表示</th><th>表示名</th>${kpiHead()}<th></th></tr></thead><tbody>
+      ${c[t].map((x, i) => `<tr class="${x.off ? "off" : ""}">${showCell(`${t}.${i}`, x.off)}${labCell(`${t}.${i}`, x.label)}${wCells(`${t}.${i}`, x.w)}${opsCell(t, i, c[t].length, !isBuiltin(t, x.id))}</tr>`).join("")}
+      </tbody></table></div><button type="button" class="btn add-btn" data-act="add" data-list="${t}" data-kind="item">＋ 選択肢を足す</button>
+      <p class="note">${t === "who" ? "「ひとりで」「その他」" : "「とくにない」"}は、チャットでいつも最後に表示されます。</p>`;
+  }
+  if (t === "rank") {
+    const row = (k, what, nn) => `<tr><th style="text-align:left">${what}</th>${Array.from({ length: nn }, (_, i) => `<td><input type="number" class="wnum nz" min="0" max="1" step="0.05" value="${c.rank[k][i] ?? 0}" data-path="rank.${k}.${i}" data-num aria-label="${what} ${i + 1}番目"></td>`).join("")}${nn < 4 ? "<td></td>".repeat(4 - nn) : ""}</tr>`;
+    return `<p class="note" style="margin-top:0">いくつか選べる問いで、先に選んだものほど本人にとって大事、と考えて重みをつけます。1 番目を 1 としたときの、2 番目・3 番目・4 番目の重みです。「どこが」の重みは記録の「どこがの重み」にそのまま入ります。</p>
+      <table class="set-tbl" style="max-width:560px"><thead><tr><th></th><th>1 番目</th><th>2 番目</th><th>3 番目</th><th>4 番目</th></tr></thead><tbody>
+      ${row("feel", "気持ち", 4)}${row("why", "どこが", 4)}${row("next", "このあと", 2)}</tbody></table>`;
+  }
+  if (t === "profile") {
+    return `<p class="note" style="margin-top:0">「あなたについて」（端末ごとに 1 回だけ聞く属性）。KPI の重みはありません。</p>
+      <div class="set-scroll"><table class="set-tbl" style="max-width:640px"><thead><tr><th>表示</th><th>表示名</th><th></th></tr></thead><tbody>
+      ${c.profile.map((x, i) => `<tr class="${x.off ? "off" : ""}">${showCell(`profile.${i}`, x.off)}${labCell(`profile.${i}`, x.label)}${opsCell("profile", i, c.profile.length, !isBuiltin("profile", x.id))}</tr>`).join("")}
+      </tbody></table></div><button type="button" class="btn add-btn" data-act="add" data-list="profile" data-kind="profile">＋ 選択肢を足す</button>`;
+  }
+  return simHtml();
+}
+function simHtml() {
+  const c = ED.cur, sm = ED.sim, vis = l => l.filter(x => !x.off && String(x.label).trim());
+  sm.feel = sm.feel.filter(l => vis(c.feel).some(x => x.label === l));
+  const ff = c.feel.find(x => x.label === sm.feel[0]), useT = ff && vis(ff.targets).length, tl = vis(useT ? ff.targets : c.why_default);
+  sm.why = sm.why.filter(l => tl.some(x => x.label === l));
+  const res = calcKpi(c, { feel: sm.feel, why: sm.why, whyFor: useT ? ff.label : "", who: sm.who, next: sm.next });
+  const chips = (kind, labels, sel, single) => `<div class="chips">${labels.map(l => { const k = single ? (sel === l ? 0 : -1) : sel.indexOf(l); return `<button type="button" class="chip${k >= 0 ? " on" : ""}" data-sim="${kind}" data-l="${esc(l)}">${k >= 0 && !single ? `<span class="ord">${k + 1}</span>` : ""}${esc(l)}</button>`; }).join("")}</div>`;
+  const e = res.total ? argmax(KPI.map(([k]) => res.share[k])) : -1;
+  const v = res.valence, vs = valStyle(v == null ? null : v >= .75 ? 1 : v > .25 ? .5 : v >= -.25 ? 0 : -1);
+  const f2 = x => (x ? x.toFixed(2) : "0");
+  return `<div class="sim"><p class="note" style="margin-top:0">チャットで答えるつもりで押してみてください（いま編集中の設定で計算します。保存は不要）。数字は「選択肢の重み × 選んだ順の重み」です。</p>
+    <div class="sim-grid"><div>
+      <h4>気持ち（近い順に押す・4 つまで）</h4>${chips("feel", vis(c.feel).map(x => x.label), sm.feel)}
+      <h4>${esc(useT ? `「${ff.label}」の「どこが」` : "「どこが」（共通の候補）")}（近い順・4 つまで）</h4>${chips("why", tl.map(x => x.label), sm.why)}
+      <h4>だれと</h4>${chips("who", vis(c.who).map(x => x.label), sm.who, true)}
+      <h4>このあと（任意・2 つまで）</h4>${chips("next", vis(c.next).map(x => x.label), sm.next)}
+      <button type="button" class="btn" data-act="simclear">選んだものを消す</button>
+    </div><div>
+      <h4>KPI のソフト分類（4 つの合計が 1）</h4>
+      ${res.total ? hbars(KPI.map(([k, l]) => ({ label: l, v: Math.round(res.share[k] * 100) / 100, vText: res.share[k].toFixed(2), tv: res.share[k].toFixed(2), tl: `${l}（点数 ${res.raw[k].toFixed(2)}）` })), { emph: e, max: 1, cap: `いちばん大きい KPI：${KPI[e][1]}`, tcols: ["KPI", "割合"] }) : '<p class="note">KPI の点数がつく答えがまだありません（すべて 0 のときは「当てはまらない」扱い）。</p>'}
+      <h4>気持ちの向き</h4><p>${v == null ? "−" : `<span class="vsym" style="color:${vs.c === "var(--good2)" ? "#2A78D6" : vs.c === "var(--mid)" ? "#8a6400" : vs.c}">${vs.s}</span> <b>${v.toFixed(2)}</b>（${vs.t}）`}</p>
+      <h4>記録される「どこがの重み」</h4><p>${sm.why.length ? esc(sm.why.map((l, i) => `${l} ${(c.rank.why[i] ?? c.rank.why[c.rank.why.length - 1])}`).join(" / ")) : "−"}</p>
+    </div></div>
+    <h4>計算の中身</h4>
+    <table class="set-tbl" style="max-width:860px"><thead><tr><th>問い</th><th>答え</th><th>選んだ順の重み</th>${kpiHead()}</tr></thead><tbody>
+      ${res.rows.map(r => `<tr><td>${r.what}</td><td>${esc(r.label)}</td><td class="n">${r.k}</td>${KPI.map(([k]) => `<td class="n${r.c[k] ? " nz" : ""}">${f2(r.c[k])}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="7">まだ何も選んでいません</td></tr>`}
+      ${res.rows.length ? `<tr><th colspan="3" style="text-align:left">合計（点数）</th>${KPI.map(([k]) => `<td class="n nz">${f2(res.raw[k])}</td>`).join("")}</tr><tr><th colspan="3" style="text-align:left">割合（合計を 1 にしたもの）</th>${KPI.map(([k]) => `<td class="n">${res.share[k].toFixed(2)}</td>`).join("")}</tr>` : ""}
+    </tbody></table></div>`;
+}
+function guideHtml() {
+  const d = DEFAULT_SETTINGS, who = d.who.find(x => x.id === "work"), nx = d.next.find(x => x.id === "revisit"), hk = d.feel.find(x => x.id === "hokkori");
+  return `<summary><b>はじめての方へ：重みのしくみ（3 分で読めます）</b></summary>
+    <ul>
+      <li><b>何を決めるの？</b> チャットの選択肢ごとに、CULTURE SNACK の KPI（①挑戦・②属性横断・③心理的安全性・街への愛着）の「サインの強さ」を 0〜1 で決めます。迷ったら <b>0（関係なし）・0.3（少しある）・0.5（ある）・1（はっきりある）</b> の 4 段階で十分です。</li>
+      <li><b>どう計算するの？</b> 本人が選んだ答えの数字に「選んだ順の重み」（1 番目 1、2 番目 0.6 など）を掛けて KPI ごとに足し、最後に 4 つの合計が 1 になるように割合にします。答えが多くても少なくても比べられるようにするためです。</li>
+      <li><b>例</b>（初期値）：「${esc(who.label)}」（③ ${who.w.c3}・② ${who.w.c2}）＋ 気持ち 2 番目に「${esc(hk.label)}」（愛着 ${hk.w.att} × 0.6 ＝ ${(hk.w.att * .6).toFixed(2)}）＋「${esc(nx.label)}」（愛着 ${nx.w.att}）→ 合計 ③ ${who.w.c3}・② ${who.w.c2}・愛着 ${(hk.w.att * .6 + nx.w.att).toFixed(2)} → 割合 ③ ${(who.w.c3 / (who.w.c3 + who.w.c2 + hk.w.att * .6 + nx.w.att)).toFixed(2)}・② ${(who.w.c2 / (who.w.c3 + who.w.c2 + hk.w.att * .6 + nx.w.att)).toFixed(2)}・愛着 ${((hk.w.att * .6 + nx.w.att) / (who.w.c3 + who.w.c2 + hk.w.att * .6 + nx.w.att)).toFixed(2)}</li>
+      <li><b>「どこが」の候補</b>：気持ちごとに、何に対しての気持ちかの候補を決めます（例：かわいい → 商品／ショッパー（袋）／お店の飾りつけ／お店の人）。本人は近い順に選び、<b>1・0.75・0.5・0.25</b> の重みで記録されます。分析画面の「気持ちの中身」で集計できます。</li>
+      <li><b>気持ちの向き</b>：気持ちごとに ◎ ポジティブ〜× ネガティブ（1〜−1）を決め、選んだ順の重みで平均します。</li>
+      <li><b>あとから変えても大丈夫</b>：記録には「何を何番目に選んだか」が残るので、分析画面の「いまの設定で計算し直す」で、過去の記録も新しい重みで見られます。保存の履歴から前の版にももどせます。</li>
+      <li><b>ためしに計算</b>のタブで、答えを押すと結果と計算の中身が見られます。</li>
+    </ul>`;
+}
+function renderSettings() {
+  const tok = getToken();
+  const tabs = [["feel", "気持ちと「どこが」"], ["why", "「どこが」の共通の候補"], ["who", "だれと"], ["next", "このあと"], ["rank", "選んだ順の重み"], ["profile", "あなたについて"], ["sim", "ためしに計算"]];
+  $("setPane").innerHTML = `
+    <div class="card"><h2>チャットの設定（選択肢と重み）</h2>
+      <p class="why">ここで変えて「保存する」を押すと、全員のチャットに反映されます（チャットを開きなおしたとき・次の投稿から。最大 5 分ほど）。答えている途中の人には影響しません。保存するたびに履歴が残るので、前の版にもどせます。</p>
+      <div class="set-status">いまの設定：<b>${ED.version ? esc(ED.version) : "初期値（まだ保存なし）"}</b>${ED.savedAt ? `<span>${fmtTime(ED.savedAt)} 保存・${esc(ED.savedBy)}</span>` : ""}<span class="badge saved" id="sBadge"></span>${ED.source === "offline" ? '<span class="badge dirty">記録用 GAS に接続できないため初期値を表示中（保存できません）</span>' : ""}</div>
+      ${tok ? "" : `<form class="set-login" id="sLogin"><div class="field" style="margin:0"><label for="sName">名前</label><input id="sName" value="admin" maxlength="40" autocomplete="username"></div><div class="field" style="margin:0"><label for="sPw">管理者パスワード</label><input id="sPw" type="password" autocomplete="current-password"></div><button class="btn pri" type="submit">ログイン</button><span class="note">保存・履歴には管理者パスワードでのログインが必要です（見るだけ・ためしに計算はそのままでも使えます）</span></form>`}
+      <div class="set-actions">
+        <input id="sNote" placeholder="メモ：何を変えたか（例：かわいいの候補に「ロゴ」を追加）" maxlength="200" style="flex:1;min-width:260px">
+        <button class="btn pri" id="sSave" type="button" ${tok && ED.source !== "offline" ? "" : "disabled"}>保存する</button>
+        <button class="btn" id="sUndo" type="button">変更を取り消す</button>
+        <button class="btn" id="sDefault" type="button">初期値にもどす</button>
+        <button class="btn" id="sExport" type="button">JSON に書き出す</button>
+        <label class="btn" style="cursor:pointer">JSON を読み込む<input type="file" id="sImport" accept=".json,application/json" hidden></label>
+        <button class="btn" id="sHistory" type="button" ${tok ? "" : "disabled"}>保存の履歴</button>
+      </div>
+      <div class="err" id="sErr"></div>${ED.msg ? `<div class="set-msg">${esc(ED.msg)}</div>` : ""}<div id="sHist">${histHtml()}</div>
+    </div>
+    <details class="card guide" id="sGuide"${ED.guideClosed ? "" : " open"}>${guideHtml()}</details>
+    <div class="subtabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" data-act="tab" data-t="${k}" class="${ED.tab === k ? "on" : ""}" aria-selected="${ED.tab === k}">${l}</button>`).join("")}</div>
+    <div class="card" id="setBody">${bodyHtml()}</div>`;
+  ED.msg = "";
+  markDirty();
+  $("sGuide").addEventListener("toggle", e => { ED.guideClosed = !e.target.open; });
+}
+function histHtml() {
+  if (!ED.hist) return "";
+  if (!ED.hist.length) return '<p class="note">保存の履歴はまだありません。</p>';
+  return `<table class="set-tbl" style="max-width:860px;margin-top:8px"><thead><tr><th>版</th><th>保存日時</th><th>保存した人</th><th>メモ</th><th></th></tr></thead><tbody>
+    ${ED.hist.map((h, i) => `<tr><td>${esc(h.version)}</td><td>${fmtTime(h.saved_at)}</td><td>${esc(h.saved_by)}</td><td>${esc(h.note)}</td><td><button type="button" class="btn" data-act="hist" data-i="${i}" style="padding:3px 10px">この版を編集画面に読み込む</button></td></tr>`).join("")}</tbody></table>`;
+}
+function rerenderBody() { const b = $("setBody"); if (b) b.innerHTML = bodyHtml(); markDirty(); }
+
+/* ---------- 操作（入力はその場で反映。並べ替え・追加・削除は描き直し） ---------- */
+$("setPane").addEventListener("input", e => {
+  const el = e.target, path = el.dataset && el.dataset.path; if (!path) return;
+  let v = el.type === "checkbox" ? (el.dataset.inv !== undefined ? !el.checked : el.checked) : el.value;
+  if (el.dataset.num !== undefined) { v = Number(v); if (!isFinite(v)) v = 0; if (el.classList.contains("wnum")) { v = Math.min(1, Math.max(0, v)); el.classList.toggle("nz", !!v); } }
+  setP(ED.cur, path, v);
+  if (el.type === "checkbox") { const tr = el.closest("tr"); if (tr) tr.classList.toggle("off", !!v); }
+  markDirty();
+});
+$("setPane").addEventListener("change", e => {
+  const el = e.target;
+  if (el.classList && el.classList.contains("wnum")) el.value = String(getP(ED.cur, el.dataset.path));   // 範囲外の数字を 0〜1 にそろえて見せる
+  if (el.id === "sImport") importSettings(el);
+  if (el.tagName === "SELECT" && el.dataset.path) { setP(ED.cur, el.dataset.path, el.dataset.num !== undefined ? Number(el.value) : el.value); markDirty(); }
+});
+$("setPane").addEventListener("submit", async e => {
+  if (e.target.id !== "sLogin") return;
+  e.preventDefault();
+  const pw = $("sPw").value; if (!pw) { $("sErr").textContent = "管理者パスワードを入れてください"; return; }
+  $("sErr").textContent = "確認しています…";
+  const l = await post({ action: "login", name: $("sName").value.trim() || "admin", password: pw });
+  if (!l.ok) { $("sErr").textContent = l.message || "ログインできませんでした"; return; }
+  if (!l.admin) { $("sErr").textContent = "参加者用のパスワードでは保存できません。管理者パスワード（ADMIN_PASSWORD）を入れてください"; return; }
+  sessionStorage.setItem(CONFIG.TOKEN_KEY, JSON.stringify({ token: l.token, exp: Date.now() + (l.expires_in || 3600) * 1000 }));
+  ED.msg = "ログインしました。変更を保存できます"; renderSettings();
+});
+$("setPane").addEventListener("click", async e => {
+  const b = e.target.closest("button, [data-sim]"); if (!b) return;
+  const act = b.dataset.act, c = ED.cur;
+  if (b.dataset.sim) {
+    const k = b.dataset.sim, l = b.dataset.l, sm = ED.sim, max = { feel: 4, why: 4, next: 2 }[k];
+    if (k === "who") sm.who = sm.who === l ? "" : l;
+    else { const a = sm[k], i = a.indexOf(l); if (i >= 0) a.splice(i, 1); else if (a.length < max) a.push(l); if (k === "feel") sm.why = []; }
+    rerenderBody(); return;
+  }
+  if (act === "tab") { ED.tab = b.dataset.t; renderSettings(); return; }
+  if (act === "simclear") { ED.sim = { feel: [], why: [], who: "", next: [] }; rerenderBody(); return; }
+  if (act === "open") { const i = Number(b.dataset.i); ED.open = ED.open === i ? -1 : i; rerenderBody(); return; }
+  if (act === "up" || act === "down" || act === "del") {
+    const list = getP(c, b.dataset.list), i = Number(b.dataset.i);
+    if (act === "del") { list.splice(i, 1); if (b.dataset.list === "feel" && ED.open === i) ED.open = -1; }
+    else { const j = act === "up" ? i - 1 : i + 1; if (j < 0 || j >= list.length) return; [list[i], list[j]] = [list[j], list[i]]; if (b.dataset.list === "feel" && (ED.open === i || ED.open === j)) ED.open = ED.open === i ? j : i; }
+    rerenderBody(); return;
+  }
+  if (act === "add") {
+    const list = getP(c, b.dataset.list), kind = b.dataset.kind;
+    const pre = { feel: "uf", who: "uw", next: "un", profile: "up" }[b.dataset.list] || "u";
+    list.push(kind === "target" ? { label: "", layer: "コンテンツ", w: W0(), off: false } : kind === "feel" ? { id: newId(pre), label: "", val: 1, w: W0(), off: false, q: "", targets: [] } : kind === "profile" ? { id: newId(pre), label: "", off: false } : { id: newId(pre), label: "", w: W0(), off: false });
+    rerenderBody();
+    const ins = $("setBody").querySelectorAll(`input[data-path^="${b.dataset.list}.${list.length - 1}.label"]`); if (ins.length) ins[ins.length - 1].focus();
+    return;
+  }
+  if (act === "hist") { const h = ED.hist[Number(b.dataset.i)]; if (h && h.settings) { ED.cur = normSet(h.settings); ED.msg = `${h.version} を読み込みました。よければ「保存する」で、いまの設定にします`; renderSettings(); } return; }
+  if (act === "reload") { await reloadSettings(); return; }
+  if (act === "force") { await saveSettings(true); return; }
+  switch (b.id) {
+    case "sSave": await saveSettings(false); break;
+    case "sUndo": ED.cur = clone(ED.base); ED.msg = "変更を取り消しました（保存済みの設定にもどしました）"; renderSettings(); break;
+    case "sDefault": if (confirm("すべての選択肢と重みを初期値にもどします（「保存する」を押すまでは反映されません）。よろしいですか？")) { ED.cur = normSet(DEFAULT_SETTINGS); ED.msg = "初期値にもどしました。よければ「保存する」を押してください"; renderSettings(); } break;
+    case "sExport": downloadJson(`drop_coach_settings_${(ED.version || "初期値")}_${ymd(new Date())}.json`, ED.cur); break;
+    case "sHistory": await loadHistory(); break;
+  }
+});
+function downloadJson(name, obj) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" })); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+async function importSettings(input) {
+  const f = input.files && input.files[0]; input.value = ""; if (!f) return;
+  try { const j = JSON.parse(await f.text()); if (!j || !Array.isArray(j.feel)) throw new Error("チャットの設定の JSON ではないようです"); ED.cur = normSet(j); ED.msg = `「${f.name}」を読み込みました。よければ「保存する」を押してください`; renderSettings(); }
+  catch (e) { $("sErr").textContent = "読み込めませんでした：" + e.message; }
+}
+async function loadHistory() {
+  const tok = getToken(); if (!tok) return;
+  const r = await post({ action: "settings_history", token: tok });
+  if (!r.ok) { $("sErr").textContent = r.message || "履歴を読めませんでした"; return; }
+  ED.hist = r.items || []; $("sHist").innerHTML = histHtml();
+}
+async function saveSettings(force) {
+  const errs = validateSet(ED.cur);
+  if (errs.length) { $("sErr").innerHTML = "保存できません：<br>" + errs.slice(0, 8).map(esc).join("<br>"); return; }
+  const tok = getToken();
+  if (!tok) { $("sErr").textContent = "保存するには、管理者パスワードでログインしてください"; return; }
+  if (!ED.dirty && !force) { $("sErr").textContent = "変更がありません"; return; }
+  $("sSave").disabled = true; $("sErr").textContent = "保存しています…";
+  const r = await post({ action: "save_settings", token: tok, settings: ED.cur, note: $("sNote").value.trim(), base_version: ED.version, force: !!force });
+  if (r.ok) {
+    ED.version = r.version; ED.savedAt = r.saved_at; ED.savedBy = r.saved_by; ED.base = normSet(r.settings); ED.cur = clone(ED.base); ED.source = "gas"; ED.hist = null;
+    CURSET = clone(ED.base); CURSET_VER = r.version; if ($("fWeight").options[1]) $("fWeight").options[1].textContent = `いまの設定（${CURSET_VER}）で計算し直す`;
+    ED.msg = `保存しました（${r.version}）。全員のチャットに反映されます（開きなおしたとき・次の投稿から。最大 5 分ほど）`;
+    renderSettings(); if (SESS.length) render(); return;
+  }
+  $("sSave").disabled = false;
+  if (r.code === "CONFLICT") { $("sErr").innerHTML = esc(r.message) + ' <button type="button" class="btn" data-act="reload">いまの設定を読みなおす（自分の変更は消えます）</button> <button type="button" class="btn" data-act="force">自分の変更で上書きする</button>'; return; }
+  if (r.code === "AUTH" || r.code === "FORBIDDEN") { sessionStorage.removeItem(CONFIG.TOKEN_KEY); ED.msg = r.message; renderSettings(); return; }
+  $("sErr").textContent = r.message || "保存できませんでした";
 }
 
 /* ---------- 起動：ログイン済み（このタブ）なら読み込む ---------- */

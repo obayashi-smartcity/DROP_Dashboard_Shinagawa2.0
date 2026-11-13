@@ -1,9 +1,18 @@
 /**
- * DROP Coach V2 フォルダ — 記録用 Google Apps Script（Web アプリ）  v7（2026/11/13・チャット画面 v3 用）
+ * DROP Coach V2 フォルダ — 記録用 Google Apps Script（Web アプリ）  v8（2026/11/13・チャット画面 v3.1 用）
  * ------------------------------------------------------------
- * drop_coach_with_sample.html（チャット v3）から直接呼ばれ、チャット 1 回分（1 セッション）を
+ * drop_coach_chat.html（チャット）から直接呼ばれ、チャット 1 回分（1 セッション）を
  * Google スプレッドシートに 1 行追記する。drop_coach_dashboard.html（分析画面）からは管理者だけが読み出せる。
+ * もう 1 つの役割：運営が分析画面の「チャットの設定」で保存した「選択肢と重み」を settings シートにためて、チャットに配る。
  * ★ V1 のログ用 GAS とは別のプロジェクト（00_GAS/DROP_COACH2.0/DROP_COACH_LOG）
+ *
+ * ■ v8 の変更（2026/11/13）
+ *   - チャットの設定（選択肢の言葉・KPI の重み・気持ちの向き・「どこが」の候補・選んだ順の重み）を GAS で預かる
+ *     action:"settings"（だれでも読める・チャットが起動時に読む）／"save_settings"・"settings_history"（管理者だけ）
+ *     保存のたびに settings シートへ 1 行（保存日時・版・保存した人・メモ・設定JSON）。いちばん下の行がいまの設定
+ *   - 記録の列を 5 つ足した（記録JSON の右）：どこがの気持ち／どこがの重み（例「商品 1 / ショッパー（袋） 0.75」）／設定版／
+ *     任意の問い（最低限の問いのあと「もう1つ答える」を選んだか）／この端末で何本目（その日にコピーした本数。もう 1 本つくりたくなる仕掛けの効果を見る）
+ *     v7 の chat_v3 シートは、次の記録のときに見出しが自動で書き足される
  *
  * ■ v7 の変更（チャット v3 に合わせた作り直し）
  *   - 列を v3 の問い（ひとこと → だれと → どこが → 気持ち → このあと）に合わせて整理（54 列）。既定のシート名は chat_v3
@@ -19,15 +28,19 @@
  *   { "action":"login", "name":"...", "password":"..." } → { ok:true, token, expires_in, admin }
  *   { "action":"log", "token":"...", "session":{ …チャット記録（drop_chat_v3 形式。HTML の buildRecord() を参照）… } } → { ok:true, sheet, row }
  *   { "action":"export", "token":"（管理者のトークン）", "limit":3000, "json":false } → { ok:true, sheet, header:[…], rows:[[…], …], total }
+ *   { "action":"settings" } → { ok:true, version:"設定3", saved_at, saved_by, settings:{…}|null }（null ＝まだ保存がない → チャットは初期値）
+ *   { "action":"save_settings", "token":"（管理者）", "settings":{…}, "note":"メモ", "base_version":"設定3" } → { ok:true, version:"設定4" }
+ *     base_version がいまの版と違う（ほかの人が先に保存した）ときは CONFLICT。force:true で上書き
+ *   { "action":"settings_history", "token":"（管理者）" } → { ok:true, items:[{ version, saved_at, saved_by, note, settings }, …]（新しい順・20 件） }
  *
  * ■ スクリプトプロパティ
  *   必須  APP_PASSWORD   … 参加者用パスワード（仕上げ用 GAS と同じ値）
  *         LOG_SHEET_ID   … 記録先スプレッドシートの ID（V2 の LOG_DROP_COACH）。★ V1 の ID を入れないこと
  *   分析画面を使うなら  ADMIN_PASSWORD … 管理者用パスワード（APP_PASSWORD とは別の値にする）
- *   任意  LOG_SHEET_NAME (chat_v3) / TOKEN_TTL_SEC (21600) / MAX_FAILS (30) / MAX_LOGS_PER_TOKEN (300) / EXPORT_MAX_ROWS (5000)
+ *   任意  LOG_SHEET_NAME (chat_v3) / SETTINGS_SHEET_NAME (settings) / TOKEN_TTL_SEC (21600) / MAX_FAILS (30) / MAX_LOGS_PER_TOKEN (300) / EXPORT_MAX_ROWS (5000)
  *
  * ■ 更新のしかた
- *   貼り替え → スクリプトプロパティ（LOG_SHEET_NAME を chat_v3 に・ADMIN_PASSWORD を追加）→ setupTest() を 1 回実行
+ *   貼り替え → スクリプトプロパティ（LOG_SHEET_NAME を chat_v3 に・ADMIN_PASSWORD を追加）→ setupTest() を 1 回実行（settings シートもできる）
  *   → デプロイを管理 → 編集 → 新バージョン（URL は変わらない）。LOG_URL?diag=1 をブラウザで開くと記録先の状態を確認できる
  */
 const LOG_HEADER = [
@@ -37,16 +50,18 @@ const LOG_HEADER = [
   'ノード（共起用）', 'ソフト①挑戦', 'ソフト②属性横断', 'ソフト③心理的安全性', 'ソフト愛着',
   '組み立て文面', 'AI文面', '最終文面', '採用', '手で編集', 'コーチ関与', 'ハッシュタグ',
   'AI分類', 'AIソフト', 'AI感情の向き', 'AI行動', 'AIコンテンツ', 'AI空間', 'AI 5W1H', 'AI評価', 'AIひとこと', '写真と本文', 'AI注意',
-  'ヒント状態', 'ほかの人の例を見た', '投稿イメージを開いた', '表示順', '問いごとの秒', 'AIモデル', 'プロンプト版', 'AI秒', 'アプリ版', '記録JSON'
+  'ヒント状態', 'ほかの人の例を見た', '投稿イメージを開いた', '表示順', '問いごとの秒', 'AIモデル', 'プロンプト版', 'AI秒', 'アプリ版', '記録JSON',
+  // v8 で追加（記録JSON の右に足す。v7 のシートは見出しを自動で書き足す）
+  'どこがの気持ち', 'どこがの重み', '設定版', '任意の問い', 'この端末で何本目'
 ];
 const END_LABEL = { copy: 'コピー', finish: '完了', abandon: '途中離脱', reset: 'やり直し' };
 const ACT_LABEL = { watch: '見た・聴いた', eat: '食べた・飲んだ', make: '作った・体験した', buy: '買った', talk: '話した', host: '出展・出演・お手伝い', stroll: 'ぶらぶら回った' };
-const DEFAULTS = { LOG_SHEET_NAME: 'chat_v3', TOKEN_TTL_SEC: 21600, MAX_FAILS: 30, MAX_LOGS_PER_TOKEN: 300, EXPORT_MAX_ROWS: 5000 };
+const DEFAULTS = { LOG_SHEET_NAME: 'chat_v3', SETTINGS_SHEET_NAME: 'settings', SETTINGS_CACHE_SEC: 300, TOKEN_TTL_SEC: 21600, MAX_FAILS: 30, MAX_LOGS_PER_TOKEN: 300, EXPORT_MAX_ROWS: 5000 };
 const CACHE_MAX_SEC = 21600;
 const FAIL_WINDOW_SEC = 900;
 const MAX_LEN = { NAME: 40, ID: 64, TEXT: 400, SHORT: 120, FIELD: 1000, ITEMS: 12, MSG: 300, META: 80, JSON_CELL: 45000 };
-const KEY = { FAIL: 'chatlog_auth_fail', TOKEN: 'chatlogtok_' };
-const SERVICE_VERSION = 7;
+const KEY = { FAIL: 'chatlog_auth_fail', TOKEN: 'chatlogtok_', SETTINGS: 'chatlog_settings_cur' };
+const SERVICE_VERSION = 8;
 
 class AppError extends Error {
   constructor(code, message) { super(message); this.code = code; }
@@ -74,6 +89,9 @@ function doPost(e) {
       case 'login':  return handleLogin_(req);
       case 'log':    return handleLog_(req);
       case 'export': return handleExport_(req);
+      case 'settings':         return handleSettings_();
+      case 'save_settings':    return handleSaveSettings_(req);
+      case 'settings_history': return handleSettingsHistory_(req);
       default:       throw new AppError('BAD_REQUEST', '不明な action です');
     }
   } catch (err) {
@@ -87,13 +105,13 @@ function doPost(e) {
 }
 /** ブラウザで LOG_URL を開くと疎通確認。?diag=1 で記録先の状態も返す */
 function doGet(e) {
-  const out = { ok: true, service: 'drop-coach-chat-log', version: SERVICE_VERSION, actions: ['login', 'log', 'export'], time: new Date().toISOString() };
+  const out = { ok: true, service: 'drop-coach-chat-log', version: SERVICE_VERSION, actions: ['login', 'log', 'export', 'settings', 'save_settings', 'settings_history'], time: new Date().toISOString() };
   if (e && e.parameter && e.parameter.diag) {
     out.password_set = !!prop_('APP_PASSWORD');
     out.admin_password_set = !!prop_('ADMIN_PASSWORD');
     out.sheet_id_set = !!prop_('LOG_SHEET_ID');
     out.sheet_name = prop_('LOG_SHEET_NAME');
-    try { out.sheet = getSheet_().getName(); out.sheet_ok = true; }
+    try { out.sheet = getSheet_().getName(); out.sheet_ok = true; out.settings_version = currentSettings_().version || '（初期値）'; }
     catch (err) { out.sheet_ok = false; out.sheet_error = String(err && err.message || err); }
   }
   return json_(out);
@@ -155,12 +173,20 @@ function handleExport_(req) {
   const last = sh.getLastRow();
   const maxRows = Math.min(Number(req.limit) > 0 ? Number(req.limit) : numProp_('EXPORT_MAX_ROWS'), numProp_('EXPORT_MAX_ROWS'));
   const withJson = req.json === true;
-  const width = withJson ? LOG_HEADER.length : LOG_HEADER.length - 1;   // 既定では記録JSON（最後の列）を返さない（軽くするため）
-  if (last < 2) return json_({ ok: true, sheet: sh.getName(), header: LOG_HEADER.slice(0, width), rows: [], total: 0 });
-  const from = Math.max(2, last - maxRows + 1);
-  const values = sh.getRange(from, 1, last - from + 1, width).getValues()
-    .map(r => r.map(v => (v instanceof Date ? v.toISOString() : v)));
-  return json_({ ok: true, sheet: sh.getName(), header: LOG_HEADER.slice(0, width), rows: values, total: last - 1, truncated: from > 2 });
+  const ji = LOG_HEADER.indexOf('記録JSON');   // 既定では記録JSON の列を返さない（重いため）
+  const header = withJson ? LOG_HEADER.slice() : LOG_HEADER.filter((_, i) => i !== ji);
+  if (last < 2) return json_({ ok: true, sheet: sh.getName(), header: header, rows: [], total: 0 });
+  const from = Math.max(2, last - maxRows + 1), n = last - from + 1;
+  let values;
+  if (withJson) values = sh.getRange(from, 1, n, LOG_HEADER.length).getValues();
+  else {
+    const a = sh.getRange(from, 1, n, ji).getValues();
+    const rest = LOG_HEADER.length - ji - 1;
+    const b = rest > 0 ? sh.getRange(from, ji + 2, n, rest).getValues() : a.map(() => []);
+    values = a.map((r, i) => r.concat(b[i]));
+  }
+  values = values.map(r => r.map(v => (v instanceof Date ? v.toISOString() : v)));
+  return json_({ ok: true, sheet: sh.getName(), header: header, rows: values, total: last - 1, truncated: from > 2 });
 }
 
 /** チャット記録（drop_chat_v3）→ 1 行。値はすべて検証・丸めてから書く */
@@ -245,7 +271,12 @@ function buildRow_(name, s) {
     t(ai.prompt_version, MAX_LEN.META),
     num(ai.elapsed_sec, 0, 600),
     t(s.app_version, 40),
-    jsonCell
+    jsonCell,
+    t(s.why_for, 30),
+    arr(a.why).slice(0, MAX_LEN.ITEMS).map(x => { const y = o(x); const w = num(y.rank_w, 0, 1); return t(y.label, MAX_LEN.SHORT) + (w === '' ? '' : ' ' + Math.round(w * 100) / 100); }).filter(v => v.trim()).join(' / '),
+    t(s.settings_version, 40),
+    t(s.extra, 20),   // 最低限の問いのあと：答えた（もう1つ答えた）／投稿文へ（任意の問いはとばした）／空（その前に終わった）
+    num(s.post_no, 0, 999)
   ];
 }
 
@@ -356,16 +387,127 @@ function json_(obj) { return ContentService.createTextOutput(JSON.stringify(obj)
 
 /* ============================ 動作確認用 ============================ */
 /** 記録先の作成と書き込みを確認（エディタから 1 回実行）。テスト行の Name は「テスト」 */
+/* ======================= チャットの設定（選択肢と重み） ======================= */
+const SETTINGS_HEADER = ['保存日時', '版', '保存した人', 'メモ', '設定JSON'];
+function settingsSheet_() {
+  const ss = openSpreadsheet_();
+  const name = prop_('SETTINGS_SHEET_NAME');
+  const sh = ss.getSheetByName(name) || ss.insertSheet(name);
+  if (sh.getLastRow() === 0) {
+    sh.getRange(1, 1, 1, SETTINGS_HEADER.length).setValues([SETTINGS_HEADER]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+function settingsRow_(r) {
+  let settings = null;
+  try { settings = JSON.parse(String(r[4] || 'null')); } catch (e) { settings = null; }
+  return { version: String(r[1] || ''), saved_at: r[0] instanceof Date ? r[0].toISOString() : String(r[0] || ''), saved_by: String(r[2] || ''), note: String(r[3] || ''), settings: settings };
+}
+/** いまの設定（settings シートのいちばん下の行）。5 分キャッシュ。まだ保存がなければ settings:null */
+function currentSettings_() {
+  const cache = CacheService.getScriptCache();
+  const c = cache.get(KEY.SETTINGS);
+  if (c) { try { return JSON.parse(c); } catch (e) { /* 読み直す */ } }
+  const sh = settingsSheet_(), last = sh.getLastRow();
+  const out = last >= 2 ? settingsRow_(sh.getRange(last, 1, 1, SETTINGS_HEADER.length).getValues()[0]) : { version: '', saved_at: '', saved_by: '', note: '', settings: null };
+  try { const j = JSON.stringify(out); if (j.length < 90000) cache.put(KEY.SETTINGS, j, numProp_('SETTINGS_CACHE_SEC')); } catch (e) { /* キャッシュなしで続ける */ }
+  return out;
+}
+function handleSettings_() {
+  const c = currentSettings_();
+  return json_({ ok: true, version: c.version, saved_at: c.saved_at, saved_by: c.saved_by, settings: c.settings });
+}
+function adminSession_(token) {
+  const session = session_(token);
+  if (!session || !session.name) throw new AppError('AUTH', 'ログインの有効期限が切れました。再ログインしてください');
+  if (!session.admin) throw new AppError('FORBIDDEN', 'チャットの設定を変えるには、管理者パスワードでのログインが必要です');
+  return session;
+}
+function handleSaveSettings_(req) {
+  const session = adminSession_(req.token);
+  const settings = sanitizeSettings_(req.settings);
+  const json = JSON.stringify(settings);
+  if (json.length > MAX_LEN.JSON_CELL) throw new AppError('BAD_REQUEST', '設定が大きすぎます（選択肢を減らしてください）');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    CacheService.getScriptCache().remove(KEY.SETTINGS);
+    const cur = currentSettings_();
+    if (req.force !== true && String(req.base_version || '') !== String(cur.version || '')) {
+      throw new AppError('CONFLICT', 'ほかの人が先に設定を保存しました（いまの版：' + (cur.version || '初期値') + '）。読みなおしてから、もう一度保存してください');
+    }
+    const sh = settingsSheet_(), row = sh.getLastRow() + 1, ver = '設定' + (row - 1), now = new Date();
+    sh.getRange(row, 1, 1, SETTINGS_HEADER.length).setValues([[now, ver, session.name, clean_(req.note, 200), json]]);
+    SpreadsheetApp.flush();
+    CacheService.getScriptCache().remove(KEY.SETTINGS);
+    return json_({ ok: true, version: ver, saved_at: now.toISOString(), saved_by: session.name, settings: settings });
+  } finally {
+    lock.releaseLock();
+  }
+}
+function handleSettingsHistory_(req) {
+  adminSession_(req.token);
+  const sh = settingsSheet_(), last = sh.getLastRow();
+  if (last < 2) return json_({ ok: true, items: [] });
+  const from = Math.max(2, last - 19);
+  const items = sh.getRange(from, 1, last - from + 1, SETTINGS_HEADER.length).getValues().map(settingsRow_).reverse();
+  return json_({ ok: true, items: items });
+}
+/** 設定の検証：形・文字数・数値の範囲をそろえる（画面の normSettings と同じ考え方） */
+function sanitizeSettings_(raw) {
+  const s = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : null;
+  if (!s) throw new AppError('BAD_REQUEST', 'settings（設定）がありません');
+  const n = (v, lo, hi, d) => { const x = Number(v); return isFinite(x) ? Math.min(hi, Math.max(lo, Math.round(x * 1000) / 1000)) : d; };
+  const lab = v => clean_(v, 24).replace(/\s+/g, ' ');
+  const id = (v, i, pre) => (/^[A-Za-z0-9_-]{1,24}$/.test(String(v || '')) ? String(v) : pre + i);
+  const w = v => { const x = v && typeof v === 'object' ? v : {}; return { c1: n(x.c1, 0, 1, 0), c2: n(x.c2, 0, 1, 0), c3: n(x.c3, 0, 1, 0), att: n(x.att, 0, 1, 0) }; };
+  const arr = (v, max) => (Array.isArray(v) ? v : []).slice(0, max);
+  const LAYERS = ['人', 'コンテンツ', '空間'];
+  const tgt = t => { const x = t && typeof t === 'object' ? t : {}; return { label: lab(x.label), layer: LAYERS.indexOf(x.layer) >= 0 ? x.layer : 'コンテンツ', w: w(x.w), off: x.off === true }; };
+  const uniq = (list, what) => {
+    const seen = {};
+    list.forEach(x => { if (!x.label) throw new AppError('BAD_REQUEST', what + 'に、表示名が空のものがあります'); if (seen[x.label]) throw new AppError('BAD_REQUEST', what + 'の「' + x.label + '」が 2 つあります'); seen[x.label] = 1; });
+    return list;
+  };
+  const visible = (list, min, what) => { if (list.filter(x => !x.off).length < min) throw new AppError('BAD_REQUEST', what + 'は、表示するものを ' + min + ' つ以上にしてください'); return list; };
+  const rk = (v, def) => { const a = arr(v, 6).map(x => n(x, 0, 1, 0)); return a.length ? a : def; };
+  const r = s.rank && typeof s.rank === 'object' ? s.rank : {};
+  const feel = visible(uniq(arr(s.feel, 20).map((x, i) => {
+    const y = x && typeof x === 'object' ? x : {};
+    return { id: id(y.id, i, 'uf'), label: lab(y.label), val: n(y.val, -1, 1, 0), w: w(y.w), off: y.off === true, q: clean_(y.q, 60),
+      targets: uniq(arr(y.targets, 10).map(tgt).filter(t => t.label), '「' + lab(y.label) + '」のどこがの候補') };
+  }), '気持ち'), 2, '気持ち');
+  const simple = (v, max, pre, what, withW) => visible(uniq(arr(v, max).map((x, i) => {
+    const y = x && typeof x === 'object' ? x : {};
+    const o = { id: id(y.id, i, pre), label: lab(y.label), off: y.off === true };
+    if (withW) o.w = w(y.w);
+    return o;
+  }), what), 2, what);
+  return {
+    schema: 'drop_coach_settings_v1',
+    rank: { feel: rk(r.feel, [1, 0.6, 0.45, 0.35]), why: rk(r.why, [1, 0.75, 0.5, 0.25]), next: rk(r.next, [1, 0.8]) },
+    why_q_default: clean_(s.why_q_default, 60) || 'とくに印象に残ったのは、どこですか？',
+    feel: feel,
+    why_default: visible(uniq(arr(s.why_default, 12).map(tgt), '「どこが」の共通の候補'), 2, '「どこが」の共通の候補'),
+    who: simple(s.who, 15, 'uw', 'だれと', true),
+    next: simple(s.next, 15, 'un', 'このあと', true),
+    profile: simple(s.profile, 12, 'up', 'あなたについて', false)
+  };
+}
+
 function setupTest() {
   console.log('APP_PASSWORD: ' + (prop_('APP_PASSWORD') ? '設定済み' : '★未設定'));
   console.log('ADMIN_PASSWORD: ' + (prop_('ADMIN_PASSWORD') ? '設定済み' : '未設定（分析画面から読み出せません）'));
   console.log('LOG_SHEET_ID: ' + (prop_('LOG_SHEET_ID') ? '設定済み' : '未設定（このスクリプトが紐づくスプレッドシートを使用）'));
   console.log('LOG_SHEET_NAME: ' + prop_('LOG_SHEET_NAME'));
+  console.log('チャットの設定: ' + (currentSettings_().version || 'まだ保存なし（チャットは初期値を使う）') + '（シート「' + settingsSheet_().getName() + '」）');
   const w = appendRow_(buildRow_('テスト', {
     schema: 'drop_chat_v3', session_id: 'test_' + Date.now(), end: 'finish', started_at: new Date().toISOString(), duration_sec: 42,
     answered: 4, last_step: '最後まで', has_photo: false, text1: 'コーヒーおいしかった',
     detected: { feels: ['oishii'], feel_labels: ['おいしい'], who: '', next: false, subject: 'コーヒー' }, subject: 'コーヒー',
-    answers: { who: { label: 'ひとりで', detail: '' }, why: [{ label: '味・香り', src: '選択肢' }], feel: [{ label: 'おいしい' }],
+    why_for: 'おいしい', settings_version: '初期値',
+    answers: { who: { label: 'ひとりで', detail: '' }, why: [{ label: '味', src: '選択肢', rank_w: 1 }, { label: '香り', src: '選択肢', rank_w: 0.75 }], feel: [{ label: 'おいしい' }],
       next: [{ label: 'また来たい' }], profile: { label: '品川で働いている' } },
     valence: 1, nodes: ['コンテンツ:コーヒー', '人:ひとりで', 'コンテンツ:味・香り', '感情:おいしい', '意向:また来たい'],
     soft: { c1: 0, c2: 0, c3: 0, att: 1 },

@@ -1,7 +1,7 @@
 /**
  * DROP Coach V2（チャット版）— 投稿文の仕上げ用 Google Apps Script（Web アプリ）  v9（2026/11/13・チャット画面 v3 用）
  * ------------------------------------------------------------
- * V2.0 リポジトリ（DROP_Dashboard_Shinagawa2.0）の drop_coach_with_sample.html から呼ばれる。
+ * V2.0 リポジトリ（DROP_Dashboard_Shinagawa2.0）の drop_coach_chat.html（チャット）から呼ばれる。
  * ★ V1（DROP_Dashboard_Shinagawa1.0）の GAS とは別のプロジェクトとして新しく作り、別にデプロイすること。
  *   プロンプトも V2 リポジトリの prompt/drop_coach_chat.md を読む（V1 の GAS・プロンプト・シートには一切影響しない）。
  *
@@ -63,7 +63,7 @@
  *   3) プロジェクトの設定 → スクリプト プロパティ に上の「必須」3 つを追加
  *   4) エディタで checkSetup() を実行（初回は権限を承認）→ ログに「★」が無いことを確認 → testChat() で疎通確認
  *   5) デプロイ → 新しいデプロイ → 種類「ウェブアプリ」／次のユーザーとして実行「自分」／アクセスできるユーザー「全員」
- *   6) 表示された /exec の URL を drop_coach_with_sample.html の CONFIG.GAS_URL に貼る
+ *   6) 表示された /exec の URL を drop_coach_chat.html の CONFIG.GAS_URL に貼る
  *   コードを更新したとき：貼り替え → デプロイを管理 → 編集 → バージョン「新バージョン」（URL は変わらない）
  *   プロンプトだけ直したとき：GitHub に push すれば PROMPT_CACHE_SEC（5 分）以内に反映。すぐ反映したいときは clearPromptCache() を実行
  */

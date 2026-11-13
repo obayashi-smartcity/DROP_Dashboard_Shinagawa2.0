@@ -33,8 +33,20 @@
   .brand{font-weight:900;font-size:18px;letter-spacing:-.4px;line-height:1;white-space:nowrap}
   .brand i{font-style:normal;color:var(--rich)}
   .brand small{display:block;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--dim);margin-top:4px}
-  .prog{flex:1;height:6px;background:var(--bg-b);border-radius:3px;overflow:hidden}
-  .prog span{display:block;height:100%;width:0;background:var(--rich);border-radius:3px;transition:width .35s ease}
+  /* すすみぐあい（円）：最低限の 4 つ（ひとこと・気持ち・どこが・だれと）。このあと は任意 */
+  .ringbox{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .ring{position:relative;width:46px;height:46px;flex:none}
+  .ring svg{width:46px;height:46px;transform:rotate(-90deg);display:block}
+  .ring circle{fill:none;stroke-width:5.5}
+  .ring .rt{stroke:var(--rich-soft)}
+  .ring .rf{stroke:var(--rich);stroke-linecap:round;stroke-dasharray:113.1;stroke-dashoffset:113.1;transition:stroke-dashoffset .6s ease}
+  .ring b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--rich-ink);letter-spacing:-.3px}
+  .ring.done b{font-size:19px}
+  .ring.pulse{animation:ringpop .55s ease}
+  @keyframes ringpop{40%{transform:scale(1.18)}}
+  .ring-lab{font-size:14px;font-weight:900;color:var(--rich-ink);line-height:1.15;white-space:nowrap}
+  .ring-lab small{display:block;font-size:11px;color:var(--dim);font-weight:700;margin-top:2px}
+  @media (max-width:360px){ .brand small{display:none} .brand{font-size:16px} .ring-lab small{display:none} }
   .icon-btn{width:42px;height:42px;border:1px solid var(--stroke);background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted)}
   .icon-btn svg{width:20px;height:20px}
   .menu{max-width:640px;margin:0 auto;padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
@@ -91,6 +103,16 @@
   .tag.off{background:#fff;border-color:var(--stroke);color:var(--dim);text-decoration:line-through}
   .note{font-size:13.5px;color:var(--muted);line-height:1.6;margin-top:8px}
   .note.warn{color:var(--warn)}
+  .card.stamp{border-color:var(--rich-2);background:linear-gradient(180deg,#fff, var(--rich-soft))}
+  .card.stamp .stamp-n{margin-left:auto;font-weight:900;color:var(--rich-ink);font-size:15px}
+  .stamps{display:flex;gap:8px;margin:6px 0 10px}
+  .stamps i{width:46px;height:46px;border-radius:50%;border:2px dashed var(--rich-2);display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:900;color:#fff;font-size:15px}
+  .stamps i.on{background:var(--rich);border:2px solid var(--rich);transform:rotate(-8deg);box-shadow:0 2px 6px rgba(85,58,133,.35)}
+  .stamps i.on:last-of-type{animation:stamp .5s ease}
+  @keyframes stamp{0%{transform:scale(1.6) rotate(-8deg);opacity:0}100%{transform:scale(1) rotate(-8deg);opacity:1}}
+  .stamp-msg{margin:0;font-size:15.5px;line-height:1.7;font-weight:700}
+  .stamp-ai{margin:8px 0 0;font-size:14px;color:var(--muted);line-height:1.6}
+  .stamp-ai span{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:var(--rich);border-radius:4px;padding:1px 6px;margin-right:6px}
   .card.staff{border-color:var(--warn);border-style:dashed;max-width:100%}
   .card.staff b{color:var(--warn)}
   .card.staff table{width:100%;border-collapse:collapse;font-size:13px}
@@ -182,7 +204,10 @@
 <header class="top">
   <div class="appbar-in">
     <div class="brand">DROP<i>.</i> Coach<small>投稿づくりチャット</small></div>
-    <div class="prog" aria-hidden="true"><span id="progBar"></span></div>
+    <div class="ringbox" id="ringBox" role="progressbar" aria-valuemin="0" aria-valuemax="4" aria-valuenow="0" aria-label="すすみぐあい">
+      <div class="ring" id="ring"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rt" cx="22" cy="22" r="18"/><circle class="rf" id="ringFill" cx="22" cy="22" r="18"/></svg><b id="ringNum">0/4</b></div>
+      <div class="ring-lab" id="ringLab">はじめ<small>しつもん 4つ</small></div>
+    </div>
     <span class="staff-flag" id="staffFlag" hidden>STAFF</span>
     <button type="button" class="icon-btn" id="menuBtn" aria-label="メニュー" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
   </div>
@@ -218,24 +243,28 @@
 <!-- 見本投稿の控え：json/sample_drop.json を読めないとき（file:// で直接開いたときなど）に使う。
      json/sample_drop.json を更新したら、ここも同じ内容に更新すること（README の手順） -->
 <script type="application/json" id="sampleFallback">{"mart":"sample_drop","source":"CULTURE_SNACK_DROP_投稿例集_v4（2026/11/12）","note":"運営作成の模範投稿（架空）。DROP.Coach（サンプル参照版）の比較材料。写真は json/sample_img/。line_roles は各行の役割（V2 チャット版の「完成イメージ」で表示。見たもの／誰と・きっかけ／心に残ったところ／気持ち／次にしたいこと）","record_count":8,"records":[{"artwork_id":"model-v4-1-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-1.jpg","image_file_path":"json/sample_img/1-1.jpg","sentence":"隣のビルの経理さん、週末は豆本作家！\nこんな人がいたなんて\n毎日通う品川を身近に感じる\n同僚にも教えたい！\n来年は私も出展してみたい","account_id":"","account_name":"運営作成 ①-1 豆本（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-1-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-2.jpg","image_file_path":"json/sample_img/1-2.jpg","sentence":"会社員バンド、ボーカルは平日SE！\n働きながらここまでやれるんだ\n刺激もらった〜\n押し入れのギター、また弾きたくなる\n帰ったら弦を張り替えよう","account_id":"","account_name":"運営作成 ①-2 会社員バンド（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-2-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-1.jpg","image_file_path":"json/sample_img/2-1.jpg","sentence":"平日は銀行員、今日はカレー屋さん！\n並んでくれた人と辛さの話で盛り上がる\n同じビルなのに初めて話した\n来週ランチ行く約束\nまた屋台出したくなる","account_id":"","account_name":"運営作成 ②-1 カレー屋台（出展した社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-2-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-2.jpg","image_file_path":"json/sample_img/2-2.jpg","sentence":"ランタンづくり、隣は近所の大学生\n不器用な私に教えてくれた\nひと回り下なのに意外と話が合う\n通勤中に会ったら声かけようかな\n品川に知り合いが増えた","account_id":"","account_name":"運営作成 ②-2 ランタンづくり（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-3-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-1.jpg","image_file_path":"json/sample_img/3-1.jpg","sentence":"部長がコーヒー淹れてた！\n「何が好き？」って聞かれた\n会社じゃ話したことなかった\n仕事以外の話、していいんだと思えた\nチームメンバーにも聞いてみたい","account_id":"","account_name":"運営作成 ③-1 部長のコーヒー（出展企業の社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-3-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-2.jpg","image_file_path":"json/sample_img/3-2.jpg","sentence":"企業ブースの社員さん、週末は落語家\n上司っぽい人が一番前で笑ってた\n趣味を応援しあえる職場っていいな\n私も社内で話してみたい\nまずは自分の趣味から","account_id":"","account_name":"運営作成 ③-2 社員の落語（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-p1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p1.jpg","image_file_path":"json/sample_img/p1.jpg","sentence":"すぐ帰るつもりの仕事帰り\n焼き芋につられて会場をひと回り\nベンチで隣の人と「寒いですね」\n聞けば同じ会社の人だった\n品川の夜、ちょっと好きになる","account_id":"","account_name":"運営作成 ＋1 焼き芋（仕事帰りにふらっと）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-p2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p2.jpg","image_file_path":"json/sample_img/p2.jpg","sentence":"子どもが手品に釘づけ！\nスタンプ集めそっちのけ\n演じてたのは近所の会社の人\n私にはとても無理だけど\n来年も家族で応援しに来たい","account_id":"","account_name":"運営作成 ＋2 手品（家族でスタンプラリー）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"}]}</script>
+<!-- 選択肢と重みの初期値（json/coach_settings_default.json と同じ）。運営が「チャットの設定」で保存した設定があれば、そちらを使う -->
+<script type="application/json" id="defaultSettings">{"schema":"drop_coach_settings_v1","note":"初期値。運営は分析画面（drop_coach_dashboard.html）の「チャットの設定」で変更・保存する。保存した設定は記録用 GAS に入り、全員のチャットに反映される","rank":{"feel":[1,0.6,0.45,0.35],"why":[1,0.75,0.5,0.25],"next":[1,0.8]},"why_q_default":"{話題}の、とくに印象に残ったのは、どこですか？","feel":[{"id":"oishii","label":"おいしい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"{話題}の、どこがおいしかったですか？","targets":[{"label":"味","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"香り","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"見た目","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"作った人のこだわり","layer":"人","w":{"c1":0.2,"c2":0.3,"c3":0,"att":0}},{"label":"食べた場所の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"tanoshii","label":"たのしい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"なにがたのしかったですか？","targets":[{"label":"体験・ワークショップ","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"音楽・演奏","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"いっしょに行った人","layer":"人","w":{"c1":0,"c2":0,"c3":0.3,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"kawaii","label":"かわいい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがかわいかったですか？","targets":[{"label":"商品","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"ショッパー（袋）","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"お店の飾りつけ","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"お店の人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}}]},{"id":"sugoi","label":"すごい","val":1,"w":{"c1":0.3,"c2":0,"c3":0,"att":0},"q":"{話題}の、どこがすごかったですか？","targets":[{"label":"技・うまさ","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"細かさ・作りこみ","layer":"コンテンツ","w":{"c1":0.2,"c2":0,"c3":0,"att":0}},{"label":"作った人・演じた人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"平日とのギャップ","layer":"人","w":{"c1":0.2,"c2":0,"c3":0.2,"att":0}}]},{"id":"kirei","label":"きれい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがきれいでしたか？","targets":[{"label":"色","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"形・デザイン","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"飾りつけ・照明","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"品川の景色","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}]},{"id":"hokkori","label":"ほっこり","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0.2},"q":"なにに、ほっこりしましたか？","targets":[{"label":"お店の人とのやりとり","layer":"人","w":{"c1":0,"c2":0.3,"c3":0.2,"att":0}},{"label":"子ども・家族づれ","layer":"人","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"味・あたたかさ","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"igai","label":"意外","val":0.3,"w":{"c1":0,"c2":0.2,"c3":0.2,"att":0},"q":"なにが意外でしたか？","targets":[{"label":"作った人の本業","layer":"人","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"label":"出会った人","layer":"人","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"label":"品物・作品","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"品川にこんな場所","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}]},{"id":"shigeki","label":"刺激をもらった","val":0.8,"w":{"c1":0.5,"c2":0,"c3":0,"att":0},"q":"なにに刺激をもらいましたか？","targets":[{"label":"挑戦している姿","layer":"人","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"作った人の生き方","layer":"人","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"技・発想","layer":"コンテンツ","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}}]},{"id":"futsuu","label":"ふつう","val":0,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"","targets":[]},{"id":"zannen","label":"いまいち","val":-1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがいまいちでしたか？","targets":[{"label":"待ち時間・混雑","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"案内のわかりにくさ","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"値段","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"品ぞろえ","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}}]}],"why_default":[{"label":"味・香り","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"見た目・色・形","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"手づくり感・技","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"作った人・演じた人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"平日とのギャップ","layer":"人","w":{"c1":0.2,"c2":0,"c3":0.2,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}},{"label":"品川の景色・街","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}],"who":[{"id":"maker","label":"作った人・お店の人と話した","w":{"c1":0.3,"c2":0.5,"c3":0,"att":0}},{"id":"work","label":"職場の人（上司・同僚）と","w":{"c1":0,"c2":0.3,"c3":0.7,"att":0}},{"id":"otherco","label":"ちがう会社の人と話した","w":{"c1":0,"c2":1,"c3":0,"att":0}},{"id":"local","label":"近所の人・学生と話した","w":{"c1":0,"c2":1,"c3":0,"att":0.3}},{"id":"family","label":"家族・友だちと","w":{"c1":0,"c2":0,"c3":0,"att":0.3}},{"id":"alone","label":"ひとりで","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"id":"other","label":"その他","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"next":[{"id":"try","label":"自分もやってみたい","w":{"c1":1,"c2":0,"c3":0,"att":0}},{"id":"again","label":"あの人とまた話したい","w":{"c1":0,"c2":1,"c3":0,"att":0}},{"id":"work","label":"職場でも話してみたい","w":{"c1":0,"c2":0,"c3":1,"att":0}},{"id":"tell","label":"誰かに教えたい","w":{"c1":0,"c2":0,"c3":0,"att":0.7}},{"id":"revisit","label":"また来たい","w":{"c1":0,"c2":0,"c3":0,"att":1}},{"id":"walk","label":"品川をもっと歩きたい","w":{"c1":0,"c2":0,"c3":0,"att":1}},{"id":"wish","label":"運営に伝えたいことがある","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"id":"none","label":"とくにない","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"profile":[{"id":"worker","label":"品川で働いている"},{"id":"resident","label":"品川の近くに住んでいる"},{"id":"exhibitor","label":"出展・出演している"},{"id":"staff","label":"運営・スタッフ"},{"id":"student","label":"学生"},{"id":"visitor","label":"遊びに来た（品川以外から）"},{"id":"other","label":"その他"}]}</script>
 <script>
 "use strict";
 /* =====================================================================
-   DROP. Coach — 投稿づくりチャット v3（drop_coach_with_sample.html）  2026/11/13
+   DROP. Coach — 投稿づくりチャット v3.1（drop_coach_chat.html）  2026/11/13
    ---------------------------------------------------------------------
    2026/11/13 の改良会議（README と docs の会議メモ）で決めた作り
    - 聞いてから聞く：ひとことを受けて返し、ひとことに書かれた気持ち・人は先に選んでおく。問いの言い方もひとことの話題を使う
-   - 問いは 4 つ：だれと → どこが → 気持ち → このあと（＋端末ごとに 1 回「あなたについて」）。点数は聞かず、気持ちから向きを計算
+   - 問いは 4 つ：気持ち → どこが → だれと → このあと（＋端末ごとに 1 回「あなたについて」）。点数は聞かず、気持ちから向きを計算
+   - 「どこが」の候補は気持ちごとに運営が設定（例：かわいい → 商品／ショッパー／お店の飾りつけ／お店の人）。近い順に選び、1・0.75・0.5・0.25 の重みで記録
+   - 選択肢・重みは運営が分析画面の「チャットの設定」で変えられる（記録用 GAS から配る）
    - 上部の「あなたの投稿」バーで、答えるたびに投稿が育つのを見せる（深掘りのゴールが見える）。見本は「ほかの人の例」としてここから
    - AI は 2 回・待たせない：ひとことの直後に裏でヒント（話題・写真から見える候補）、最後に投稿文（分析用の読み取りも）
    - 最後は「AI が整えた文／自分の言葉の文」を本人が選べる。ハッシュタグは付けない設定から始める
    - 文字・ボタンを大きく。メニューから「文字を大きく」。いつでも「ここまでで投稿文をつくる」
    設定
    - GAS_URL : 仕上げ用 GAS（gas/DROP_COACH_GPT.gs v9）の /exec URL
-   - LOG_URL : 記録用 GAS（gas/DROP_COACH_LOG.gs v7）の /exec URL
+   - LOG_URL : 記録用 GAS（gas/DROP_COACH_LOG.gs v8）の /exec URL。記録と「チャットの設定」の配布
    - URL に ?staff=1 を付けると、分析用の記録（ノード・重み・JSON）と、この端末の記録の CSV 保存が出る
 ===================================================================== */
-const APP_VERSION = "chat-v3.0 (2026-11-13)";
+const APP_VERSION = "chat-v3.1 (2026-11-13)";
 const CONFIG = {
   GAS_URL: "https://script.google.com/macros/s/AKfycbw4Z6_8PsnpD-rsyWM4j0spAWosP5wwALRy3reD6r8iShnCt0_Zioef3NEVkBx6ln457Q/exec",   // 00_GAS/DROP_COACH2.0/DROP_COACH_GPT
   LOG_URL: "https://script.google.com/macros/s/AKfycbyTHPDVzPHB76Xt8GmZaiW3q_i4x9H2fishpnrWn1TbMGFCGzYIgPqLAzOetsrNMVokEA/exec",   // 00_GAS/DROP_COACH2.0/DROP_COACH_LOG
@@ -254,82 +283,113 @@ const CONFIG = {
   SEND_SAMPLES: true,         // AI に見本投稿 8 例の本文を渡す
   SEND_SAMPLE_IMAGES: false,  // 見本投稿の写真も AI に渡す（待ち時間が長くなる）
   DROP_URL: "",               // DROP の投稿画面の URL（入れるとコピー後に「DROP を開く」ボタンを出す）
-  BOT_DELAY: 420, TIMEOUT_MS: 90000,
+  BOT_DELAY: 420, TIMEOUT_MS: 90000, SETTINGS_TIMEOUT_MS: 8000,
   IMG_MAX_EDGE: 512, IMG_QUALITY: 0.8, PREVIEW_EDGE: 1080, MAX_MB: 30,
   MAX_TEXT1: 100, MAX_DETAIL: 30, MAX_FREE: 20, MAX_FINAL: 300,
   RESUME_HOURS: 6,
-  KEYS: { SESSION: "dropChatV3Session", PHOTO: "dropChatV3Photo", BIG: "dropChatV3Big", HISTORY: "dropChatV3History",
+  KEYS: { SESSION: "dropChatV3Session", PHOTO: "dropChatV3Photo", BIG: "dropChatV3Big", HISTORY: "dropChatV3History", SETTINGS: "dropChatV3Settings", POSTS: "dropChatV3Posts",
           TOKEN: "dropChatV2Token", LOG_TOKEN: "dropChatV2LogToken", NAME: "dropChatV2Name", PW: "dropChatV2Pw", PROFILE: "dropChatV2Profile" }
 };
 
 /* =====================================================================
-   選択肢（統制語彙）
-   - layer：共起ネットワークのノードの層（人／コンテンツ／空間／感情／意向）
-   - w：ソフト分類の重み（c1=①挑戦, c2=②属性横断, c3=③信頼・心理的安全性, att=街への愛着）。仮の値（記録から後で再計算できる）
-   - val：気持ちの向き（-1〜1）。選んだ気持ちから「気持ちの向き」を計算する
-   - key：ひとことから読み取るための言葉（正規表現）。外れても画面で選び直せる
-   - fixed：シャッフルせず末尾／neutral：中立（投稿文にしない）／negative：ネガティブ／hidden：画面に出さない（自由記述・AI 候補の受け皿）
+   選択肢と重み（設定）
+   - 選択肢の言葉・KPI の重み・気持ちの向き・「どこが」の候補・選んだ順の重みは「設定」から作る
+     運営が分析画面（drop_coach_dashboard.html）の「チャットの設定」で変えて保存 → 記録用 GAS（action:"settings"）から全員に配られる
+     読めないときは、この端末に残っている前回の設定 → 初期値（json/coach_settings_default.json と同じ。下の defaultSettings）
+   - w：KPI の重み（c1=①挑戦, c2=②属性横断, c3=③信頼・心理的安全性, att=街への愛着）／val：気持ちの向き（-1〜1）
+   - layer：共起ネットワークのノードの層（人／コンテンツ／空間）
+   - BASE は画面の動き（ひとことの読み取りの言葉・投稿文のつなぎ方）で、設定では変えない
+     fixed：シャッフルせず末尾／neutral：中立（投稿文にしない）／negative：ネガティブ／hidden：画面に出さない（自由記述の受け皿）
 ===================================================================== */
-const V = {
-  who: [
-    { id: "maker",   label: "作った人・お店の人と話した", w: { c2: .5, c1: .3 }, ph: "例：隣のビルの経理さん、平日はSEの人", key: "作家|店主|お店の人|作った人|出展者|出演者|演者|作り手|職人",
-      line: d => d ? `作ったのは${d}` : "作った人と話せた" },
-    { id: "work",    label: "職場の人（上司・同僚）と", w: { c3: .7, c2: .3 }, ph: "例：部長、となりの部署の人", key: "部長|課長|上司|同僚|先輩|後輩|チーム|社内|職場|会社の人",
-      line: d => d ? `${d}と一緒に` : "職場の人と一緒に" },
-    { id: "otherco", label: "ちがう会社の人と話した", w: { c2: 1 }, ph: "例：同じビルの銀行員さん", key: "他社|別の会社|違う会社|ちがう会社|隣のビル",
-      line: d => d ? `${d}と話した` : "ちがう会社の人と話した" },
-    { id: "local",   label: "近所の人・学生と話した", w: { c2: 1, att: .3 }, ph: "例：近所の大学生", key: "近所|学生|地元",
-      line: d => d ? `${d}と話した` : "近所の人と話した" },
-    { id: "family",  label: "家族・友だちと", w: { att: .3 }, ph: "例：子ども、学生時代の友だち", key: "子ども|子供|家族|娘|息子|夫|妻|友だち|友達|友人",
-      line: d => d ? `${d}と一緒に` : "" },
-    { id: "alone",   label: "ひとりで", neutral: true, fixed: true, key: "ひとりで|一人で|1人で", line: () => "" },
-    { id: "other",   label: "その他", free: true, fixed: true, line: (d, v) => v || "" }
-  ],
-  why: [
-    { id: "taste",  label: "味・香り",           say: "味わい",         layer: "コンテンツ" },
-    { id: "look",   label: "見た目・色・形",     say: "見た目",         layer: "コンテンツ" },
-    { id: "craft",  label: "手づくり感・技",     say: "手づくり感",     layer: "コンテンツ", w: { c1: .3 } },
-    { id: "person", label: "作った人・演じた人", say: "作った人",       layer: "人", w: { c2: .3 } },
-    { id: "talk",   label: "話したこと",         say: "話したこと",     layer: "人", w: { c2: .3 } },
-    { id: "gap",    label: "平日とのギャップ",   say: "平日とのギャップ", layer: "人", tag: "#B面", w: { c1: .2, c3: .2 } },
-    { id: "vibe",   label: "その場の雰囲気",     say: "その場の雰囲気", layer: "空間", w: { att: .3 } },
-    { id: "town",   label: "品川の景色・街",     say: "品川の景色",     layer: "空間", tag: "#品川", w: { att: .5 } },
-    { id: "other",  label: "自由記述", free: true, hidden: true, layer: "コンテンツ" }
-  ],
-  feel: [
-    { id: "oishii",  label: "おいしい",       tag: "#おいしい", val: 1,   ex: "おいしい！",     withE: "{e}がおいしい！",     q: "どこがおいしかったですか？", key: "おいし|美味|うま[いか]" },
-    { id: "tanoshii", label: "たのしい",      tag: "#たのしい", val: 1,   ex: "たのしい！",     withE: "{e}がたのしい！",     q: "どこがたのしかったですか？", key: "たのし|楽し" },
-    { id: "kawaii",  label: "かわいい",       tag: "#かわいい", val: 1,   ex: "かわいい！",     withE: "{e}がかわいい！",     q: "どこがかわいかったですか？", key: "かわい|可愛" },
-    { id: "sugoi",   label: "すごい",         tag: "#すごい",   val: 1,   ex: "すごすぎる！",   withE: "{e}がすごい！",       q: "どこがすごかったですか？",   key: "すご[いかく]|凄|感動", w: { c1: .3 } },
-    { id: "kirei",   label: "きれい",         tag: "#きれい",   val: 1,   ex: "きれい！",       withE: "{e}がきれい！",       q: "どこがきれいでしたか？",     key: "きれい|綺麗|キレイ|美し" },
-    { id: "hokkori", label: "ほっこり",       tag: "#ほっこり", val: 1,   ex: "ほっこり",       withE: "{e}にほっこり",       q: "どこにほっこりしましたか？", key: "ほっこり|あったか|あったま|温か|癒", w: { att: .2 } },
-    { id: "igai",    label: "意外",           tag: "#意外",     val: .3,  ex: "意外な発見！",   withE: "{e}に意外な発見",     q: "どこが意外でしたか？",       key: "意外|びっくり|驚", w: { c2: .2, c3: .2 } },
-    { id: "shigeki", label: "刺激をもらった", tag: "#刺激",     val: .8,  ex: "刺激をもらった", withE: "{e}に刺激をもらった", q: "どこに刺激をもらいましたか？", key: "刺激|憧れ|あこが", w: { c1: .5 } },
-    { id: "futsuu",  label: "ふつう",   val: 0,  neutral: true, fixed: true },
-    { id: "zannen",  label: "いまいち", val: -1, negative: true, fixed: true, ex: "ちょっと残念", withE: "{e}がちょっと残念", q: "どこがいまいちでしたか？", key: "残念|いまいち|イマイチ|微妙" },
-    { id: "other",   label: "自由記述", free: true, hidden: true, val: null, ex: "{v}", withE: "{e}が{v}" }
-  ],
-  next: [
-    { id: "try",     label: "自分もやってみたい",   say: "私もやってみたい",     w: { c1: 1 } },
-    { id: "again",   label: "あの人とまた話したい", say: "また話したい",         w: { c2: 1 } },
-    { id: "work",    label: "職場でも話してみたい", say: "職場でも話してみたい", w: { c3: 1 } },
-    { id: "tell",    label: "誰かに教えたい",       say: "誰かに教えたい！",     w: { att: .7 } },
-    { id: "revisit", label: "また来たい",           say: "また来たい！",         w: { att: 1 } },
-    { id: "walk",    label: "品川をもっと歩きたい", say: "品川をもっと歩きたい", w: { att: 1 } },
-    { id: "none",    label: "とくにない", neutral: true, fixed: true, say: "" },
-    { id: "other",   label: "自由記述", free: true, hidden: true, say: "{v}" }
-  ],
-  profile: [
-    { id: "worker",    label: "品川で働いている" },
-    { id: "resident",  label: "品川の近くに住んでいる" },
-    { id: "exhibitor", label: "出展・出演している" },
-    { id: "staff",     label: "運営・スタッフ" },
-    { id: "student",   label: "学生" },
-    { id: "visitor",   label: "遊びに来た（品川以外から）" },
-    { id: "other",     label: "その他", free: true, fixed: true }
-  ]
+const DEFAULT_SETTINGS = (() => { try { return JSON.parse(document.getElementById("defaultSettings").textContent); } catch (e) { return null; } })();
+const BASE = {
+  who: {
+    maker:   { ph: "例：隣のビルの経理さん、平日はSEの会社員", key: "作家|店主|お店の人|作った人|出展者|出演者|演者|作り手|職人", line: d => d ? `作ったのは${d}` : "作った人と話せた" },
+    work:    { ph: "例：総務部の部長、となりの部署の後輩", key: "部長|課長|上司|同僚|先輩|後輩|チーム|社内|職場|会社の人", line: d => d ? `${d}と一緒に` : "職場の人と一緒に" },
+    otherco: { ph: "例：同じビルの銀行の営業さん", key: "他社|別の会社|違う会社|ちがう会社|隣のビル", line: d => d ? `${d}と話した` : "ちがう会社の人と話した" },
+    local:   { ph: "例：近所の大学の学生さん、商店街のお店の人", key: "近所|学生|地元", line: d => d ? `${d}と話した` : "近所の人と話した" },
+    family:  { ph: "例：小学生の娘、学生時代の友だち", key: "子ども|子供|家族|娘|息子|夫|妻|友だち|友達|友人", line: d => d ? `${d}と一緒に` : "" },
+    alone:   { neutral: true, fixed: true, key: "ひとりで|一人で|1人で", line: () => "" },
+    other:   { free: true, fixed: true, line: (d, v) => v || "" }
+  },
+  feel: {
+    oishii:   { tag: "#おいしい", ex: "おいしい！",     withE: "{e}がおいしい！",     key: "おいし|美味|うま[いか]" },
+    tanoshii: { tag: "#たのしい", ex: "たのしい！",     withE: "{e}がたのしい！",     key: "たのし|楽し" },
+    kawaii:   { tag: "#かわいい", ex: "かわいい！",     withE: "{e}がかわいい！",     key: "かわい|可愛" },
+    sugoi:    { tag: "#すごい",   ex: "すごすぎる！",   withE: "{e}がすごい！",       key: "すご[いかく]|凄|感動" },
+    kirei:    { tag: "#きれい",   ex: "きれい！",       withE: "{e}がきれい！",       key: "きれい|綺麗|キレイ|美し" },
+    hokkori:  { tag: "#ほっこり", ex: "ほっこり",       withE: "{e}にほっこり",       key: "ほっこり|あったか|あったま|温か|癒" },
+    igai:     { tag: "#意外",     ex: "意外な発見！",   withE: "{e}に意外な発見",     key: "意外|びっくり|驚" },
+    shigeki:  { tag: "#刺激",     ex: "刺激をもらった", withE: "{e}に刺激をもらった", key: "刺激|憧れ|あこが" },
+    futsuu:   { neutral: true, fixed: true },
+    zannen:   { negative: true, fixed: true, ex: "ちょっと残念", withE: "{e}がちょっと残念", key: "残念|いまいち|イマイチ|微妙" }
+  },
+  next: {
+    try: { say: "私もやってみたい" }, again: { say: "また話したい" }, work: { say: "職場でも話してみたい" }, tell: { say: "誰かに教えたい！" },
+    revisit: { say: "また来たい！" }, walk: { say: "品川をもっと歩きたい" }, none: { neutral: true, fixed: true, say: "" },
+    wish: { fixed: true, say: "" }   // 「運営に伝えたいことがある」：投稿文には入れず、記録だけ（中身は自由記述で）
+  },
+  profile: { other: { free: true, fixed: true } },
+  why: {   // 候補の言葉ごとの、投稿文での言い方・ハッシュタグ（ラベルで対応）
+    "味・香り": { say: "味わい" }, "見た目・色・形": { say: "見た目" }, "手づくり感・技": { say: "手づくり感" }, "作った人・演じた人": { say: "作った人" },
+    "平日とのギャップ": { tag: "#B面" }, "品川の景色・街": { say: "品川の景色", tag: "#品川" }, "品川の景色": { tag: "#品川" }
+  }
 };
-const ORDER_W = { feel: [1, .6, .45, .35], why: [.8, .5, .4, .3], next: [1, .8] };   // 選んだ順の重み
+const FREE_ITEM = {   // 自由記述の受け皿（画面には出さない）
+  feel: { id: "other", label: "自由記述", free: true, hidden: true, val: null, ex: "{v}", withE: "{e}が{v}", w: {} },
+  next: { id: "other", label: "自由記述", free: true, hidden: true, say: "{v}", w: {} }
+};
+const reEsc = t => String(t).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** 設定にしかない（運営が足した）選択肢の動き */
+function customBase(kind, x) {
+  if (kind === "feel") return { tag: "#" + x.label, ex: x.label + "！", withE: "{e}が" + x.label + "！", key: reEsc(x.label) };
+  if (kind === "who") return { ph: "例：会社・部署・立場などで", key: reEsc(x.label.replace(/(と|と話した)$/, "")), line: d => d ? `${d}と` : x.label };
+  if (kind === "next") return { say: x.label };
+  return {};
+}
+const W0 = () => ({ c1: 0, c2: 0, c3: 0, att: 0 });
+/** 設定の形をそろえる（欠けている所は初期値で補う・数値は範囲内に） */
+function normSettings(raw) {
+  const d = DEFAULT_SETTINGS || {}, s = raw && typeof raw === "object" ? raw : {};
+  const num = (v, lo, hi, def) => { const n = Number(v); return isFinite(n) ? Math.min(hi, Math.max(lo, n)) : def; };
+  const w = v => { const o = W0(); if (v && typeof v === "object") Object.keys(o).forEach(k => { o[k] = num(v[k], 0, 1, 0); }); return o; };
+  const lab = v => String(v || "").replace(/\s+/g, " ").trim().slice(0, 24);
+  const list = (a, def, f) => (Array.isArray(a) && a.length ? a : def || []).map(f).filter(x => x && x.label);
+  const tg = t => ({ label: lab(t.label), layer: ["人", "コンテンツ", "空間"].includes(t.layer) ? t.layer : "コンテンツ", w: w(t.w), off: !!t.off });
+  const rank = (a, def) => (Array.isArray(a) && a.length ? a : def).slice(0, 6).map(v => num(v, 0, 1, 0));
+  const r = s.rank || {}, dr = d.rank || { feel: [1, .6, .45, .35], why: [1, .75, .5, .25], next: [1, .8] };
+  return {
+    rank: { feel: rank(r.feel, dr.feel), why: rank(r.why, dr.why), next: rank(r.next, dr.next) },
+    why_q_default: lab(s.why_q_default || d.why_q_default || "とくに印象に残ったのは、どこですか？").slice(0, 60) || "とくに印象に残ったのは、どこですか？",
+    feel: list(s.feel, d.feel, x => ({ id: String(x.id || ""), label: lab(x.label), val: num(x.val, -1, 1, 0), w: w(x.w), off: !!x.off, q: String(x.q || "").slice(0, 60), targets: (Array.isArray(x.targets) ? x.targets : []).map(tg).filter(t => t.label) })),
+    why_default: list(s.why_default, d.why_default, tg),
+    who: list(s.who, d.who, x => ({ id: String(x.id || ""), label: lab(x.label), w: w(x.w), off: !!x.off })),
+    next: list(s.next, d.next, x => ({ id: String(x.id || ""), label: lab(x.label), w: w(x.w), off: !!x.off })),
+    profile: list(s.profile, d.profile, x => ({ id: String(x.id || ""), label: lab(x.label), off: !!x.off }))
+  };
+}
+let V = {}, ORDER_W = {}, SETTINGS = null, SETTINGS_VER = "初期値";
+function applySettings(raw, ver) {
+  const s = normSettings(raw);
+  // 初期値の選択肢でも、運営が表示名を変えたら、投稿文でのつなぎ方は新しい表示名に合わせる（中立などの性質はそのまま）
+  const defLabel = (kind, id) => (((DEFAULT_SETTINGS || {})[kind] || []).find(d => d.id === id) || {}).label;
+  const mk = (kind, x) => {
+    const base = BASE[kind][x.id];
+    if (!base) return { ...customBase(kind, x), ...x, w: x.w || W0() };
+    if (defLabel(kind, x.id) === x.label) return { ...base, ...x, w: x.w || W0() };
+    const c = customBase(kind, x);
+    return { ...base, ...c, key: base.key ? base.key + "|" + c.key : c.key, ...(kind === "feel" && base.negative ? { ex: base.ex, withE: base.withE } : {}), ...(base.neutral ? { line: base.line, say: base.say } : {}), ...x, w: x.w || W0() };
+  };
+  V = {
+    who: s.who.filter(x => !x.off).map(x => mk("who", x)),
+    feel: s.feel.filter(x => !x.off).map(x => mk("feel", x)).concat([FREE_ITEM.feel]),
+    next: s.next.filter(x => !x.off).map(x => mk("next", x)).concat([FREE_ITEM.next]),
+    profile: s.profile.filter(x => !x.off).map(x => ({ ...(BASE.profile[x.id] || {}), ...x }))
+  };
+  ORDER_W = { ...s.rank };
+  SETTINGS = s; SETTINGS_VER = ver || "初期値";
+}
+applySettings(DEFAULT_SETTINGS, "初期値");
 const SOFT_LABEL = { c1: "①挑戦", c2: "②属性横断", c3: "③心理的安全性", att: "愛着" };
 const ACT_LABEL = { watch: "見た・聴いた", eat: "食べた・飲んだ", make: "作った・体験した", buy: "買った", talk: "話した", host: "出展・出演・お手伝い", stroll: "ぶらぶら回った" };
 
@@ -369,7 +429,7 @@ const RT = { busy: false, typing: false, rendered: 0, sel: [], who: null, freeTe
 
 function newSession() {
   return {
-    v: 30, sid: uid(), started: new Date().toISOString(), t0: now(),
+    v: 31, sid: uid(), started: new Date().toISOString(), t0: now(),
     msgs: [], cur: null, phase: "ask",
     det: { feels: [], who: "", next: false, subject: "" },          // ひとことから読み取ったもの
     ans: { text1: "", who: null, why: [], feel: [], next: [], profile: null, score: null },
@@ -394,13 +454,15 @@ function detect(text) {
   V.feel.forEach(f => { if (!f.key) return; const m = t.match(new RegExp(f.key)); if (m) { feels.push(f.id); pos.push(m.index); } });
   const w = V.who.find(x => x.key && new RegExp(x.key).test(t));
   const next = /たい|また来|来年|次は|やってみ|行こう|しよう/.test(t);
+  // ネガティブな手がかり（「いいですね！」と返さないため。気持ちの選択までは決めない）
+  const negCue = /残念|いまいち|イマイチ|微妙|がっかり|つまらな|寒|暑|疲れ|待た|待っ|並ん|混ん|高い|高かった|わかりにく|分かりにく|迷っ|うるさ|狭|ひど|最悪|不満|足りな/.test(t);
   let subject = "";
   if (pos.length && Math.min(...pos) > 0) {
     subject = t.slice(0, Math.min(...pos)).replace(/^(この|その|あの|写真の|今日の)/, "");
     for (let k = 0; k < 3; k++) subject = subject.replace(/[\s、。,.!！?？〜~…]+$/, "").replace(/(が|は|も|を|の|って|で|に|と)$/, "");
     if (subject.length > 12 || /[たてだる]$/.test(subject)) subject = "";
   }
-  return { feels, who: w ? w.id : "", next, subject };
+  return { feels, who: w ? w.id : "", next, subject, negCue };
 }
 const subjectOf = () => (S.hint && S.hint.subject) || S.det.subject || "";
 
@@ -414,6 +476,18 @@ function firstFeel() {   // いちばん大事な気持ち（選んだもの →
   if (f) return { ...item("feel", f.id), v: f.label };
   const d = S.det.feels.map(id => item("feel", id)).find(it => it && !it.neutral);
   return d ? { ...d, v: d.label } : null;
+}
+/** 「どこが」の候補：いちばん大事な気持ちに候補が設定されていればそれ、なければ共通の候補 */
+function whyList() {
+  const f = firstFeel();
+  const list = f && (f.targets || []).some(t => !t.off) ? f.targets : SETTINGS.why_default;
+  return list.filter(t => !t.off).map(t => ({ id: "t:" + t.label, label: t.label, layer: t.layer || "コンテンツ", w: t.w || W0(), ...(BASE.why[t.label] || {}) }));
+}
+const whyFor = () => { const f = firstFeel(); return f && (f.targets || []).some(t => !t.off) ? f.label : ""; };
+/** 問い文の {話題} を、ひとことの話題に置きかえる（話題がなければ「{話題}の、」ごと消す） */
+function fillQ(tpl) {
+  const s = subjectOf();
+  return s ? tpl.replace(/\{話題\}/g, s) : tpl.replace(/\{話題\}(の、?|、)?/g, "").replace(/^[、\s]+/, "");
 }
 function preNote(kind) {
   if (kind === "who" && S.det.who && S.ans.who == null) return `ひとことから「${item("who", S.det.who).label}」を選んでおきました。違っていたら変えてください`;
@@ -430,23 +504,27 @@ const STEPS = [
     q: () => hasPhoto() ? "この写真のこと、ひとことどうぞ。思ったままで大丈夫です" : "今日のこと、ひとことどうぞ。思ったままで大丈夫です",
     sub: () => "これが投稿文のもとになります。キーボードのマイクで話して入力もできます",
     ph: () => hasPhoto() ? "例：コーヒーおいしかった" : "例：豆本かわいい！" },
-  { id: "who", kind: "who", opts: "who", q: () => "そのとき、だれと一緒でしたか？", sub: () => preNote("who") },
-  { id: "why", kind: "multi", opts: "why", max: 3, freePh: "ほかにあれば、ひとことで",
-    q: () => { const s = subjectOf(), f = firstFeel(); return (s ? `${s}の、` : "") + (f && f.q ? f.q : "どこがよかったですか？"); },
-    sub: () => (S.hint && (S.hint.why_options || []).length ? (hasPhoto() ? "写真から見つけた候補もあります。" : "AI の案もあります。") : "") + "いくつでも選べます" },
   { id: "feel", kind: "multi", opts: "feel", max: 4, freePh: "ほかの言葉で",
     q: () => S.det.feels.length ? "ほかにも、どんな気持ちになりましたか？" : "どんな気持ちになりましたか？（いくつでも）",
-    sub: () => preNote("feel") },
+    sub: () => preNote("feel") || "近い順にタップしてください" },
+  { id: "why", kind: "multi", opts: "why", max: 4, freePh: "ほかにあれば、ひとことで",
+    q: () => { const f = firstFeel(); return fillQ((f && f.q) || SETTINGS.why_q_default || "とくに印象に残ったのは、どこですか？"); },
+    sub: () => (S.hint && (S.hint.why_options || []).length ? (hasPhoto() ? "写真から見つけた候補もあります。" : "AI の案もあります。") : "") + "近い順にタップしてください（4つまで）" },
   { id: "score", kind: "scale", count: false, when: () => CONFIG.ASK_SCORE,
     q: () => (subjectOf() ? `「${subjectOf()}」の体験そのものは` : "今日のその体験そのものは") + "、10点満点で何点ですか？",
     sub: () => "※このチャットの点数ではありません" },
-  { id: "next", kind: "multi", opts: "next", max: 2, freePh: "ほかにあれば（例：友だちを誘う）",
-    q: () => "このあと、どうしたいですか？（2つまで）" },
+  { id: "who", kind: "who", opts: "who", q: () => "そのとき、だれと一緒でしたか？", sub: () => preNote("who") },
+  // ここまでが「最低限」（何・どう・なぜ・誰と）。この先は任意で、答えるかどうかを本人が選ぶ（誘導しない）
+  { id: "more", kind: "gate", count: false, when: () => !S.declined && stepOf("next") && !S.done.includes("next"),
+    q: () => "これで投稿文に必要なことがそろいました！",
+    sub: () => "もう1つ「このあと、どうしたいか」を答えると、あなたらしさが増します。答えなくても大丈夫です" },
+  { id: "next", kind: "multi", opts: "next", max: 2, freePh: "ほかにあれば（例：友だちを誘う）", when: () => !S.declined,
+    q: () => "このあと、どうしたいですか？（任意・2つまで）" },
   { id: "profile", kind: "single", opts: "profile", count: false,
     when: () => CONFIG.ASK_PROFILE && !LS.get(CONFIG.KEYS.PROFILE, null),
     q: () => "さいごに、あなたについて教えてください（この端末では1回だけ聞きます）" }
 ];
-const STEP_LABEL = { login: "ログイン", photo: "写真", text1: "ひとこと", who: "だれと", why: "どこが", feel: "気持ち", score: "点数", next: "このあと", profile: "あなたについて" };
+const STEP_LABEL = { login: "ログイン", photo: "写真", text1: "ひとこと", who: "だれと", why: "どこが", feel: "気持ち", score: "点数", more: "任意の問いの前", next: "このあと", profile: "あなたについて" };
 const stepName = id => STEP_LABEL[id] || id || "";
 const stepOf = id => STEPS.find(s => s.id === id);
 const applicable = st => !st.when || st.when();
@@ -455,7 +533,7 @@ function nextStepAfter(id) {
   for (let k = i + 1; k < STEPS.length; k++) { const st = STEPS[k]; if (!S.done.includes(st.id) && applicable(st)) return st; }
   return null;
 }
-function remainingSteps() { return STEPS.filter(st => !S.done.includes(st.id) && !["login", "photo"].includes(st.id) && applicable(st)); }
+function remainingSteps() { return STEPS.filter(st => !S.done.includes(st.id) && !["login", "photo", "more"].includes(st.id) && applicable(st)); }
 function answeredCount() { return S.done.filter(id => { const st = stepOf(id); return st && st.count !== false && !S.skipped.includes(id); }).length; }
 
 /* ---------- 表示 ---------- */
@@ -474,13 +552,22 @@ function msgHtml(m, isNew) {
   }
   const av = m.ai ? '<div class="avatar ai">AI</div>' : '<div class="avatar">D<i>.</i></div>';
   if (m.card === "compose") return `<div class="${cls}">${av}${composeCardHtml()}</div>`;
+  if (m.card === "stamp") return `<div class="${cls}">${av}${stampCardHtml()}</div>`;
   return `<div class="${cls}">${av}<div class="bubble">${esc(m.text)}${m.sub ? `<span class="sub">${esc(m.sub)}</span>` : ""}</div></div>`;
 }
 function scrollEnd() { requestAnimationFrame(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" })); }
+const PROG_STEPS = ["text1", "feel", "why", "who"];   // 最低限の 4 つ（このあと は任意なので数えない）
 function renderProgress() {
-  const done = S.done.filter(id => !["login"].includes(id)).length;
-  const total = done + (S.phase === "ask" ? remainingSteps().length + (S.done.includes("photo") ? 0 : 1) : 0);
-  $("progBar").style.width = (S.phase === "ask" ? (total ? Math.round(done / total * 100) : 0) : 100) + "%";
+  const total = PROG_STEPS.length, fin = S.phase === "compose";
+  const done = fin ? total : PROG_STEPS.filter(id => S.done.includes(id)).length;
+  const ring = $("ring"), C = 2 * Math.PI * 18;
+  $("ringFill").style.strokeDashoffset = String(C * (1 - done / total));
+  $("ringNum").textContent = fin || done === total ? "✓" : `${done}/${total}`;
+  ring.classList.toggle("done", fin || done === total);
+  $("ringLab").innerHTML = fin ? "完成！<small>投稿文ができました</small>" : done === 0 ? `はじめ<small>しつもん ${total}つ</small>` : done === total ? "そろいました<small>あとは任意</small>" : `あと${total - done}つ<small>しつもん</small>`;
+  $("ringBox").setAttribute("aria-valuenow", String(done));
+  if (RT.lastDone != null && RT.lastDone !== done) { ring.classList.remove("pulse"); void ring.offsetWidth; ring.classList.add("pulse"); }
+  RT.lastDone = done;
 }
 function bot(text, extra = {}) {
   const g = RT.gen;
@@ -503,9 +590,9 @@ if ("ResizeObserver" in window) new ResizeObserver(syncDockH).observe($("dock"))
 /* ---------- 投稿イメージ（上部のバーとシート） ---------- */
 const MATERIALS = [
   { key: "text1", label: "ひとこと",         done: () => !!S.ans.text1 },
-  { key: "who",   label: "だれと",           done: () => !!S.ans.who || (!!S.det.who && !S.done.includes("who")) },
-  { key: "why",   label: "どこがよかったか", done: () => S.ans.why.length > 0 },
   { key: "feel",  label: "気持ち",           done: () => S.ans.feel.length > 0 || S.det.feels.length > 0 },
+  { key: "why",   label: "どこが",           done: () => S.ans.why.length > 0 },
+  { key: "who",   label: "だれと",           done: () => !!S.ans.who || (!!S.det.who && !S.done.includes("who")) },
   { key: "next",  label: "このあと",         done: () => S.ans.next.length > 0 || S.det.next }
 ];
 function renderPreviewBar() {
@@ -561,6 +648,8 @@ async function ask(st) {
   S.cur = st.id; S.phase = "ask";
   if (!S.asked.includes(st.id)) S.asked.push(st.id);
   S.times[st.id] = { shown: now() };
+  if (st.opts && SET.pending) { await Promise.race([SET.pending, new Promise(r => setTimeout(r, CONFIG.SETTINGS_TIMEOUT_MS))]); if (g !== RT.gen) return; }
+  if (st.id === "why") S.whyFor = whyFor();
   if (st.opts) prepareOrder(st);
   setSelFromAns(st);
   const sub = st.sub ? st.sub() : "";
@@ -591,16 +680,18 @@ async function exitEarly() {
 }
 function prepareOrder(st) {
   if (S.order[st.id]) return;
-  const list = V[st.opts].filter(x => !x.hidden);
+  const list = (st.id === "why" ? whyList() : V[st.opts]).filter(x => !x.hidden);
   const body = list.filter(x => !x.fixed), tail = list.filter(x => x.fixed);
   S.order[st.id] = (CONFIG.SHUFFLE ? shuffle(body) : body).concat(tail).map(x => x.id);
 }
 function optionsOf(st) {
-  const base = (S.order[st.id] || V[st.opts].map(x => x.id)).map(id => item(st.opts, id)).filter(x => x && !x.hidden);
-  if (st.id === "why" && S.hint && (S.hint.why_options || []).length) {
-    return S.hint.why_options.map(l => ({ id: "ai:" + l, label: l, ai: true })).concat(base);
+  if (st.id === "why") {
+    const list = whyList(), base = (S.order.why || []).map(id => list.find(x => x.id === id)).filter(Boolean);
+    list.forEach(x => { if (!base.includes(x)) base.push(x); });
+    const ai = ((S.hint && S.hint.why_options) || []).filter(l => !base.some(b => b.label === l)).map(l => ({ id: "ai:" + l, label: l, ai: true, layer: "コンテンツ", w: W0() }));
+    return ai.concat(base);
   }
-  return base;
+  return (S.order[st.id] || V[st.opts].map(x => x.id)).map(id => item(st.opts, id)).filter(x => x && !x.hidden);
 }
 /** 選択の初期値：答えたことがあればそれ。初めての問いは、ひとことから読み取ったものを先に選んでおく */
 function setSelFromAns(st) {
@@ -627,9 +718,9 @@ function renderDock() {
   if (!st) { dock(""); return; }
   const rest = remainingSteps().length;
   const canExit = S.done.includes("text1") && st.kind !== "login" && rest > 0;
-  // 上：あと N つ・ここまでで投稿文をつくる（選択肢と一緒にスクロール）／下：とばす・次へ（いつも見える位置に固定）
-  const top = S.done.includes("text1") && st.kind !== "login"
-    ? `<div class="dock-top"><span>あと${rest}つ・とばしてもOK</span>${canExit ? `<button type="button" class="lnk" id="dExit">ここまでで投稿文をつくる</button>` : ""}</div>` : "";
+  // 上：とばしてもOK・ここまでで投稿文をつくる（選択肢と一緒にスクロール）／下：とばす・次へ（いつも見える位置に固定）
+  const top = S.done.includes("text1") && st.kind !== "login" && st.kind !== "gate"
+    ? `<div class="dock-top"><span>とばしてもOK</span>${canExit ? `<button type="button" class="lnk" id="dExit">ここまでで投稿文をつくる</button>` : ""}</div>` : "";
   const skipBtn = `<button type="button" class="btn ghost sm" id="dSkip">とばす</button>`;
   const okBtn = (on, n) => `<button type="button" class="btn wide" id="dOk" ${on ? "" : "disabled"}>次へ${n ? `（${n}）` : ""}</button>`;
   let html = "", act = "";
@@ -643,7 +734,7 @@ function renderDock() {
   } else if (st.kind === "who") {
     const sel = RT.who, it = sel ? item("who", sel.id) : null;
     html = `<div class="chips">${optionsOf(st).map(o => `<button type="button" class="chip${sel && sel.id === o.id ? " on" : ""}${o.free ? " sub" : ""}" data-id="${o.id}" aria-pressed="${!!(sel && sel.id === o.id)}">${sel && sel.id === o.id ? '<span class="ck">✓</span>' : ""}${esc(o.label)}</button>`).join("")}</div>
-      ${it && (it.ph || it.free) ? `<div class="lab">${it.free ? "だれと一緒でしたか？" : "どんな人でしたか？（わかる範囲で・名前は書かなくてOK）"}</div><input class="input sm" id="dDetail" maxlength="${CONFIG.MAX_DETAIL}" placeholder="${esc(it.free ? "例：サークルの仲間" : it.ph)}" value="${esc(it.free ? (sel.label === it.label ? "" : sel.label) : (sel.detail || ""))}" enterkeyhint="done" />` : ""}`;
+      ${it && (it.ph || it.free) ? `<div class="lab">${it.free ? "だれと一緒でしたか？（会社・部署・立場などで）" : "どんな人でしたか？ 会社・部署・立場などで教えてください（任意・名前は書かなくてOK）"}</div><input class="input sm" id="dDetail" maxlength="${CONFIG.MAX_DETAIL}" placeholder="${esc(it.free ? "例：取引先の営業さん、サークルの仲間" : it.ph)}" value="${esc(it.free ? (sel.label === it.label ? "" : sel.label) : (sel.detail || ""))}" enterkeyhint="done" />` : ""}`;
     act = `<div class="row">${skipBtn}${okBtn(!!sel)}</div>`;
   } else if (st.kind === "single") {
     html = `<div class="chips">${optionsOf(st).map(o => `<button type="button" class="chip${o.free ? " sub" : ""}" data-id="${o.id}">${esc(o.label)}</button>`).join("")}</div><div id="dFreeBox"></div>`;
@@ -658,6 +749,9 @@ function renderDock() {
       <input class="input sm" style="margin-top:10px" id="dFreeM" maxlength="${CONFIG.MAX_FREE}" placeholder="${esc(st.freePh || "ほかにあれば")}" value="${esc(fv)}" enterkeyhint="done" />
       <div class="hint" id="dMax">${st.max ? `選べるのは${st.max}つまで（先に選んだものほど大事にします）` : ""}</div>`;
     act = `<div class="row">${skipBtn}${okBtn(n, n)}</div>`;
+  } else if (st.kind === "gate") {
+    html = `<button type="button" class="btn full" id="dGateGo">${ICON.spark}投稿文をつくる</button>`;
+    act = `<div class="row"><button type="button" class="btn ghost wide sm" id="dGateMore">もう1つ答える（任意）</button></div>`;
   } else if (st.kind === "scale") {
     html = `<div class="scale">${Array.from({ length: 10 }, (_, i) => `<button type="button" data-v="${i + 1}">${i + 1}</button>`).join("")}</div>
       <div class="scale-lab"><span>1 イマイチ</span><span>5 ふつう</span><span>10 最高</span></div>`;
@@ -700,9 +794,10 @@ function bindDock(st) {
         markDone(st); me(v); lockDock();
         fireHint();   // 裏で AI のヒント（待たない）
         const g = RT.gen, d = S.det, short = v.length > 22 ? v.slice(0, 21) + "…" : v;
-        const neg = d.feels.some(id => (item("feel", id) || {}).negative);
-        const n = remainingSteps().length;
-        if (!await bot((neg ? `「${short}」、教えてくれてありがとうございます。` : `「${short}」、いいですね！`) + `あと${n}つだけ、タップで聞かせてください`, { sub: "答えるたびに、上の「あなたの投稿」が育っていきます。とばしても大丈夫です" })) return;
+        const neg = d.negCue || d.feels.some(id => { const it = item("feel", id) || {}; return it.negative || (typeof it.val === "number" && it.val < 0); });
+        const pos = !neg && d.feels.some(id => { const it = item("feel", id) || {}; return typeof it.val === "number" && it.val > 0; });
+        const n = PROG_STEPS.filter(id => !S.done.includes(id)).length;
+        if (!await bot((neg ? `「${short}」、正直に教えてくれてありがとうございます。` : pos ? `「${short}」、いいですね！` : `「${short}」、ありがとうございます。`) + `あと${n}つだけ、タップで聞かせてください`, { sub: "答えるたびに、上の「あなたの投稿」が育っていきます。とばしても大丈夫です" })) return;
         await advance(st.id, g);
         return;
       }
@@ -751,19 +846,23 @@ function bindDock(st) {
       if (st.max && RT.sel.length >= st.max) { b.classList.add("shake"); const m = $("dMax"); if (m) m.style.color = "var(--err)"; setTimeout(() => b.classList.remove("shake"), 320); return; }
       if (o.neutral) RT.sel = [];
       else RT.sel = RT.sel.filter(x => !(item(st.opts, x.id) || {}).neutral);
-      RT.sel.push({ id: o.id, label: o.label, ...(o.ai ? { src: "AI候補" } : {}) });
+      RT.sel.push({ id: o.id, label: o.label, ...(o.ai ? { src: "AI候補" } : {}), ...(st.id === "why" ? { layer: o.layer, w: o.w, say: o.say, tag: o.tag } : {}) });
       renderDock();
     }));
     on("dOk", async () => {
       if (RT.busy) return;
       const fv = oneLine(fi.value).replace(/^[#＃]/, "").slice(0, CONFIG.MAX_FREE);
       let list = RT.sel.map(x => ({ ...x }));
-      if (fv) { list = list.filter(x => !(item(st.opts, x.id) || {}).neutral); list.push({ id: "other", label: fv, src: "自分で" }); }
+      if (fv) { list = list.filter(x => !(item(st.opts, x.id) || {}).neutral); list.push({ id: "other", label: fv, src: "自分で", ...(st.id === "why" ? { layer: "コンテンツ", w: W0() } : {}) }); }
       if (!list.length) return;
       list.forEach(x => { if (!x.src) x.src = "選択肢"; });
       S.ans[st.id] = list;
       await answered(st, list.map(x => x.label).join("　"));
     });
+  }
+  if (st.kind === "gate") {
+    on("dGateGo", async () => { if (RT.busy) return; S.extra = "投稿文へ"; S.declined = true; markDone(st); me("投稿文をつくる", { muted: true }); lockDock(); await advance(st.id); });
+    on("dGateMore", async () => { if (RT.busy) return; S.extra = "答えた"; markDone(st); me("もう1つ答える", { muted: true }); lockDock(); await advance(st.id); });
   }
   if (st.kind === "scale") {
     $("dockIn").querySelectorAll(".scale button").forEach(b => b.addEventListener("click", async () => {
@@ -865,9 +964,9 @@ function composeText() {
   if (w && w.line) { const l = w.line(A.who.detail, A.who.label); if (l) lines.push(l); }
   const f = firstFeel();
   const t1HasFeel = f && f.key ? new RegExp(f.key).test(t1raw) : false;
-  const whys = A.why.map(x => { const it = item("why", x.id); return it && !it.free && it.say ? it.say : x.label; }).filter(Boolean).slice(0, 2).join("と");
+  const whys = A.why.map(x => x.say || x.label).filter(Boolean).slice(0, 2).join("と");
   const fill = (tpl, e) => String(tpl || "").replace("{e}", e).replace("{v}", f ? f.v : "");
-  if (whys) lines.push(t1HasFeel ? (f.negative ? `気になったのは${whys}` : `とくに${whys}！`) : f && f.withE ? fill(f.withE, whys) : `${whys}がよかった`);
+  if (whys) lines.push(t1HasFeel ? (f.negative ? `気になったのは${whys}` : `とくに${whys}！`) : f && f.withE ? fill(f.withE, whys) : `印象に残ったのは${whys}`);
   else if (f && !t1HasFeel && f.ex) lines.push(fill(f.ex, ""));
   // 2 番目以降に選んだ気持ち（ひとことに無いもの）を 1 つ
   const f2 = A.feel.map(x => ({ ...item("feel", x.id), v: x.label })).find(x => x && x.id !== (f && f.id) && !x.neutral && !(x.key && new RegExp(x.key).test(t1raw)));
@@ -878,7 +977,7 @@ function composeText() {
 function autoTags() {
   const t = [];
   S.ans.feel.forEach(x => { const it = item("feel", x.id); if (it && it.tag && !it.neutral && !it.negative) t.push(it.tag); });
-  S.ans.why.forEach(x => { const it = item("why", x.id); if (it && it.tag) t.push(it.tag); });
+  S.ans.why.forEach(x => { if (x.tag) t.push(x.tag); });
   return uniq(t).slice(0, CONFIG.MAX_TAGS).concat(CONFIG.FIXED_TAGS || []);
 }
 const activeTags = () => (S.tagsOn ? autoTags().filter(t => !S.tagOff.includes(t)) : []);
@@ -953,13 +1052,21 @@ function renderComposeDock() {
   }
   const canRedo = gasOn() && (S.aiCount || 0) < CONFIG.AI_MAX && (S.aiOk === false || S.aiStale);
   const rest = remainingSteps().filter(st => st.id !== "profile");
-  dock(`<button type="button" class="btn full" id="dCopy">${ICON.copy}${S.copied ? "もう一度コピーする" : "コピーして DROP に投稿へ"}</button>
+  if (S.copied) {   // コピーしたあと：いちばん目立つボタンを「次の 1 本」に
+    dock(`<button type="button" class="btn full" id="dNext">${ICON.camera}次の写真で、もう1本つくる</button>
+      <div class="row"><button type="button" class="btn ghost wide sm" id="dCopy">${ICON.copy}もう一度コピー</button>${CONFIG.DROP_URL ? `<a class="btn ghost wide sm" href="${esc(CONFIG.DROP_URL)}" target="_blank" rel="noopener">${ICON.open}DROP を開く</a>` : ""}</div>
+      <div class="row center"><button type="button" class="lnk" id="dEx">ほかの人の例</button></div>`);
+    $("dNext").addEventListener("click", () => restart());
+    $("dCopy").addEventListener("click", copyFinal);
+    $("dEx").addEventListener("click", openExamples);
+    return;
+  }
+  dock(`<button type="button" class="btn full" id="dCopy">${ICON.copy}コピーして DROP に投稿へ</button>
     <div class="row">
       ${canRedo ? `<button type="button" class="btn ghost wide sm" id="dAI">${ICON.spark}AI で整え直す</button>` : ""}
-      ${S.copied && CONFIG.DROP_URL ? `<a class="btn ghost wide sm" href="${esc(CONFIG.DROP_URL)}" target="_blank" rel="noopener">${ICON.open}DROP を開く</a>` : ""}
       ${S.early && rest.length ? `<button type="button" class="btn ghost wide sm" id="dResume">つづきを答える（あと${rest.length}つ）</button>` : ""}
     </div>
-    <div class="row center"><button type="button" class="lnk" id="dEx">ほかの人の例</button><button type="button" class="lnk" id="dRestart">${S.copied ? "次の投稿をつくる" : "最初から"}</button></div>`);
+    <div class="row center"><button type="button" class="lnk" id="dEx">ほかの人の例</button><button type="button" class="lnk" id="dRestart">最初から</button></div>`);
   $("dCopy").addEventListener("click", copyFinal);
   const ai = $("dAI"); if (ai) ai.addEventListener("click", redoAI);
   const rs = $("dResume"); if (rs) rs.addEventListener("click", resume);
@@ -980,6 +1087,20 @@ async function resume() {
   const n = nextStepAfter(null);
   if (n) await ask(n); else await toCompose(false);
 }
+/* ---------- もう 1 本つくりたくなる仕掛け：投稿スタンプ（この端末で、今日コピーした本数） ---------- */
+const STAMP_SLOTS = 5;
+function postStats() { const p = LS.get(CONFIG.KEYS.POSTS, null), d = new Date().toISOString().slice(0, 10); return p && p.date === d ? p : { date: d, n: 0, total: (p && p.total) || 0 }; }
+function countPost() { const p = postStats(); p.n++; p.total = (p.total || 0) + 1; LS.set(CONFIG.KEYS.POSTS, p); return p.n; }
+function stampCardHtml() {
+  const n = S.postNo || postStats().n, k = ((n - 1) % STAMP_SLOTS) + 1, round = Math.ceil(n / STAMP_SLOTS);
+  const msg = n === 1 ? "1本目、完成です！ ほかのブースや気づいたことでも、ひとこと残してみませんか？"
+    : k === STAMP_SLOTS ? `${n}本目！ スタンプがそろいました。たくさんの声をありがとうございます`
+    : n === 3 ? "3本目！ もう DROP 名人です。ほかに気になったところはありますか？" : `${n}本目、完成です！ 気づいたことがあれば、もう1本どうですか？`;
+  const head = S.ai && S.ai.status === "OK" && S.ai.result && S.ai.result.headline && S.chosen === "AI" ? S.ai.result.headline : "";
+  return `<div class="card stamp"><div class="card-hd"><b>今日の投稿スタンプ${round > 1 ? `（${round}枚目）` : ""}</b><span class="stamp-n">${n}本</span></div>
+    <div class="stamps" role="img" aria-label="${STAMP_SLOTS}つのうち${k}つ">${Array.from({ length: STAMP_SLOTS }, (_, i) => `<i class="${i < k ? "on" : ""}">${i < k ? i + 1 + (round - 1) * STAMP_SLOTS : ""}</i>`).join("")}</div>
+    <p class="stamp-msg">${esc(msg)}</p>${head ? `<p class="stamp-ai"><span>AI より</span>${esc(head)}</p>` : ""}</div>`;
+}
 async function copyFinal() {
   const text = finalText();
   if (!text) { toast("文が空です"); return; }
@@ -988,9 +1109,13 @@ async function copyFinal() {
   catch (e) { try { const t = document.createElement("textarea"); t.value = text; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.select(); ok = document.execCommand("copy"); t.remove(); } catch (e2) {} }
   if (!ok) { toast("コピーできませんでした。文を長押ししてコピーしてください"); return; }
   const first = !S.copied;
-  S.copied++; save();
-  if (first) await bot("コピーしました！ DROP に貼りつけて、写真と一緒に投稿してください。おつかれさまでした");
-  else toast("コピーしました");
+  S.copied++;
+  if (first) S.postNo = countPost();
+  save();
+  if (first) {
+    await bot("コピーしました！ DROP に貼りつけて、写真と一緒に投稿してください");
+    S.msgs.push({ who: "bot", card: "stamp" }); renderMsgs(); save();
+  } else toast("コピーしました");
   renderComposeDock();
   sendLog("copy");
 }
@@ -1007,15 +1132,15 @@ const hasTokens = () => (!gasOn() || !!getToken(CONFIG.KEYS.TOKEN)) && (!logOn()
 const getName = () => LS.get(CONFIG.KEYS.NAME, "") || "";
 /* 名前・パスワードはこの端末に保存（パスワードは平文で localStorage に入る点に注意。メニューのログアウトで削除） */
 function getCreds() { const n = getName(), pw = LS.get(CONFIG.KEYS.PW, ""); return n && pw ? { name: n, pw } : null; }
-async function post(body, url) {
-  const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), CONFIG.TIMEOUT_MS);
+async function post(body, url, timeoutMs) {
+  const ms = timeoutMs || CONFIG.TIMEOUT_MS, ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), ms);
   try {
     // text/plain で送るとプリフライトが発生せず GAS でも CORS エラーにならない
     const res = await fetch(url, { method: "POST", redirect: "follow", signal: ctrl.signal, headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) });
     if (!res.ok) throw new Error("HTTP " + res.status);
     return await res.json();
   } catch (e) {
-    if (e.name === "AbortError") return { ok: false, code: "TIMEOUT", message: `応答がありませんでした（${CONFIG.TIMEOUT_MS / 1000} 秒）` };
+    if (e.name === "AbortError") return { ok: false, code: "TIMEOUT", message: `応答がありませんでした（${ms / 1000} 秒）` };
     return { ok: false, code: "NETWORK", message: "接続できませんでした（" + e.message + "）" };
   } finally { clearTimeout(to); }
 }
@@ -1055,10 +1180,10 @@ function bindLogin(onOk) {
 }
 function qaList() {
   const A = S.ans, out = [], ok = id => S.done.includes(id) && !S.skipped.includes(id);
-  if (ok("who") && A.who) out.push({ q: "そのとき、だれと一緒でしたか？", a: A.who.label + (A.who.detail ? `（${A.who.detail}）` : "") });
-  if (ok("why") && A.why.length) out.push({ q: stepOf("why").q(), a: A.why.map(x => x.label + (x.src === "AI候補" ? "（AI の候補から選んだ）" : "")).join("、") });
   if (ok("feel") && A.feel.length) out.push({ q: "どんな気持ちになりましたか？（選んだ順）", a: A.feel.map(x => x.label).join("、") });
+  if (ok("why") && A.why.length) out.push({ q: stepOf("why").q() + "（近い順）", a: A.why.map(x => x.label + (x.src === "AI候補" ? "（AI の候補から選んだ）" : "")).join("、") });
   if (ok("score") && A.score) out.push({ q: "体験そのものの点数（10点満点。文面には書かない）", a: A.score + "点" });
+  if (ok("who") && A.who) out.push({ q: "そのとき、だれと一緒でしたか？", a: A.who.label + (A.who.detail ? `（${A.who.detail}）` : "") });
   if (ok("next") && A.next.length) out.push({ q: "このあと、どうしたいですか？", a: A.next.map(x => x.label).join("、") });
   return out;
 }
@@ -1113,38 +1238,41 @@ async function attachSampleImages(refs) {
    - 気持ちの向き：選んだ気持ちの val を、選んだ順の重みで平均（-1〜1）
    - コーチ関与：ひとことのみ／選択あり／AI仕上げ（効果測定で分けて扱う）
 ===================================================================== */
+const rankW = (kind, i) => { const a = ORDER_W[kind] || []; return a.length ? (a[i] ?? a[a.length - 1]) : .3; };
+/** rank_w：選んだ順の重み（設定の値そのまま。例 1 / 0.75 / 0.5 / 0.25）・w：合計 1 にした重み */
 function weighted(list, kind) {
-  const ws = list.map((_, i) => (ORDER_W[kind] || [])[i] ?? .3), sum = ws.reduce((a, b) => a + b, 0) || 1;
-  return list.map((x, i) => ({ id: x.id, label: x.label, src: x.src || "", pre: !!x.pre, w: r2(ws[i] / sum), ...(kind === "feel" ? { val: (item("feel", x.id) || {}).val ?? null } : {}) }));
+  const ws = list.map((_, i) => rankW(kind, i)), sum = ws.reduce((a, b) => a + b, 0) || 1;
+  return list.map((x, i) => ({ id: x.id, label: x.label, src: x.src || "", pre: !!x.pre, rank_w: r2(ws[i]), w: r2(ws[i] / sum),
+    ...(kind === "feel" ? { val: (item("feel", x.id) || {}).val ?? null } : {}), ...(kind === "why" ? { layer: x.layer || "コンテンツ", kpi: x.w || W0() } : {}) }));
 }
 function softOf() {
   const A = S.ans, raw = { c1: 0, c2: 0, c3: 0, att: 0 };
   const add = (kind, id, k) => { const it = item(kind, id); if (!it || !it.w) return; Object.keys(it.w).forEach(d => { raw[d] += it.w[d] * k; }); };
   if (A.who) add("who", A.who.id, 1);
-  A.why.forEach((x, i) => add("why", x.id, ORDER_W.why[i] ?? .3));
-  A.feel.forEach((x, i) => add("feel", x.id, ORDER_W.feel[i] ?? .3));
-  A.next.forEach((x, i) => add("next", x.id, ORDER_W.next[i] ?? .6));
+  A.why.forEach((x, i) => { const w = x.w || {}; Object.keys(raw).forEach(d => { raw[d] += (w[d] || 0) * rankW("why", i); }); });
+  A.feel.forEach((x, i) => add("feel", x.id, rankW("feel", i)));
+  A.next.forEach((x, i) => add("next", x.id, rankW("next", i)));
   const tot = Object.values(raw).reduce((a, b) => a + b, 0), share = {};
   Object.keys(raw).forEach(k => { share[k] = tot ? r2(raw[k] / tot) : 0; raw[k] = r2(raw[k]); });
   return { share, raw, total: r2(tot) };
 }
 function valenceOf() {
   let s = 0, w = 0;
-  S.ans.feel.forEach((x, i) => { const v = (item("feel", x.id) || {}).val; if (typeof v !== "number") return; const k = ORDER_W.feel[i] ?? .3; s += v * k; w += k; });
+  S.ans.feel.forEach((x, i) => { const v = (item("feel", x.id) || {}).val; if (typeof v !== "number") return; const k = rankW("feel", i); s += v * k; w += k; });
   return w ? r2(s / w) : null;
 }
 function nodesOf() {
   const A = S.ans, n = [], subj = subjectOf();
   if (subj) n.push("コンテンツ:" + subj);
   if (A.who) n.push("人:" + (A.who.id === "other" ? "その他" : A.who.label));
-  A.why.forEach(x => { const it = item("why", x.id); n.push((it ? it.layer : "コンテンツ") + ":" + x.label); });
+  A.why.forEach(x => n.push((x.layer || "コンテンツ") + ":" + x.label));
   A.feel.forEach(x => n.push("感情:" + x.label));
   A.next.forEach(x => n.push("意向:" + x.label));
   return uniq(n);
 }
 function coachLevel() {
   if (S.aiOk && S.chosen === "AI") return "AI仕上げ";
-  return ["who", "why", "feel", "next"].some(id => S.done.includes(id) && !S.skipped.includes(id)) ? "選択あり" : "ひとことのみ";
+  return ["feel", "why", "who", "next"].some(id => S.done.includes(id) && !S.skipped.includes(id)) ? "選択あり" : "ひとことのみ";
 }
 function buildRecord(end) {
   const A = S.ans, soft = softOf(), stepSec = {};
@@ -1175,6 +1303,8 @@ function buildRecord(end) {
     ai: S.ai ? { status: S.ai.status, message: S.ai.message, cached: S.ai.cached, model: S.ai.model, prompt_version: S.ai.prompt_version, elapsed_sec: S.ai.elapsed_sec, result: S.ai.result } : { status: "" },
     hint: { status: h.status || "", elapsed_sec: h.elapsed_sec, cached: !!h.cached, subject: h.subject || "", why_options: h.why_options || [], act: h.act || "", photo_summary: h.photo_summary || "", covered: h.covered || null },
     example_views: S.exViews || [], preview_opens: S.previewOpens || 0,
+    why_for: S.whyFor || "", settings_version: SETTINGS_VER,
+    extra: S.extra || "", post_no: S.postNo || (postStats().n + (S.copied ? 0 : 1)),
     order: S.order, step_sec: stepSec, big_text: document.documentElement.classList.contains("big")
   };
 }
@@ -1279,20 +1409,42 @@ async function restart() {
   closeModal(); start();
 }
 
+/* ---------- 設定（選択肢と重み）を記録用 GAS から読む ---------- */
+const SET = { pending: null, next: null };
+const optionStepsStarted = () => !!S && ["feel", "why", "who", "next"].some(id => S.asked.includes(id));
+function loadSettings() {
+  const cached = LS.get(CONFIG.KEYS.SETTINGS, null);
+  if (cached && cached.settings) applySettings(cached.settings, cached.version);
+  if (!logOn()) return;
+  SET.pending = post({ action: "settings" }, CONFIG.LOG_URL, CONFIG.SETTINGS_TIMEOUT_MS).then(r => {
+    SET.pending = null;
+    if (!r || !r.ok) return;   // 古い GAS（設定に未対応）・通信エラー → いまの設定のまま
+    const ver = r.settings ? String(r.version || "") : "初期値";
+    if (r.settings) LS.set(CONFIG.KEYS.SETTINGS, { settings: r.settings, version: ver }); else LS.del(CONFIG.KEYS.SETTINGS);
+    if (ver === SETTINGS_VER) return;
+    if (optionStepsStarted()) SET.next = { settings: r.settings, version: ver };   // 答えている途中は変えず、次のチャットから
+    else applySettings(r.settings || DEFAULT_SETTINGS, ver);
+  });
+}
+
 /* ---------- 起動 ---------- */
 function warmLogin() { if (anyGas() && getCreds() && !hasTokens()) autoLogin().catch(() => {}); }
 async function start() {
   RT.gen++; RT.typing = false; RT.typingText = "";
   SS.del(CONFIG.KEYS.PHOTO); PHOTO = { img: "", imgAi: "", w: 0, h: 0 };
+  if (SET.next) { applySettings(SET.next.settings || DEFAULT_SETTINGS, SET.next.version); SET.next = null; }
   S = newSession(); RT.rendered = 0; RT.busy = true; RT.aiWait = false; RT.loginFor = null;
   save(); renderMsgs(); renderStaff(); lockDock(); warmLogin();
   const g = RT.gen;
-  if (!await bot("こんにちは！ DROP の投稿文を、チャットで一緒につくります", { sub: "写真とひとことだけでもOK。あとはタップで答えるだけです" })) return;
+  const ps = postStats();
+  const hello = ps.n > 0 ? [`おかえりなさい！ ${ps.n + 1}本目をつくりましょう`, { sub: "写真とひとことのあと、タップで3つ答えるだけです" }]
+    : ["こんにちは！ DROP の投稿文を、チャットで一緒につくります", { sub: "写真とひとことのあと、タップで3つ答えるだけ。あとは任意です" }];
+  if (!await bot(hello[0], hello[1])) return;
   await advance(null, g);
 }
 function restore() {
   const s = LS.get(CONFIG.KEYS.SESSION, null);
-  if (!s || s.v !== 30 || !s.sid || now() - (s.t0 || 0) > CONFIG.RESUME_HOURS * 3600e3 || s.copied) return false;
+  if (!s || s.v !== 31 || !s.sid || now() - (s.t0 || 0) > CONFIG.RESUME_HOURS * 3600e3 || s.copied) return false;
   S = s; S.msgs = (S.msgs || []).filter(m => m && m.who);
   const p = SS.get(CONFIG.KEYS.PHOTO, null);
   if (p && p.sid === S.sid && /^data:image\/jpeg;base64,/.test(p.img || "")) PHOTO = p;
@@ -1313,6 +1465,7 @@ function restore() {
   $("staffFlag").hidden = !STAFF;
   if (LS.get(CONFIG.KEYS.BIG, false)) document.documentElement.classList.add("big");
   syncMenu();
+  loadSettings();
   const json = await loadSamples();
   SAMPLES = (Array.isArray(json) ? json : (json.records || [])).map(r => ({
     id: r.artwork_id, n: r.account_name || "", s: String(r.sentence || "").trim(), img: r.image_file_path || r.image_file_path_thumbnail || ""
