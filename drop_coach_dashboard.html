@@ -6,109 +6,233 @@
 <meta name="robots" content="noindex" />
 <title>DROP. Coach 分析ダッシュボード</title>
 <style>
-  /* 色の役割（可視化の色ルール）
-     構造＝濃紺／注目＝マゼンタ（1 図に 1 つ）／その他＝グレー／評価・気持ちの向き＝青・淡青・黄・赤（記号つき）
-     多い・少ない＝青緑・オレンジ（矢印つき）／段階（コーチ関与）＝紫の濃淡／2 つの比較＝紫と比較相手のグレー */
+  /* =====================================================================
+     色の役割（可視化の色ルール）
+     構造＝濃紺（見出し・枠・選択中のタブ）／注目＝マゼンタ（1 つの図に 1 つ。画面の飾りには使わない）
+     その他＝グレー／評価・気持ちの向き＝青・淡青・黄・赤（記号つき）／多い・少ない＝青緑・オレンジ（矢印つき）
+     段階（コーチの関与・書けている具体さ）＝紫の濃淡／2 つの比較＝紫と比較相手のグレー
+  ===================================================================== */
   :root{
     color-scheme: light;
-    --struct:#0E3B4A; --struct2:#2F5D6B;
+    --struct:#0E3B4A; --struct2:#2F5D6B; --struct-soft:#e3edf0; --struct-faint:#f1f6f7;
     --emph:#BE258D; --emph-soft:#f6e3ef;
     --gray:#B9C4C9; --gray-ink:#5B6770; --gray-ink2:#8A979D; --none:#DDE4E7;
     --good:#2A78D6; --good2:#9EC5F4; --mid:#F5B82E; --bad:#D03B3B;
     --many:#0099AE; --many-soft:#d5eef2; --few:#E07B39; --few-soft:#fbe5d6;
     --o1:#BFAAEF; --o2:#8F6CD0; --o3:#6239A0; --o4:#351162;
     --series:#6250D6;
-    --bg:#f3f5f6; --card:#ffffff; --line:#e3e8ea; --ink:#16232a; --ink2:#46545c;
+    --bg:#f4f6f7; --card:#ffffff; --line:#e3e8ea; --line2:#d2d9dc; --ink:#16232a; --ink2:#46545c; --soft:#f7f9fa;
     --info-bg:#e8f1fc; --hyp-bg:#fdf3dc; --warn-bg:#fbe7e7;
+    --bar-h:58px; --rail-w:236px; --r:14px;
+    --shadow:0 1px 2px rgba(14,59,74,.05);
     --font: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
-  button,input,select{font-family:var(--font);font-size:14px}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  button,input,select{font-family:var(--font);font-size:14px;color:var(--ink)}
   [hidden]{display:none!important}
   a{color:var(--struct2)}
-  .wrap{max-width:1240px;margin:0 auto;padding:0 18px}
-  header.top{background:var(--struct);color:#fff}
-  header.top .wrap{display:flex;align-items:center;gap:16px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
-  .brand{font-weight:900;font-size:19px;letter-spacing:-.3px}
-  .brand small{display:block;font-size:11px;font-weight:700;letter-spacing:1px;opacity:.75}
-  .status{margin-left:auto;font-size:13px;opacity:.9}
-  .nav{display:flex;gap:4px;background:rgba(255,255,255,.12);border-radius:10px;padding:3px}
-  .nav button{border:none;background:transparent;color:#fff;font-weight:800;padding:7px 14px;border-radius:8px;cursor:pointer;opacity:.8}
-  .nav button.on{background:#fff;color:var(--struct);opacity:1}
-  .btn{border:1px solid var(--struct2);background:#fff;color:var(--struct);border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
+  :focus-visible{outline:2px solid var(--struct2);outline-offset:2px}
+  .wrap{max-width:1520px;margin:0 auto;padding:0 24px}
+  .ico{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0;margin:-1px}
+  .print-only{display:none}
+
+  /* ボタン */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line2);background:#fff;color:var(--struct);border-radius:9px;padding:7px 13px;font-weight:700;font-size:13.5px;line-height:1.3;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+  .btn:hover{background:var(--struct-faint);border-color:var(--struct2)}
   .btn.pri{background:var(--struct);color:#fff;border-color:var(--struct)}
-  .btn.on-dark{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+  .btn.pri:hover{background:#174e61}
+  .btn.ghost{border-color:transparent;background:transparent;color:var(--struct2)}
+  .btn.ghost:hover{background:var(--struct-faint)}
+  .btn.lg{padding:10px 18px;font-size:14.5px;border-radius:10px}
+  .btn.sm{padding:4px 10px;font-size:12.5px;border-radius:8px}
   .btn:disabled{opacity:.45;cursor:default}
-  .banner{padding:10px 14px;border-radius:8px;margin:14px 0 0;font-size:13.5px}
-  .banner.hyp{background:var(--hyp-bg);border:1px solid #f0d58f}
-  .banner.warn{background:var(--warn-bg);border:1px solid #efb8b8}
-  .banner.info{background:var(--info-bg);border:1px solid #bcd6f5}
+  .btn:disabled:hover{background:#fff;border-color:var(--line2)}
+  .btn.pri:disabled:hover{background:var(--struct);border-color:var(--struct)}
+  .link{border:none;background:none;color:var(--struct2);font-weight:700;cursor:pointer;padding:2px 4px;font-size:12.5px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
 
-  /* 読み込み */
-  .loader{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
-  @media (max-width:1100px){ .loader{grid-template-columns:repeat(2,1fr)} }
-  .loader .card{margin:0}
-  .loader h3{margin:0 0 6px;font-size:15px;color:var(--struct)}
-  .loader p{margin:0 0 10px;color:var(--ink2);font-size:13px}
-  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+  /* ---------- 上のバー ---------- */
+  .appbar{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line)}
+  .appbar-in{display:flex;align-items:center;gap:18px;min-height:var(--bar-h)}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0;flex:none}
+  .mark{width:32px;height:32px;border-radius:9px;background:var(--struct);color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px;letter-spacing:-.5px;flex:none}
+  .bt{display:flex;flex-direction:column;line-height:1.2}
+  .bt b{font-size:15px;color:var(--struct);letter-spacing:-.2px}
+  .bt small{font-size:11px;color:var(--gray-ink);font-weight:700}
+  .nav{display:flex;gap:2px;background:#eef2f3;border-radius:10px;padding:3px;flex:none}
+  .nav button{border:none;background:transparent;color:var(--gray-ink);font-weight:800;font-size:13.5px;padding:6px 14px;border-radius:8px;cursor:pointer}
+  .nav button:hover{color:var(--struct)}
+  .nav button.on{background:#fff;color:var(--struct);box-shadow:0 1px 3px rgba(14,59,74,.16)}
+  .appbar-r{margin-left:auto;display:flex;align-items:center;gap:4px;min-width:0}
+  .src{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink2);background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:5px 12px;min-width:150px;max-width:430px;margin-right:6px}
+  .src #status{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--gray);flex:none}
+  .dot.live{background:var(--struct2)} .dot.demo{background:var(--mid)}
+  .notice{font-size:12px;color:var(--gray-ink);padding:7px 0 0}
+  .notice .wrap{display:flex;gap:7px;align-items:center}
+  .notice .ico{width:14px;height:14px}
+  .demo-strip{margin-top:10px;display:flex;gap:8px;align-items:center;background:var(--hyp-bg);border:1px solid #f0d58f;border-radius:10px;padding:8px 12px;font-size:13px;color:#5c4300}
+  .demo-strip .dot{background:var(--mid)}
+
+  /* ---------- 読み込み方を選ぶ ---------- */
+  .loader{padding:30px 0 6px}
+  .intro{max-width:780px;margin:0 0 22px}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.6px;color:var(--struct2)}
+  .intro h1{margin:4px 0 6px;font-size:26px;line-height:1.35;color:var(--struct);letter-spacing:-.3px}
+  .intro p{margin:0;color:var(--ink2)}
+  .resume{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--struct2);border-radius:var(--r);padding:12px 16px;margin:0 0 16px;font-size:13.5px}
+  .resume .ico{color:var(--struct2)}
+  .resume .btn{margin-left:auto}
+  .choices{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:16px;align-items:stretch}
+  .choice{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow);min-width:0}
+  .choice.rec{border-color:var(--struct2);box-shadow:0 0 0 3px var(--struct-faint)}
+  .choice-h{display:flex;align-items:center;gap:12px}
+  .choice-ic{width:42px;height:42px;border-radius:12px;background:var(--struct-soft);color:var(--struct);display:grid;place-items:center;flex:none}
+  .choice-ic .ico{width:21px;height:21px}
+  .choice h3{margin:0;font-size:16px;color:var(--struct);line-height:1.35}
+  .choice .step{display:block;font-size:11.5px;color:var(--gray-ink);font-weight:700}
+  .tag{font-size:11px;font-weight:800;color:var(--struct);background:var(--struct-faint);border:1px solid #c9d9de;border-radius:999px;padding:1px 9px;margin-left:auto;white-space:nowrap}
+  .choice p{margin:0;color:var(--ink2);font-size:13px}
+  .choice .grow{flex:1}
+  .choice form{display:flex;flex-direction:column}
+  .quick{background:var(--struct-faint);border-radius:10px;padding:10px 12px}
+  .quick p{margin:0 0 8px}
+  .drop{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:150px;border:1.5px dashed var(--line2);border-radius:12px;padding:18px 12px;text-align:center;color:var(--gray-ink);cursor:pointer;background:var(--soft);transition:background .15s,border-color .15s;font-size:13px}
+  .drop .ico{width:26px;height:26px;color:var(--struct2)}
+  .drop b{color:var(--struct);font-size:14px}
+  .drop:hover,.drop.over{border-color:var(--struct2);background:var(--struct-faint)}
+  .drop:focus-within{outline:2px solid var(--struct2);outline-offset:2px}
+  .setlink{margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;color:var(--ink2);font-size:13.5px}
+  .setlink .ico{color:var(--struct2)}
+  .setlink .btn{margin-left:auto}
+  @media (max-width:1060px){ .choices{grid-template-columns:1fr 1fr} .choice.rec{grid-column:1 / -1} }
+  @media (max-width:700px){ .choices{grid-template-columns:1fr} }
+
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;min-width:0}
   .field label{font-size:12px;color:var(--gray-ink);font-weight:700}
-  .field input{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .field input,.field select{border:1px solid var(--line2);border-radius:9px;padding:8px 10px;background:#fff;min-width:0;width:100%}
+  .field input:focus,.field select:focus{border-color:var(--struct2);outline:none;box-shadow:0 0 0 3px var(--struct-soft)}
   .err{color:var(--bad);font-size:13px;min-height:1.2em}
-  @media (max-width:860px){ .loader{grid-template-columns:1fr} }
 
-  /* 色の見方・フィルター */
-  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12.5px;color:var(--ink2);margin:14px 0 4px}
-  .legend b{color:var(--struct);font-size:12.5px;margin-right:2px}
-  .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
-  .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0 14px;position:sticky;top:0;z-index:5}
-  .filters .field{margin:0}
-  .filters select,.filters input{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:#fff}
-  .filters .cnt{margin-left:auto;font-size:13px;color:var(--gray-ink);font-variant-numeric:tabular-nums}
+  /* ---------- 分析：左の目次・絞り込み ＋ 右の本文 ---------- */
+  .shell{display:grid;grid-template-columns:var(--rail-w) minmax(0,1fr);gap:28px;padding-top:20px}
+  .rail{position:sticky;top:calc(var(--bar-h) + 14px);align-self:start;max-height:calc(100vh - var(--bar-h) - 24px);overflow:auto;display:flex;flex-direction:column;gap:12px;padding:0 2px 10px;scrollbar-width:thin}
+  .rail-box{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:12px}
+  .rail-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--gray-ink);margin:0 0 8px}
+  .toc{display:flex;flex-direction:column;gap:1px}
+  .toc a{display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:9px;color:var(--ink2);text-decoration:none;font-weight:700;font-size:13.5px;white-space:nowrap}
+  .toc a .n{width:20px;height:20px;border-radius:6px;background:#eef2f3;color:var(--gray-ink);font-size:11px;font-weight:800;display:grid;place-items:center;flex:none}
+  .toc a:hover{background:var(--struct-faint);color:var(--struct)}
+  .toc a.on{background:var(--struct-soft);color:var(--struct)}
+  .toc a.on .n{background:var(--struct);color:#fff}
+  .filters .field{margin-bottom:7px}
+  .filters .field label{font-size:11.5px}
+  .filters .field input,.filters .field select{padding:6px 8px;font-size:13px;border-radius:8px}
+  .filters .field select.active{border-color:var(--struct);box-shadow:inset 3px 0 0 var(--struct);font-weight:700}
+  .f-toggle{border:none;background:none;padding:0;font:inherit;color:inherit;cursor:default;letter-spacing:inherit}
+  .f-count{font-size:12.5px;color:var(--ink2);margin:0 0 10px;font-variant-numeric:tabular-nums}
+  .f-count b{font-size:16px;color:var(--ink)}
+  .f-meter{height:4px;border-radius:2px;background:#eef2f3;margin-top:5px;overflow:hidden}
+  .f-meter i{display:block;height:100%;width:100%;background:var(--struct2);border-radius:2px;transition:width .2s}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12px;color:var(--ink2);background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 14px;margin:0 0 18px}
+  .legend b{color:var(--struct);font-size:12px}
+  .legend > span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .legend .sws{display:inline-flex;gap:2px}
+  .legend .sws .sw{margin:0}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;flex:none}
+
+  .content{min-width:0;container-type:inline-size;container-name:content}
+  .sec{scroll-margin-top:calc(var(--bar-h) + 12px);margin-bottom:36px}
+  .sec-h{display:flex;align-items:flex-start;gap:12px;margin:0 0 14px}
+  .sec-n{width:28px;height:28px;border-radius:8px;background:var(--struct);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center;flex:none;margin-top:1px}
+  .sec-h h2{margin:0;font-size:19px;color:var(--struct);letter-spacing:-.2px;line-height:1.35}
+  .sec-h p{margin:1px 0 0;font-size:13px;color:var(--gray-ink)}
 
   /* カード */
-  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-bottom:24px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
-  .card h2{margin:0;font-size:15.5px;color:var(--struct);border-top:3px solid var(--struct);padding-top:8px;margin-top:-6px}
-  .card .why{margin:4px 0 10px;font-size:12.5px;color:var(--gray-ink)}
+  .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 14px;min-width:0;box-shadow:var(--shadow);scroll-margin-top:calc(var(--bar-h) + 16px)}
+  .card > h2,.card > h3,.card-h h3{margin:0;font-size:14.5px;color:var(--struct);line-height:1.45}
+  .card-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .card .why{margin:3px 0 12px;font-size:12.5px;color:var(--gray-ink);line-height:1.6}
+  .card.flash{animation:flash 1.6s ease-out}
+  @keyframes flash{0%,35%{box-shadow:0 0 0 3px var(--struct2)}100%{box-shadow:0 0 0 3px rgba(47,93,107,0)}}
   .c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}
-  @media (max-width:980px){ .c8,.c7,.c6,.c5,.c4{grid-column:span 12} }
-  .sec{grid-column:span 12;margin:10px 0 -4px;font-size:13px;font-weight:800;color:var(--struct2);letter-spacing:.5px}
-  details.tbl{margin-top:10px}
-  details.tbl summary{cursor:pointer;font-size:12.5px;color:var(--struct2);font-weight:700}
+  @container content (max-width: 860px){ .c8,.c7,.c6,.c5,.c4{grid-column:span 12} }
+  details.tbl{margin-top:12px;border-top:1px dashed var(--line);padding-top:6px}
+  details.tbl summary{cursor:pointer;font-size:12px;color:var(--struct2);font-weight:700;list-style:none;display:inline-flex;align-items:center;gap:5px;padding:2px 0}
+  details.tbl summary::-webkit-details-marker{display:none}
+  details.tbl summary::before{content:"▸";font-size:10px;transition:transform .15s}
+  details.tbl[open] summary::before{transform:rotate(90deg)}
+  details.tbl table{margin-top:6px}
   table{border-collapse:collapse;width:100%;font-size:12.5px}
-  th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
-  th{color:var(--gray-ink);font-weight:700;background:#f8fafa;position:sticky;top:0}
+  th,td{border-bottom:1px solid #edf1f2;padding:6px 8px;text-align:left;vertical-align:top}
+  th{color:var(--gray-ink);font-weight:700;background:var(--soft);position:sticky;top:0;font-size:12px}
   td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   .note{font-size:12px;color:var(--gray-ink);margin-top:8px}
-  .box{border-radius:8px;padding:8px 10px;font-size:12.5px;margin-top:8px}
+  .box{border-radius:9px;padding:8px 11px;font-size:12.5px;margin-top:10px}
   .box.ok{background:var(--info-bg)} .box.hyp{background:var(--hyp-bg)} .box.ng{background:var(--warn-bg)}
 
-  /* 数字のタイル */
-  .tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-  @media (max-width:980px){ .tiles{grid-template-columns:repeat(3,1fr)} }
-  .tile{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
-  .tile .l{font-size:12px;color:var(--gray-ink);font-weight:700}
-  .tile .v{font-size:26px;font-weight:800;color:var(--ink);line-height:1.2;margin-top:2px}
-  .tile .s{font-size:12px;color:var(--gray-ink2)}
-  .tile.hero{grid-column:span 2;border-color:var(--struct2)}
-  .tile.hero .v{font-size:48px}
+  /* 概要：主な数字 ＋ まとまりごとの数字 ＋ 目立つところ */
+  .kpis{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:16px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);min-width:0;display:flex;flex-direction:column}
+  .kpi .l{font-size:12.5px;color:var(--gray-ink);font-weight:800}
+  .kpi .v{font-size:34px;font-weight:800;line-height:1.15;margin-top:8px;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.5px;white-space:nowrap}
+  .kpi .v small{font-size:14px;font-weight:700;color:var(--gray-ink);margin-left:4px;letter-spacing:0}
+  .kpi .s{font-size:12px;color:var(--gray-ink);margin-top:4px}
+  .kpi.hero{background:var(--struct);border-color:var(--struct);color:#fff}
+  .kpi.hero .l,.kpi.hero .s{color:rgba(255,255,255,.8)}
+  .kpi.hero .v{color:#fff;font-size:46px}
+  .kpi.hero .v small{color:rgba(255,255,255,.78)}
+  .flow{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;margin-top:auto;padding-top:12px;font-size:12px;color:rgba(255,255,255,.82)}
+  .flow b{color:#fff;font-size:13px;font-variant-numeric:tabular-nums;margin-left:2px}
+  .flow .arr{opacity:.55}
+  .mgroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:16px}
+  .mg{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px 18px 8px;box-shadow:var(--shadow);min-width:0}
+  .mg h4{margin:0 0 2px;font-size:12.5px;color:var(--struct2);font-weight:800}
+  .mg dl{margin:0}
+  .mg .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 12px;padding:8px 0;border-top:1px solid #eef2f3}
+  .mg .row:first-child{border-top:none}
+  .mg dt{font-size:13px;color:var(--ink2);font-weight:700}
+  .mg dd{margin:0;font-weight:800;font-size:16px;text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+  .mg .sub{grid-column:1 / -1;font-size:11.5px;color:var(--gray-ink2);line-height:1.45}
+  .findings{margin-top:16px}
+  .fd-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;margin:10px 0 0;padding:0;list-style:none}
+  .fd{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:10px;background:var(--soft);border:1px solid transparent;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit;height:100%}
+  .fd:hover{border-color:var(--line2);background:#fff}
+  .fd .txt{min-width:0}
+  .fd .k{font-size:11.5px;color:var(--gray-ink);font-weight:700;display:block}
+  .fd .t{font-size:14.5px;font-weight:800;color:var(--ink);display:block;line-height:1.4}
+  .fd .d{font-size:12px;color:var(--gray-ink);display:block}
+  .fd .go{margin-left:auto;color:var(--struct2);font-size:12px;font-weight:800;white-space:nowrap;display:inline-flex;align-items:center;gap:2px}
+  .fd .go .ico{width:14px;height:14px}
+  @container content (max-width: 1080px){
+    .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .kpi.hero{grid-column:1 / -1;display:grid;grid-template-columns:auto 1fr;column-gap:28px;align-items:end}
+    .kpi.hero .l{grid-column:1 / -1} .kpi.hero .v{grid-row:2} .kpi.hero .s{grid-column:1;grid-row:3}
+    .kpi.hero .flow{grid-column:2;grid-row:2 / 4;justify-content:flex-end;padding:0 0 4px;font-size:13px}
+  }
+  @container content (max-width: 700px){
+    .kpis,.mgroups,.fd-list{grid-template-columns:1fr}
+    .kpi.hero{display:flex;align-items:stretch} .kpi.hero .flow{justify-content:flex-start;padding-top:12px}
+  }
 
   /* 横棒（HTML） */
-  .hb{display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:6px 10px;align-items:center}
+  .hb{display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:7px 10px;align-items:center}
   .hb .lab{font-size:13px;color:var(--ink);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
   .hb .lab .sym{display:inline-block;width:16px;text-align:center;font-weight:800;color:var(--ink2);margin-right:4px}
   .hb .trk{position:relative;height:18px;display:flex;align-items:center}
   .hb .bar{height:16px;border-radius:0 4px 4px 0;min-width:2px;cursor:default}
-  .hb .bar:hover,.hb .bar:focus{filter:brightness(1.1);outline:2px solid rgba(14,59,74,.25);outline-offset:1px}
+  .hb .bar:hover,.hb .bar:focus{filter:brightness(1.08);outline:2px solid rgba(14,59,74,.25);outline-offset:1px}
   .hb .val{font-size:12.5px;color:var(--ink2);margin-left:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
   .hb .val b{color:var(--ink)}
   .hb.two .trk{height:30px;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
   .hb.two .bar{height:11px}
   .hb.two .row2{display:flex;align-items:center;width:100%}
-  .emph-cap{font-size:12px;color:var(--gray-ink);margin-top:6px}
-  .emph-cap i{display:inline-block;width:10px;height:10px;background:var(--emph);border-radius:2px;margin-right:4px;vertical-align:-1px}
-  .keys{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin:0 0 8px}
+  .emph-cap{font-size:12px;color:var(--gray-ink);margin-top:8px}
+  .emph-cap i{display:inline-block;width:10px;height:10px;background:var(--emph);border-radius:2px;margin-right:5px;vertical-align:-1px}
+  .keys{display:flex;gap:6px 14px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--ink2);margin:0 0 10px}
+  .keys select{border:1px solid var(--line2);border-radius:8px;padding:5px 8px;background:#fff;font-size:13px;font-weight:700}
 
   /* 縦棒（時間帯） */
   .cols{display:flex;align-items:flex-end;gap:6px;height:170px;padding:0 4px;border-bottom:1px solid #c3c9cc}
@@ -118,19 +242,22 @@
   .cols-x{display:flex;gap:6px;padding:4px 4px 0}
   .cols-x span{flex:1;text-align:center;font-size:11.5px;color:var(--gray-ink)}
 
-  /* 分割バー（一致・関与） */
+  /* 分割バー（一致・関与・具体さ） */
   .seg{display:flex;height:28px;border-radius:4px;overflow:hidden;gap:2px;background:#fff}
   .seg div{display:flex;align-items:center;padding:0 8px;font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;border-radius:4px}
   .seg div.dark{color:var(--ink)}
 
   /* 共起ネットワーク */
-  .net-wrap{display:grid;grid-template-columns:1fr 300px;gap:14px}
-  @media (max-width:980px){ .net-wrap{grid-template-columns:1fr} }
+  .net-tools{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--gray-ink);background:var(--soft);border-radius:10px;padding:8px 12px;margin-bottom:10px}
+  .net-tools label{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--ink2)}
+  .net-tools input[type=range]{accent-color:var(--struct2)}
+  .net-tools .btn{margin-left:auto}
+  .net-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+  .net-side{border-top:1px solid var(--line);padding-top:14px;max-width:780px}
   .net-scroll{overflow-x:auto}
-  .net-scroll svg{min-width:760px;width:100%;height:auto;display:block}
-  .net-side h3{margin:0 0 4px;font-size:14px;color:var(--struct)}
+  .net-scroll svg{min-width:720px;width:100%;height:auto;display:block}
+  .net-side h3{margin:0 0 4px;font-size:14px;color:var(--struct);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .net-side .sel{font-size:15px;font-weight:800;color:var(--emph);margin-bottom:6px}
-  .net-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--gray-ink);margin-bottom:6px}
   .lift{font-weight:800;font-variant-numeric:tabular-nums;border-radius:4px;padding:1px 6px;display:inline-block;min-width:54px;text-align:center}
   .lift.up{background:var(--many-soft);color:#00606e}
   .lift.dn{background:var(--few-soft);color:#8d4210}
@@ -146,191 +273,306 @@
   .lv{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700}
 
   /* 投稿一覧 */
-  .posts-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
-  .posts-tools input{flex:1;min-width:200px;border:1px solid var(--line);border-radius:8px;padding:7px 10px}
-  .posts{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+  .posts-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .search{flex:1;min-width:220px;position:relative;display:flex;align-items:center}
+  .search .ico{position:absolute;left:11px;color:var(--gray-ink2)}
+  .search input{width:100%;border:1px solid var(--line2);border-radius:10px;padding:8px 12px 8px 34px}
+  .search input:focus{border-color:var(--struct2);outline:none;box-shadow:0 0 0 3px var(--struct-soft)}
+  .posts-tools .note{margin:0}
+  .posts{max-height:640px;overflow:auto;border:1px solid var(--line);border-radius:10px}
   .posts td{white-space:pre-wrap}
   .posts tr.r{cursor:pointer}
-  .posts tr.r:hover td{background:#fafbfc}
-  .posts tr.d td{background:#f8fafa;font-size:12px;color:var(--ink2)}
-  .pill{display:inline-block;border-radius:999px;padding:0 7px;font-size:11.5px;font-weight:700;border:1px solid var(--line);color:var(--gray-ink);white-space:nowrap}
+  .posts tr.r:hover td{background:var(--struct-faint)}
+  .posts tr.d td{background:var(--soft);font-size:12px;color:var(--ink2)}
+  .pill{display:inline-block;border-radius:999px;padding:0 7px;font-size:11.5px;font-weight:700;border:1px solid var(--line);color:var(--gray-ink);white-space:nowrap;background:#fff}
   .vsym{font-weight:800}
 
-
-  /* チャットの設定（編集画面） */
-  #setPane{margin:14px 0 30px}
-  #setPane .card{margin-bottom:12px}
-  .set-status{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px;margin:6px 0}
+  /* ---------- チャットの設定（編集画面） ---------- */
+  #setPane{padding:20px 0 30px}
+  #setPane > .card{margin-bottom:12px}
+  .set-title{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+  .set-title > div:first-child{flex:1;min-width:300px}
+  .set-title h2{margin:0;font-size:19px;color:var(--struct)}
+  .set-tools{display:flex;gap:2px;flex-wrap:wrap}
+  .set-status{display:flex;gap:8px 12px;align-items:center;flex-wrap:wrap;font-size:13.5px;margin:4px 0 0;padding-top:10px;border-top:1px solid #eef2f3}
   .set-status span{color:var(--gray-ink)}
-  .badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800}
+  .badge{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800;white-space:nowrap}
+  .set-status .badge{white-space:normal}
   .badge.dirty{background:var(--hyp-bg);color:#6b4b00;border:1px solid #f0d58f}
-  .badge.saved{background:#eef3f5;color:var(--struct2)}
-  .set-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
-  .set-actions input{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-  .set-msg{background:var(--info-bg);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:13.5px}
-  .set-login{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;background:#f8fafa;border:1px dashed var(--line);border-radius:10px;padding:10px;margin-top:8px}
-  .set-login input{border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+  .badge.saved{background:#eef3f5;color:var(--struct2);border:1px solid transparent}
+  .savebar{position:sticky;top:calc(var(--bar-h) + 8px);z-index:12;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;margin:0 0 12px;box-shadow:0 6px 18px rgba(14,59,74,.08);transition:background .2s,border-color .2s}
+  .savebar.dirty{background:#fffaf0;border-color:#f0d58f}
+  .savebar-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .savebar-row input{flex:1;min-width:240px;border:1px solid var(--line2);border-radius:9px;padding:8px 10px;background:#fff}
+  .savebar-row input:focus{border-color:var(--struct2);outline:none;box-shadow:0 0 0 3px var(--struct-soft)}
+  .savebar .err{margin-top:6px}
+  .savebar .err:empty{display:none}
+  .set-msg{background:var(--info-bg);border-radius:9px;padding:8px 12px;margin-top:8px;font-size:13.5px}
+  .set-login{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;background:var(--soft);border:1px dashed var(--line2);border-radius:10px;padding:10px;margin-top:10px}
+  .set-login input{border:1px solid var(--line2);border-radius:8px;padding:7px 9px}
   .guide{font-size:13.5px;line-height:1.75}
   .guide summary{cursor:pointer;color:var(--struct)}
   .guide table{max-width:640px;margin:6px 0}
   .guide ul{margin:6px 0;padding-left:20px}
-  .subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
-  .subtabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-weight:700;cursor:pointer;color:var(--ink2)}
-  .subtabs button.on{background:var(--struct);color:#fff;border-color:var(--struct)}
+  .set-layout{display:grid;grid-template-columns:210px minmax(0,1fr);gap:16px;align-items:start}
+  .subtabs{display:flex;flex-direction:column;gap:2px;position:sticky;top:calc(var(--bar-h) + 84px);background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:8px}
+  .subtabs button{border:none;background:transparent;border-radius:9px;padding:8px 10px;font-weight:700;cursor:pointer;color:var(--ink2);text-align:left;font-size:13.5px}
+  .subtabs button:hover{background:var(--struct-faint);color:var(--struct)}
+  .subtabs button.on{background:var(--struct);color:#fff}
+  @media (max-width:900px){ .set-layout{grid-template-columns:1fr} .subtabs{position:static;flex-direction:row;overflow-x:auto} .subtabs button{white-space:nowrap} }
   .set-scroll{overflow-x:auto}
   .set-tbl{width:100%;border-collapse:collapse;font-size:13px}
-  .set-tbl th{position:static;background:#f8fafa;font-size:12px;white-space:nowrap}
-  .set-tbl td{vertical-align:middle;padding:4px 5px}
-  .set-tbl input[type=text]{width:100%;min-width:130px;border:1px solid var(--line);border-radius:6px;padding:5px 7px}
-  .set-tbl select{border:1px solid var(--line);border-radius:6px;padding:5px 4px;background:#fff;min-width:118px}
-  .set-tbl input.wnum{width:66px;border:1px solid var(--line);border-radius:6px;padding:5px 4px;text-align:right;font-variant-numeric:tabular-nums}
+  .set-tbl th{position:static;background:var(--soft);font-size:12px;white-space:nowrap}
+  .set-tbl td{vertical-align:middle;padding:5px 5px}
+  .set-tbl input[type=text]{width:100%;min-width:130px;border:1px solid var(--line2);border-radius:7px;padding:5px 7px}
+  .set-tbl select{border:1px solid var(--line2);border-radius:7px;padding:5px 4px;background:#fff;min-width:118px}
+  .set-tbl input.wnum{width:66px;border:1px solid var(--line2);border-radius:7px;padding:5px 4px;text-align:right;font-variant-numeric:tabular-nums}
   .set-tbl input.wnum.nz{font-weight:800;background:#eef3f5;border-color:var(--struct2)}
+  .set-tbl input:focus,.set-tbl select:focus{border-color:var(--struct2);outline:none;box-shadow:0 0 0 3px var(--struct-soft)}
   .set-tbl tr.off td{opacity:.45}
   .set-tbl tr.off td:first-child{opacity:1}
   .ops{white-space:nowrap}
-  .ops button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 8px;cursor:pointer;margin-right:2px;font-size:12px}
+  .ops button{border:1px solid var(--line2);background:#fff;border-radius:6px;padding:3px 8px;cursor:pointer;margin-right:2px;font-size:12px}
+  .ops button:hover{background:var(--struct-faint)}
   .ops button:disabled{opacity:.35;cursor:default}
   .fixed-note{font-size:11px;color:var(--gray-ink2);white-space:nowrap}
-  tr.tg-row > td{background:#fafbfc;padding:6px 8px 12px 28px}
+  tr.tg-row > td{background:var(--soft);padding:6px 8px 12px 28px}
   .tg-box{border-left:3px solid var(--struct2);padding:6px 12px}
   .tg-box .field input{max-width:520px}
   .add-btn{margin-top:8px}
   .sim .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
-  .sim .chip{border:1px solid var(--line);border-radius:999px;padding:5px 12px;background:#fff;cursor:pointer;font-weight:700;font-size:13px;color:var(--ink)}
-  .sim .chip.on{border-color:var(--struct);background:#e6eef1}
+  .sim .chip{border:1px solid var(--line2);border-radius:999px;padding:5px 12px;background:#fff;cursor:pointer;font-weight:700;font-size:13px;color:var(--ink)}
+  .sim .chip:hover{border-color:var(--struct2)}
+  .sim .chip.on{border-color:var(--struct);background:var(--struct-soft)}
   .sim .chip .ord{display:inline-block;min-width:18px;height:18px;border-radius:9px;background:var(--struct);color:#fff;font-size:11px;text-align:center;line-height:18px;margin-right:4px}
-  .sim h4{margin:10px 0 2px;font-size:13px;color:var(--struct2)}
-  .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .sim h4{margin:12px 0 2px;font-size:13px;color:var(--struct2)}
+  .sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
   @media (max-width:980px){ .sim-grid{grid-template-columns:1fr} }
   .sim td.nz{font-weight:800}
+
   #tip{position:fixed;z-index:50;pointer-events:none;background:#fff;border:1px solid var(--line);box-shadow:0 6px 18px rgba(0,0,0,.12);border-radius:8px;padding:7px 10px;font-size:12.5px;max-width:300px;display:none}
   #tip b{display:block;font-size:15px;color:var(--ink)}
   #tip span{color:var(--gray-ink)}
-  footer{color:var(--gray-ink2);font-size:12px;padding:20px 0 40px}
+  footer{color:var(--gray-ink2);font-size:12px;padding:12px 0 40px;border-top:1px solid var(--line);margin-top:8px}
+
+  /* ---------- 画面がせまいとき：目次は上に横並び、絞り込みはたたむ ---------- */
+  @media (max-width:1180px){
+    .shell{grid-template-columns:minmax(0,1fr);gap:12px}
+    .rail{display:contents}
+    .toc{position:sticky;top:var(--bar-h);z-index:20;flex-direction:row;overflow-x:auto;gap:4px;padding:8px;border-radius:12px;scrollbar-width:none;box-shadow:0 4px 12px rgba(14,59,74,.06)}
+    .toc .rail-h{display:none}
+    .filters{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:0 12px}
+    .filters .rail-h,.filters .f-count{grid-column:1 / -1}
+    .f-toggle{cursor:pointer;font-size:13px;color:var(--struct)}
+    .f-toggle::after{content:"  ▾";color:var(--gray-ink2)}
+    .filters.closed .f-toggle::after{content:"  ▸"}
+    .filters.closed .field{display:none}
+    .filters.closed .f-count{margin-bottom:0}
+  }
+  @media (max-width:900px){
+    .appbar{position:relative}
+    .appbar-in{flex-wrap:wrap;gap:8px 14px;padding:8px 0}
+    .appbar-r{margin-left:0;width:100%;flex-wrap:wrap}
+    .src{max-width:100%}
+    .toc{top:0}
+    .sec{scroll-margin-top:64px} .card{scroll-margin-top:64px}
+    .savebar{top:8px} .subtabs{top:auto}
+    .intro h1{font-size:22px}
+    .wrap{padding:0 14px}
+  }
+  @media (max-width:1320px){ .appbar .long{display:none} }
+  @media (max-width:1060px) and (min-width:901px){ .bt small{display:none} }
+  @media (max-width:560px){ .bt small{display:none} .src{font-size:12px} }
+  /* 印刷：操作ボタンや目次は出さず、カードを途中で切らない */
+  @media print{
+    body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .appbar,.notice,.rail,.toc,.filters,.net-tools .btn,.posts-tools,footer{display:none!important}
+    .print-only{display:block;font-size:12px;color:var(--gray-ink);margin:0 0 10px}
+    .shell{display:block;padding:0}
+    .card,.kpi,.mg{box-shadow:none;break-inside:avoid}
+    .posts{max-height:none;overflow:visible}
+  }
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="wrap">
-    <div class="brand">DROP. Coach 分析ダッシュボード<small>CULTURE SNACK × 投稿づくりチャットの記録と設定</small></div>
+<!-- 画面で使うアイコン -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.6-9.96A6 6 0 0 1 18 8.5a4.5 4.5 0 0 1-.5 9"/><path d="M12 12v9"/><path d="m8.5 17.5 3.5 3.5 3.5-3.5"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m10 8.5 5 3.5-5 3.5z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66L20 8.5"/><path d="M20 3.5v5h-5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M5 20h14"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 15V4"/><path d="m7.5 8.5 4.5-4.5 4.5 4.5"/><path d="M5 20h14"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 4 3 8l4 4"/><path d="M3 8h13"/><path d="m17 12 4 4-4 4"/><path d="M21 16H8"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></symbol>
+</svg>
+
+<header class="appbar">
+  <div class="wrap appbar-in">
+    <div class="brand"><span class="mark" aria-hidden="true">D.</span><span class="bt"><b>DROP. Coach</b><small>分析ダッシュボード・CULTURE SNACK</small></span></div>
     <nav class="nav" aria-label="画面の切りかえ"><button class="on" id="navMain" type="button">分析</button><button id="navSet" type="button">チャットの設定</button></nav>
-    <div class="status" id="status">記録を読み込んでください</div>
-    <button class="btn on-dark" id="switchBtn" hidden>← データの読み込み方を選ぶ</button>
-    <button class="btn on-dark" id="reloadBtn" hidden>最新を読み込む</button>
-    <button class="btn on-dark" id="csvBtn" hidden>この絞り込みを CSV で保存</button>
+    <div class="appbar-r">
+      <div class="src" title="いま読み込んでいるデータ"><span class="dot" id="srcDot"></span><span id="status">記録を読み込んでください</span></div>
+      <button class="btn ghost" id="reloadBtn" type="button" hidden><svg class="ico"><use href="#i-refresh"/></svg>最新を読み込む</button>
+      <button class="btn ghost" id="csvBtn" type="button" title="いまの絞り込みのチャットを 1 行ずつ CSV で保存します" hidden><svg class="ico"><use href="#i-down"/></svg><span class="long">この絞り込みを </span>CSV で保存</button>
+      <button class="btn" id="switchBtn" type="button" hidden><svg class="ico"><use href="#i-swap"/></svg>データの読み込み方を選ぶ</button>
+    </div>
   </div>
 </header>
+<div class="notice"><div class="wrap"><svg class="ico"><use href="#i-lock"/></svg>管理者用の画面です。参加者の名前とひとことが表示されます。画面を共有・印刷するときは注意してください。</div></div>
 
 <div class="wrap">
-  <div class="banner warn">管理者用の画面です。参加者の名前とひとことが表示されます。画面を共有・印刷するときは注意してください。</div>
-  <div class="banner hyp" id="demoBanner" hidden>いま表示しているのは <b>デモデータ（架空）</b> です。画面の見え方を確かめるためのもので、実際の記録ではありません。</div>
+  <p class="print-only">DROP. Coach 分析ダッシュボード（管理者用・参加者の名前とひとことを含みます。取り扱いに注意）</p>
+  <div class="demo-strip" id="demoBanner" hidden><span class="dot"></span><span>いま表示しているのは <b>デモデータ（架空）</b> です。画面の見え方を確かめるためのもので、実際の記録ではありません。</span></div>
 
-  <div class="banner info" id="loaderBack" hidden>いま読み込んでいるデータ：<b id="loaderCur"></b>　<button class="btn" id="loaderBackBtn" type="button">このデータの分析にもどる</button></div>
   <section class="loader" id="loader">
-    <div class="card">
-      <h3>1. 記録用 GAS から読み込む</h3>
-      <p>LOG_DROP_COACH（chat_v3 シート）の記録を直接読み込みます。<b>管理者パスワード</b>（GAS の ADMIN_PASSWORD）が必要です。参加者用のパスワードでは読めません。</p>
-      <div id="aQuick" hidden><p class="note">管理者としてログイン中です。</p><button class="btn pri" id="aQuickBtn" type="button">そのまま読み込む</button><p class="note">別のパスワードで入りなおすときは下へ</p></div>
-      <form id="fLogin">
-        <div class="field"><label for="aName">名前</label><input id="aName" autocomplete="username" value="admin" maxlength="40" /></div>
-        <div class="field"><label for="aPw">管理者パスワード</label><input id="aPw" type="password" autocomplete="current-password" /></div>
-        <div class="err" id="aErr"></div>
-        <button class="btn pri" id="aGo" type="submit">読み込む</button>
-      </form>
+    <div class="intro">
+      <div class="eyebrow">はじめに</div>
+      <h1>どのデータを見ますか？</h1>
+      <p>投稿づくりチャット（DROP. Coach）の記録を読み込んで、使われ方・投稿の中身・KPI を見ます。いつもは「記録用 GAS から読み込む」を使います。</p>
     </div>
-    <div class="card">
-      <h3>2. CSV を読み込む</h3>
-      <p>スプレッドシートの chat_v3 シートを「ファイル → ダウンロード → カンマ区切り形式（.csv）」で保存したファイルを選びます。データはこの端末の中だけで処理されます。</p>
-      <input type="file" id="csvFile" accept=".csv,text/csv" />
-      <div class="err" id="cErr"></div>
+    <div class="resume" id="loaderBack" hidden><svg class="ico"><use href="#i-history"/></svg><span>いま読み込んでいるデータ：<b id="loaderCur"></b></span><button class="btn pri" id="loaderBackBtn" type="button">このデータの分析にもどる<svg class="ico"><use href="#i-next"/></svg></button></div>
+    <div class="choices">
+      <article class="choice rec">
+        <div class="choice-h"><span class="choice-ic"><svg class="ico"><use href="#i-cloud"/></svg></span><h3><span class="step">方法 1</span>記録用 GAS から読み込む</h3><span class="tag">いつもはこれ</span></div>
+        <p>LOG_DROP_COACH（chat_v3 シート）の最新の記録を直接読み込みます。<b>管理者パスワード</b>（GAS の ADMIN_PASSWORD）が必要です。参加者用のパスワードでは読めません。</p>
+        <div class="quick" id="aQuick" hidden><p class="note" style="margin-top:0">このタブでは管理者としてログイン中です。</p><button class="btn pri" id="aQuickBtn" type="button">そのまま読み込む</button><p class="note" style="margin-bottom:0">別のパスワードで入りなおすときは下へ</p></div>
+        <form id="fLogin">
+          <div class="field"><label for="aName">名前</label><input id="aName" autocomplete="username" value="admin" maxlength="40" /></div>
+          <div class="field"><label for="aPw">管理者パスワード</label><input id="aPw" type="password" autocomplete="current-password" /></div>
+          <div class="err" id="aErr" role="alert"></div>
+          <button class="btn pri lg" id="aGo" type="submit">読み込む</button>
+        </form>
+      </article>
+      <article class="choice">
+        <div class="choice-h"><span class="choice-ic"><svg class="ico"><use href="#i-file"/></svg></span><h3><span class="step">方法 2</span>CSV を読み込む</h3></div>
+        <p>スプレッドシートの chat_v3 シートを「ファイル → ダウンロード → カンマ区切り形式（.csv）」で保存したファイル。データはこの端末の中だけで処理されます。</p>
+        <label class="drop" id="csvDrop" for="csvFile"><svg class="ico"><use href="#i-up"/></svg><b>CSV ファイルを選ぶ</b><span>ここにドラッグしても読み込めます</span><input type="file" id="csvFile" class="vh" accept=".csv,text/csv" /></label>
+        <div class="err" id="cErr" role="alert"></div>
+      </article>
+      <article class="choice">
+        <div class="choice-h"><span class="choice-ic"><svg class="ico"><use href="#i-play"/></svg></span><h3><span class="step">方法 3</span>デモデータで見る</h3></div>
+        <p class="grow">記録がまだ無いときに、画面の見え方を確かめるための架空のデータ（140 件）を表示します。実際の記録ではありません。</p>
+        <button class="btn lg" id="demoBtn" type="button">デモデータを表示</button>
+      </article>
     </div>
-    <div class="card">
-      <h3>3. デモデータで見る</h3>
-      <p>記録がまだ無いときに、画面の見え方を確かめるための架空のデータ（140 件）を表示します。</p>
-      <button class="btn" id="demoBtn">デモデータを表示</button>
-    </div>
-    <div class="card">
-      <h3>チャットの設定を変える</h3>
-      <p>選択肢の言葉・KPI の重み・気持ちごとの「どこが」の候補を、画面で変えられます（保存には管理者パスワード）。</p>
-      <button class="btn" id="openSetBtn" type="button">チャットの設定をひらく</button>
-    </div>
+    <div class="setlink"><svg class="ico"><use href="#i-sliders"/></svg><span>チャットの選択肢の言葉・KPI の重み・気持ちごとの「どこが」の候補は、画面で変えられます（保存には管理者パスワード）。</span><button class="btn" id="openSetBtn" type="button">チャットの設定をひらく<svg class="ico"><use href="#i-next"/></svg></button></div>
   </section>
 
   <main id="main" hidden>
-    <div class="legend" aria-label="色の見方">
-      <b>色の見方</b>
-      <span><i class="sw" style="background:var(--emph)"></i>注目してほしいところ（1 つの図に 1 つ）</span>
-      <span><i class="sw" style="background:var(--gray)"></i>その他・比較相手</span>
-      <span><i class="sw" style="background:var(--good)"></i>◎ ポジティブ <i class="sw" style="background:var(--good2);margin-left:6px"></i>○ ややポジティブ <i class="sw" style="background:var(--mid);margin-left:6px"></i>△ ふつう <i class="sw" style="background:var(--bad);margin-left:6px"></i>× ネガティブ</span>
-      <span><i class="sw" style="background:var(--many)"></i>↑ 多い <i class="sw" style="background:var(--few);margin-left:6px"></i>↓ 少ない</span>
-      <span><i class="sw" style="background:var(--o1)"></i><i class="sw" style="background:var(--o2)"></i><i class="sw" style="background:var(--o3)"></i>段階（コーチの関与）</span>
-    </div>
+    <div class="shell">
+      <aside class="rail" aria-label="目次と絞り込み">
+        <nav class="toc rail-box" id="toc" aria-label="目次">
+          <div class="rail-h">目次</div>
+          <a href="#sec-overview" class="on"><span class="n">1</span>概要</a>
+          <a href="#sec-usage"><span class="n">2</span>チャットの使われ方</a>
+          <a href="#sec-content"><span class="n">3</span>投稿の中身</a>
+          <a href="#sec-ux"><span class="n">4</span>チャットの使いごこち</a>
+          <a href="#sec-net"><span class="n">5</span>つながり</a>
+          <a href="#sec-kpi"><span class="n">6</span>KPI と効果の見方</a>
+          <a href="#sec-posts"><span class="n">7</span>投稿の一覧</a>
+        </nav>
+        <div class="filters rail-box" id="filters" role="group" aria-label="絞り込み">
+          <div class="rail-h"><button class="f-toggle" id="fToggle" type="button" aria-expanded="true" aria-controls="filters">絞り込み</button><button class="link" id="fReset" type="button">すべて解除</button></div>
+          <div class="f-count" title="絞り込みは、この画面のすべての図・表・一覧に効きます"><span id="fCount"></span><div class="f-meter" aria-hidden="true"><i id="fMeter"></i></div></div>
+          <div class="field"><label for="fFrom">開始日</label><input type="date" id="fFrom" /></div>
+          <div class="field"><label for="fTo">終了日</label><input type="date" id="fTo" /></div>
+          <div class="field"><label for="fState">状態</label><select id="fState"><option value="">すべて</option><option value="reached">投稿文まで</option><option value="copied">コピーした</option><option value="dropped">途中でやめた</option></select></div>
+          <div class="field"><label for="fLevel">コーチの関与</label><select id="fLevel"><option value="">すべて</option><option>ひとことのみ</option><option>選択あり</option><option>AI仕上げ</option></select></div>
+          <div class="field"><label for="fProfile">属性</label><select id="fProfile"><option value="">すべて</option></select></div>
+          <div class="field"><label for="fPhoto">写真</label><select id="fPhoto"><option value="">すべて</option><option>あり</option><option>なし</option></select></div>
+          <div class="field"><label for="fWeight">KPI・気持ちの向きの重み</label><select id="fWeight"><option value="rec">記録したときの重み</option><option value="now">いまの設定で計算し直す</option></select></div>
+        </div>
+      </aside>
 
-    <div class="filters" id="filters">
-      <div class="field"><label for="fFrom">開始日</label><input type="date" id="fFrom" /></div>
-      <div class="field"><label for="fTo">終了日</label><input type="date" id="fTo" /></div>
-      <div class="field"><label for="fPhoto">写真</label><select id="fPhoto"><option value="">すべて</option><option>あり</option><option>なし</option></select></div>
-      <div class="field"><label for="fProfile">属性</label><select id="fProfile"><option value="">すべて</option></select></div>
-      <div class="field"><label for="fLevel">コーチの関与</label><select id="fLevel"><option value="">すべて</option><option>ひとことのみ</option><option>選択あり</option><option>AI仕上げ</option></select></div>
-      <div class="field"><label for="fState">状態</label><select id="fState"><option value="">すべて</option><option value="reached">投稿文まで</option><option value="copied">コピーした</option><option value="dropped">途中でやめた</option></select></div>
-      <div class="field"><label for="fWeight">KPI・気持ちの向きの重み</label><select id="fWeight"><option value="rec">記録したときの重み</option><option value="now">いまの設定で計算し直す</option></select></div>
-      <button class="btn" id="fReset" type="button">絞り込みを解除</button>
-      <span class="cnt" id="fCount"></span>
-    </div>
+      <div class="content">
+        <div class="legend" id="legend" aria-label="色の見方">
+          <b>色の見方</b>
+          <span><i class="sw" style="background:var(--emph)"></i>注目してほしいところ（1 つの図に 1 つ）</span>
+          <span><i class="sw" style="background:var(--gray)"></i>その他・比較相手</span>
+          <span><span class="sws"><i class="sw" style="background:var(--good)"></i><i class="sw" style="background:var(--good2)"></i><i class="sw" style="background:var(--mid)"></i><i class="sw" style="background:var(--bad)"></i></span>評価・気持ちの向き ◎ ○ △ ×</span>
+          <span><span class="sws"><i class="sw" style="background:var(--many)"></i><i class="sw" style="background:var(--few)"></i></span>↑ 多い ↓ 少ない（良し悪しではない差）</span>
+          <span><span class="sws"><i class="sw" style="background:var(--o1)"></i><i class="sw" style="background:var(--o2)"></i><i class="sw" style="background:var(--o3)"></i><i class="sw" style="background:var(--o4)"></i></span>段階（コーチの関与・具体さ）</span>
+        </div>
+        <section class="sec" id="sec-overview" aria-labelledby="h-overview">
+          <header class="sec-h"><span class="sec-n">1</span><div><h2 id="h-overview">概要</h2><p>投稿文をコピーした数が、DROP への投稿につながる数の目安です（DROP 側の投稿数と照らし合わせて確認）。</p></div></header>
+          <div id="tiles"></div>
+          <div class="card findings"><div class="card-h"><h3>目立つところ</h3><span class="note" style="margin:0">数字の大小から自動で抜き出しています。理由は図と投稿の中身で確かめてください。</span></div><ul class="fd-list" id="findings"></ul></div>
+        </section>
 
-    <div class="grid">
-      <div class="card c12"><h2>全体</h2><p class="why">投稿文をコピーした数が、DROP への投稿につながる数の目安です（DROP 側の投稿数と照らし合わせて確認）。</p><div class="tiles" id="tiles"></div></div>
+        <section class="sec" id="sec-usage" aria-labelledby="h-usage">
+          <header class="sec-h"><span class="sec-n">2</span><div><h2 id="h-usage">チャットの使われ方</h2><p>どこで止まる・どこに時間がかかる。問いの数や言い方を見直すときに見ます。</p></div></header>
+          <div class="grid">
+            <div class="card c4"><h3>到達のようす</h3><p class="why">ひとことを書いた人のうち、投稿文までたどり着いた人・コピーした人。</p><div id="funnel"></div></div>
+            <div class="card c4"><h3>問いごとの回答率</h3><p class="why">投稿文までたどり着いた人のうち、その問いに答えた（とばさなかった）割合。「任意」の問いは、答えた人だけ。</p><div id="answerRate"></div></div>
+            <div class="card c4"><h3>問いごとにかかった時間</h3><p class="why">問いが出てから答えるまでの秒数（中央値）。長い問いは、選択肢や言い方を見直す候補です。</p><div id="stepSec"></div></div>
+            <div class="card c6"><h3>途中でやめた場所</h3><p class="why">投稿文の前に画面を閉じた人が、最後に見ていた問い。</p><div id="dropAt"></div></div>
+            <div class="card c6"><h3>時間帯</h3><p class="why">チャットを始めた時刻（1 時間ごと）。</p><div id="hours"></div></div>
+          </div>
+        </section>
 
-      <div class="sec">1. チャットの使われ方（どこで止まる・どこに時間がかかる）</div>
-      <div class="card c4"><h2>到達のようす</h2><p class="why">ひとことを書いた人のうち、投稿文までたどり着いた人・コピーした人。</p><div id="funnel"></div></div>
-      <div class="card c4"><h2>問いごとの回答率</h2><p class="why">投稿文までたどり着いた人のうち、その問いに答えた（とばさなかった）割合。「このあと」は任意の問い。</p><div id="answerRate"></div></div>
-      <div class="card c4"><h2>問いごとにかかった時間</h2><p class="why">問いが出てから答えるまでの秒数（中央値）。長い問いは、選択肢や言い方を見直す候補です。</p><div id="stepSec"></div></div>
-      <div class="card c6"><h2>途中でやめた場所</h2><p class="why">投稿文の前に画面を閉じた人が、最後に見ていた問い。</p><div id="dropAt"></div></div>
-      <div class="card c6"><h2>時間帯</h2><p class="why">チャットを始めた時刻（1 時間ごと）。</p><div id="hours"></div></div>
+        <section class="sec" id="sec-content" aria-labelledby="h-content">
+          <header class="sec-h"><span class="sec-n">3</span><div><h2 id="h-content">投稿の中身</h2><p>気持ち・どこが・だれと・このあと。チャットの答えから、何がどう感じられたかを見ます。</p></div></header>
+          <div class="grid">
+            <div class="card c6"><h3>どんな気持ちになったか</h3><p class="why">選ばれた気持ちの数（1 人で複数）。色は気持ちの向き。</p><div id="feels"></div></div>
+            <div class="card c6"><h3>気持ちの向き（1 人ごと）</h3><p class="why">選んだ気持ちを、選んだ順の重みで平均した値（−1〜1）。AI の読み取りとの一致も見ます。</p><div id="valence"></div></div>
+            <div class="card c12"><h3>気持ちの中身（「どこが」の候補・近い順の重み）</h3><p class="why">たとえば「かわいい」と答えた人が、何をかわいいと思ったのか。近い順に選んだものに 1・0.75・0.5・0.25 の重みをつけて足しています（重みは「チャットの設定」で変えられます）。</p><div id="targets"></div></div>
+            <div class="card c4"><h3>だれと一緒だったか</h3><p class="why">②属性横断・③心理的安全性の手がかり。</p><div id="who"></div></div>
+            <div class="card c4"><h3>どこが（全体）</h3><p class="why">気持ちを問わず、選ばれた「どこが」の数。「写真から」= AI の候補から選ばれたもの。</p><div id="why"></div></div>
+            <div class="card c4"><h3>このあと、どうしたいか（任意）</h3><p class="why">①挑戦・街への愛着の手がかり。最低限の問いのあとに、任意の問いへ進んだ人だけに聞いています。</p><div id="next"></div></div>
+            <div class="card c4"><h3>話題（ひとことから）</h3><p class="why">ひとことの話題（AI のヒント → 画面の読み取り）。</p><div id="subjects"></div></div>
+            <div class="card c4"><h3>投稿の材料の数</h3><p class="why">投稿文に入った材料（ひとこと＋だれと・どこが・気持ち・このあと）の数。</p><div id="richness"></div></div>
+            <div class="card c4"><h3>属性</h3><p class="why">「あなたについて」の答え（端末ごとに 1 回）。</p><div id="profile"></div></div>
+            <div class="card c6"><h3>今日の発見（任意）</h3><p class="why">最低限の問いのあとに聞く任意の問い。投稿の「気づき」の行になる（例：こんな人がいたなんて）。</p><div id="finds"></div></div>
+            <div class="card c6"><h3>その人のふだん（任意）</h3><p class="why">作った人・話した人がふだん何をしている人か。「平日は〇〇、今日は〇〇」のギャップ（B 面）の手がかり。</p><div id="faces"></div></div>
+          </div>
+        </section>
 
-      <div class="sec">2. 投稿の中身（気持ち・どこが・だれと・このあと）</div>
-      <div class="card c6"><h2>どんな気持ちになったか</h2><p class="why">選ばれた気持ちの数（1 人で複数）。色は気持ちの向き。</p><div id="feels"></div></div>
-      <div class="card c6"><h2>気持ちの向き（1 人ごと）</h2><p class="why">選んだ気持ちを、選んだ順の重みで平均した値（−1〜1）。AI の読み取りとの一致も見ます。</p><div id="valence"></div></div>
-      <div class="card c12"><h2>気持ちの中身（「どこが」の候補・近い順の重み）</h2><p class="why">たとえば「かわいい」と答えた人が、何をかわいいと思ったのか。近い順に選んだものに 1・0.75・0.5・0.25 の重みをつけて足しています（重みは「チャットの設定」で変えられます）。</p><div id="targets"></div></div>
-      <div class="card c4"><h2>だれと一緒だったか</h2><p class="why">②属性横断・③心理的安全性の手がかり。</p><div id="who"></div></div>
-      <div class="card c4"><h2>どこが（全体）</h2><p class="why">気持ちを問わず、選ばれた「どこが」の数。「写真から」= AI の候補から選ばれたもの。</p><div id="why"></div></div>
-      <div class="card c4"><h2>このあと、どうしたいか（任意）</h2><p class="why">①挑戦・街への愛着の手がかり。最低限の問いのあとに「もう1つ答える」を選んだ人だけに聞いています。</p><div id="next"></div></div>
-      <div class="card c4"><h2>話題（ひとことから）</h2><p class="why">ひとことの話題（AI のヒント → 画面の読み取り）。</p><div id="subjects"></div></div>
-      <div class="card c4"><h2>投稿の材料の数</h2><p class="why">投稿文に入った材料（ひとこと＋だれと・どこが・気持ち・このあと）の数。</p><div id="richness"></div></div>
-      <div class="card c4"><h2>属性</h2><p class="why">「あなたについて」の答え（端末ごとに 1 回）。</p><div id="profile"></div></div>
-      <div class="card c6"><h2>今日の発見（任意）</h2><p class="why">最低限の問いのあとに聞く任意の問い。投稿の「気づき」の行になる（例：こんな人がいたなんて）。</p><div id="finds"></div></div>
-      <div class="card c6"><h2>その人のふだん（任意）</h2><p class="why">作った人・話した人がふだん何をしている人か。「平日は〇〇、今日は〇〇」のギャップ（B 面）の手がかり。</p><div id="faces"></div></div>
+        <section class="sec" id="sec-ux" aria-labelledby="h-ux">
+          <header class="sec-h"><span class="sec-n">4</span><div><h2 id="h-ux">チャットの使いごこち</h2><p>投稿文をコピーしたあとに、任意で聞いている 5 段階と、運営へのコメント。</p></div></header>
+          <div class="grid">
+            <div class="card c5"><h3>使いごこち（5 段階）</h3><p class="why">このチャット（投稿づくり）について。イベントの満足度ではありません。</p><div id="rating"></div></div>
+            <div class="card c7"><h3>運営へのコメント</h3><p class="why">使いごこちを答えた人が、任意で書いたひとこと（新しい順）。</p><div id="comments"></div></div>
+          </div>
+        </section>
 
-      <div class="sec">2'. チャットの使いごこち（コピーのあとに任意で 5 段階）</div>
-      <div class="card c5"><h2>使いごこち（5 段階）</h2><p class="why">このチャット（投稿づくり）について。イベントの満足度ではありません。</p><div id="rating"></div></div>
-      <div class="card c7"><h2>運営へのコメント</h2><p class="why">使いごこちを答えた人が、任意で書いたひとこと（新しい順）。</p><div id="comments"></div></div>
+        <section class="sec" id="sec-net" aria-labelledby="h-net">
+          <header class="sec-h"><span class="sec-n">5</span><div><h2 id="h-net">つながり</h2><p>同じ投稿でいっしょに選ばれたもの（共起ネットワーク）。人 → コンテンツ → 空間 → 感情 → 発見 → 意向 の順に並べています。</p></div></header>
+          <div class="card">
+            <h3>いっしょに選ばれたもの</h3>
+            <p class="why">丸を押すと、そのノードとよくいっしょに出るものを図の下の表に出します（もう一度押すか、図の何もないところを押すと解除）。「出やすさ」は偶然に比べて何倍いっしょに出るか（1 より大きいほど結びつきが強い）。</p>
+            <div class="net-tools"><label>線を出す最小の回数 <input type="range" id="netMin" min="1" max="10" value="2" /> <b id="netMinV">2</b> 回</label><span id="netInfo"></span><button class="btn sm" id="netCsv" type="button"><svg class="ico"><use href="#i-down"/></svg>線の一覧を CSV で保存</button></div>
+            <div class="net-wrap"><div class="net-scroll" id="net"></div><div class="net-side" id="netSide"></div></div>
+          </div>
+        </section>
 
-      <div class="sec">3. つながり（共起ネットワーク）</div>
-      <div class="card c12">
-        <h2>いっしょに選ばれたもの</h2>
-        <p class="why">同じ投稿でいっしょに出てきたもの同士を線でつないでいます（人 → コンテンツ → 空間 → 感情 → 発見 → 意向）。丸を押すと、そのノードとよくいっしょに出るものを右に出します。「出やすさ」は偶然に比べて何倍いっしょに出るか（1 より大きいほど結びつきが強い）。</p>
-        <div class="net-tools"><label>線を出す最小の回数 <input type="range" id="netMin" min="1" max="10" value="2" /> <b id="netMinV">2</b> 回</label><span id="netInfo"></span><button class="btn" id="netCsv" type="button">線の一覧を CSV で保存</button></div>
-        <div class="net-wrap"><div class="net-scroll" id="net"></div><div class="net-side" id="netSide"></div></div>
-      </div>
+        <section class="sec" id="sec-kpi" aria-labelledby="h-kpi">
+          <header class="sec-h"><span class="sec-n">6</span><div><h2 id="h-kpi">KPI と効果の見方</h2><p>分析に使える投稿か・KPI のソフト分類・AI との一致・関与や見本の影響を比べます。</p></div></header>
+          <div class="grid">
+            <div class="card c12"><h3>分析に使える投稿か（5 つの要素）</h3><p class="why">AI が投稿文から読み取った「何を・誰の立場・なぜ・変化・次の一歩」の具体さ（0＝無い／1＝あいまい／2＝具体的）。「分析に使える」＝何を・なぜが具体的、誰の立場が書けていて、変化か次の一歩がある投稿。</p><div id="elements"></div></div>
+            <div class="card c6"><h3>KPI のソフト分類（平均）</h3><p class="why">本人の答えから計算した分類と、AI が投稿文から読み取った分類の比較。</p><div id="soft"></div></div>
+            <div class="card c6"><h3>本人の答えと AI の読み取りの一致</h3><p class="why">いちばん大きい KPI が、AI の分類と同じだったか。ずれが多い KPI は、選択肢の重みか AI の指示を見直します。</p><div id="agree"></div></div>
+            <div class="card c6"><h3>コーチの関与で比べる</h3><p class="why">効果測定では関与の段階を分けて見ます（AI が整えた文だけで結論を出さない）。</p><div id="levels"></div></div>
+            <div class="card c6"><h3>「ほかの人の例」を見た人・見ていない人</h3><p class="why">見本に引きずられていないかの確認。差は参考（検定はしていません）。件数が 10 未満の値は灰色。</p><div id="examples"></div></div>
+          </div>
+        </section>
 
-      <div class="sec">4. KPI（ソフト分類）と効果の見方</div>
-      <div class="card c12"><h2>分析に使える投稿か（5 つの要素）</h2><p class="why">AI が投稿文から読み取った「何を・誰の立場・なぜ・変化・次の一歩」の具体さ（0＝無い／1＝あいまい／2＝具体的）。「分析に使える」＝何を・なぜが具体的、誰の立場が書けていて、変化か次の一歩がある投稿。</p><div id="elements"></div></div>
-      <div class="card c6"><h2>KPI のソフト分類（平均）</h2><p class="why">本人の答えから計算した分類と、AI が投稿文から読み取った分類の比較。</p><div id="soft"></div></div>
-      <div class="card c6"><h2>本人の答えと AI の読み取りの一致</h2><p class="why">いちばん大きい KPI が、AI の分類と同じだったか。ずれが多い KPI は、選択肢の重みか AI の指示を見直します。</p><div id="agree"></div></div>
-      <div class="card c6"><h2>コーチの関与で比べる</h2><p class="why">効果測定では関与の段階を分けて見ます（AI が整えた文だけで結論を出さない）。</p><div id="levels"></div></div>
-      <div class="card c6"><h2>「ほかの人の例」を見た人・見ていない人</h2><p class="why">見本に引きずられていないかの確認。差は参考（検定はしていません）。件数が 10 未満の値は灰色。</p><div id="examples"></div></div>
-
-      <div class="sec">5. 投稿の一覧</div>
-      <div class="card c12">
-        <h2>投稿文とチャットの答え</h2>
-        <p class="why">行を押すと、AI の読み取り・ノード・時間などの詳細を表示します。</p>
-        <div class="posts-tools"><input type="search" id="pSearch" placeholder="ことばで探す（ひとこと・投稿文・名前・話題）" /><span class="note" id="pCount"></span></div>
-        <div class="posts" id="posts"></div>
+        <section class="sec" id="sec-posts" aria-labelledby="h-posts">
+          <header class="sec-h"><span class="sec-n">7</span><div><h2 id="h-posts">投稿の一覧</h2><p>投稿文とチャットの答え。行を押すと、AI の読み取り・ノード・時間などの詳細を表示します。</p></div></header>
+          <div class="card">
+            <div class="posts-tools"><div class="search"><svg class="ico"><use href="#i-search"/></svg><input type="search" id="pSearch" placeholder="ことばで探す（ひとこと・投稿文・名前・話題）" aria-label="投稿をことばで探す" /></div><span class="note" id="pCount"></span></div>
+            <div class="posts" id="posts"></div>
+          </div>
+        </section>
       </div>
     </div>
   </main>
   <section id="setPane" hidden></section>
-  <footer>DROP. Coach dashboard v1.2（2026-11-13）— 記録用 GAS（DROP_COACH_LOG v8）の chat_v3 シートの列名で読み込みます。同じセッション ID の行は、いちばん新しい行を使います（コピーした・投稿文まで行ったかは全行から判定）。</footer>
+  <footer>DROP. Coach dashboard v1.3（2026-11-13）— 記録用 GAS（DROP_COACH_LOG v8）の chat_v3 シートの列名で読み込みます。同じセッション ID の行は、いちばん新しい行を使います（コピーした・投稿文まで行ったかは全行から判定）。</footer>
 </div>
 <div id="tip" role="status"></div>
 <!-- チャットの選択肢と重みの初期値（json/coach_settings_default.json と同じ。チャットの HTML にも同じものが入っている） -->
@@ -387,6 +629,7 @@ document.addEventListener("pointerover", e => { const t = e.target.closest("[dat
 document.addEventListener("pointermove", e => { const t = e.target.closest("[data-tv]"); if (t) showTip(e, t.dataset.tv, t.dataset.tl || ""); else hideTip(); });
 document.addEventListener("focusin", e => { const t = e.target.closest("[data-tv]"); if (t) showTip(e, t.dataset.tv, t.dataset.tl || ""); });
 document.addEventListener("focusout", hideTip);
+addEventListener("scroll", hideTip, { passive: true });
 
 /* =====================================================================
    読み込み：GAS（管理者）／CSV／デモ
@@ -429,11 +672,14 @@ function showView(v) {
   VIEW = v;
   $("loader").hidden = v !== "loader"; $("main").hidden = v !== "main"; $("setPane").hidden = v !== "settings";
   $("navMain").classList.toggle("on", v !== "settings"); $("navSet").classList.toggle("on", v === "settings");
+  $("navMain").setAttribute("aria-current", v !== "settings" ? "page" : "false"); $("navSet").setAttribute("aria-current", v === "settings" ? "page" : "false");
   $("switchBtn").hidden = v !== "main"; $("csvBtn").hidden = v !== "main"; $("reloadBtn").hidden = !(v === "main" && /^GAS/.test(META.source || ""));
   $("demoBanner").hidden = !(v === "main" && META.demo);
+  $("srcDot").className = "dot" + (!SESS.length ? "" : META.demo ? " demo" : " live");
   $("loaderBack").hidden = !(v === "loader" && SESS.length);
   if (v === "loader") { $("loaderCur").textContent = META.source ? `${META.source}・${SESS.length} 件` : ""; const t = getToken(); $("aQuick").hidden = !t; }
-  window.scrollTo({ top: 0 });
+  window.scrollTo(0, 0);
+  if (v === "main") requestAnimationFrame(spyToc);
 }
 function showLoader() { showView("loader"); }
 $("switchBtn").addEventListener("click", showLoader);
@@ -458,8 +704,12 @@ function parseCSV(text) {
   if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
   return rows.filter(r => r.some(x => x !== ""));
 }
-$("csvFile").addEventListener("change", async () => {
-  const f = $("csvFile").files[0]; if (!f) return;
+$("csvFile").addEventListener("change", () => { const f = $("csvFile").files[0]; if (f) loadCsv(f); });
+{ const dz = $("csvDrop");
+  ["dragenter", "dragover"].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.add("over"); }));
+  ["dragleave", "drop"].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.remove("over"); }));
+  dz.addEventListener("drop", e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) loadCsv(f); }); }
+async function loadCsv(f) {
   $("cErr").textContent = "";
   try {
     const rows = parseCSV(await f.text());
@@ -467,7 +717,7 @@ $("csvFile").addEventListener("change", async () => {
     useData(rows[0], rows.slice(1), { source: "CSV（" + f.name + "）", total: rows.length - 1, demo: false });
   } catch (e) { $("cErr").textContent = e.message; }
   $("csvFile").value = "";
-});
+}
 $("demoBtn").addEventListener("click", () => { const d = makeDemo(); useData(d.header, d.rows, { source: "デモデータ（架空）", total: d.rows.length, demo: true }); });
 
 /* =====================================================================
@@ -538,6 +788,7 @@ function useData(header, rows, meta) {
   const days = SESS.map(s => s.started).filter(Boolean).map(d => d.getTime());
   if (days.length) { $("fFrom").value = ymd(new Date(Math.min(...days))); $("fTo").value = ymd(new Date(Math.max(...days))); }
   $("status").textContent = `${meta.source}・${rows.length} 行 → ${SESS.length} 件のチャット` + (meta.truncated ? "（古い行は省略）" : "");
+  $("status").parentElement.title = "いま読み込んでいるデータ：" + $("status").textContent;
   render();
 }
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -555,6 +806,9 @@ function applyWeightMode(F) {
     s.topU = Object.values(s.softU).some(v => v) ? SOFT.map(x => [x[0], s.softU[x[0]] || 0]).sort((a, b) => b[1] - a[1])[0][0] : "";
   });
 }
+$("fToggle").addEventListener("click", () => { if (!NARROW.matches) return; const c = $("filters").classList.toggle("closed"); $("fToggle").setAttribute("aria-expanded", String(!c)); });
+const NARROW = window.matchMedia("(max-width: 1180px)");
+if (NARROW.matches) { $("filters").classList.add("closed"); $("fToggle").setAttribute("aria-expanded", "false"); }
 $("fReset").addEventListener("click", () => { ["fPhoto", "fProfile", "fLevel", "fState"].forEach(id => { $(id).value = ""; }); const days = SESS.map(s => s.started).filter(Boolean).map(d => d.getTime()); if (days.length) { $("fFrom").value = ymd(new Date(Math.min(...days))); $("fTo").value = ymd(new Date(Math.max(...days))); } render(); });
 function filtered() {
   const from = $("fFrom").value, to = $("fTo").value, ph = $("fPhoto").value, pr = $("fProfile").value, lv = $("fLevel").value, st = $("fState").value;
@@ -608,33 +862,90 @@ function rankItems(pairs, n, total, unit = "件") {
 function render() {
   const F = filtered();
   applyWeightMode(F);
-  $("fCount").textContent = `${F.length} / ${SESS.length} 件のチャット`;
+  $("fCount").innerHTML = `<b>${F.length}</b> / ${SESS.length} 件のチャット`;
+  $("fMeter").style.width = (SESS.length ? F.length / SESS.length * 100 : 0) + "%";
+  ["fPhoto", "fProfile", "fLevel", "fState"].forEach(id => $(id).classList.toggle("active", !!$(id).value));
+  $("fWeight").classList.toggle("active", $("fWeight").value === "now");
   renderTiles(F); renderFunnel(F); renderAnswerRate(F); renderStepSec(F); renderDropAt(F); renderHours(F);
   renderFeels(F); renderValence(F); renderTargets(F); renderWho(F); renderWhy(F); renderNext(F); renderSubjects(F); renderRichness(F); renderProfile(F); renderFinds(F); renderRating(F);
   renderNet(F); renderElements(F); renderSoft(F); renderAgree(F); renderLevels(F); renderExamples(F); renderPosts(F);
+  renderFindings(F);
 }
+/** 概要：いちばん大事な数字（上の 4 枚）と、まとまりごとの数字（下の 3 つ） */
 function renderTiles(F) {
   const R = F.filter(s => s.reached), C = F.filter(s => s.copied);
   const people = new Set(F.map(s => s.name).filter(Boolean)).size;
   const aiOk = R.filter(s => s.aiText);
-  const t = (l, v, s, hero) => `<div class="tile${hero ? " hero" : ""}"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s || "")}</div></div>`;
-  const md = median(F.map(s => s.duration));
-  $("tiles").innerHTML =
-    t("コピーされた投稿文", C.length, `ひとことを書いた人の ${fmtP(C.length, F.length)}`, true) +
-    t("チャット", F.length, `参加者 ${people} 人`) +
-    t("投稿文まで", fmtP(R.length, F.length), `${R.length} 件`) +
-    t("答えた問いの数", mean(R.map(s => s.answered)) == null ? "−" : mean(R.map(s => s.answered)).toFixed(1), "投稿文まで行った人の平均（最大 4）") +
-    t("所要時間", md == null ? "−" : (md >= 60 ? Math.floor(md / 60) + "分" + Math.round(md % 60) + "秒" : Math.round(md) + "秒"), "中央値") +
-    t("AI の文を採用", fmtP(R.filter(s => s.chosen === "AI").length, aiOk.length), `AI の文ができた ${aiOk.length} 件のうち`) +
-    t("文を手で直した", fmtP(R.filter(s => s.edited).length, R.length), "投稿文まで行った人のうち") +
-    t("AI の待ち時間", median(R.map(s => s.aiSec)) == null ? "−" : median(R.map(s => s.aiSec)).toFixed(1) + "秒", "投稿文づくり（中央値）") +
-    t("ヒントが間に合った", fmtP(F.filter(s => s.hintOk).length, F.filter(s => s.hintState).length), "裏で呼ぶ AI ヒントの成功率") +
-    t("「ほかの人の例」を見た", fmtP(F.filter(s => s.exViews > 0).length, F.length), `投稿イメージを開いた ${fmtP(F.filter(s => s.previewOpens > 0).length, F.length)}`) +
-    t("2本以上コピーした人", (() => { const m = countBy(C.map(s => s.name).filter(Boolean)); return fmtP(m.filter(x => x[1] >= 2).length, m.length); })(), "コピーした人のうち（名前ごと）") +
-    t("任意の問いにも答えた", fmtP(R.filter(s => s.extra === "答えた").length, R.filter(s => s.extra).length), "最低限の問いまで答えた人のうち") +
-    t("分析に使える投稿", fmtP(F.filter(s => s.analyzable).length, F.filter(s => s.analyzable != null).length), "何を・誰の立場・なぜ・変化/次の一歩（AI の読み取り）") +
-    t("チャットの使いごこち", mean(F.map(s => s.rating)) == null ? "−" : mean(F.map(s => s.rating)).toFixed(1) + " / 5", `${F.filter(s => s.rating != null).length} 人が回答（任意）`);
+  const md = median(F.map(s => s.duration)), ans = mean(R.map(s => s.answered)), aiw = median(R.map(s => s.aiSec)), rt = mean(F.map(s => s.rating));
+  const anaN = F.filter(s => s.analyzable != null).length;
+  const multi = countBy(C.map(s => s.name).filter(Boolean));
+  const P = (a, b) => (b ? [pct(a, b).toFixed(0), "%"] : ["−", ""]);
+  const kpi = (l, [v, u], s) => `<div class="kpi"><div class="l">${esc(l)}</div><div class="v">${esc(v)}${u ? `<small>${esc(u)}</small>` : ""}</div><div class="s">${esc(s)}</div></div>`;
+  const row = (l, v, sub) => `<div class="row"><dt>${esc(l)}</dt><dd>${esc(v)}</dd>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>`;
+  const grp = (h, rows) => `<div class="mg"><h4>${esc(h)}</h4><dl>${rows.join("")}</dl></div>`;
+  $("tiles").innerHTML = `<div class="kpis">
+      <div class="kpi hero"><div class="l">コピーされた投稿文</div><div class="v">${C.length}<small>本</small></div><div class="s">ひとことを書いた人の ${fmtP(C.length, F.length)}</div>
+        <div class="flow" aria-label="ひとこと ${F.length} 件、投稿文まで ${R.length} 件、コピー ${C.length} 件"><span>ひとこと<b>${F.length}</b></span><span class="arr">→</span><span>投稿文まで<b>${R.length}</b></span><span class="arr">→</span><span>コピー<b>${C.length}</b></span></div></div>
+      ${kpi("投稿文までたどり着いた", P(R.length, F.length), `${R.length} / ${F.length} 件のチャット`)}
+      ${kpi("分析に使える投稿", P(F.filter(s => s.analyzable).length, anaN), `何を・誰の立場・なぜ・変化／次の一歩（AI の読み取り ${anaN} 件）`)}
+      ${kpi("チャットの使いごこち", rt == null ? ["−", ""] : [rt.toFixed(1), "/ 5"], `${F.filter(s => s.rating != null).length} 人が回答（任意・5 段階）`)}
+    </div>
+    <div class="mgroups">
+      ${grp("チャットの流れ", [
+        row("チャット", `${F.length} 件`, `参加者 ${people} 人`),
+        row("答えた問いの数", ans == null ? "−" : ans.toFixed(1), "投稿文まで行った人の平均（最低限の問いは 4）"),
+        row("所要時間", md == null ? "−" : (md >= 60 ? Math.floor(md / 60) + "分" + Math.round(md % 60) + "秒" : Math.round(md) + "秒"), "中央値"),
+        row("任意の問いにも答えた", fmtP(R.filter(s => s.extra === "答えた").length, R.filter(s => s.extra).length), "最低限の問いまで答えた人のうち"),
+        row("2本以上コピーした人", fmtP(multi.filter(x => x[1] >= 2).length, multi.length), "コピーした人のうち（名前ごと）")])}
+      ${grp("AI のはたらき", [
+        row("AI の文を採用", fmtP(R.filter(s => s.chosen === "AI").length, aiOk.length), `AI の文ができた ${aiOk.length} 件のうち`),
+        row("文を手で直した", fmtP(R.filter(s => s.edited).length, R.length), "投稿文まで行った人のうち"),
+        row("AI の待ち時間", aiw == null ? "−" : aiw.toFixed(1) + "秒", "投稿文づくり（中央値）"),
+        row("ヒントが間に合った", fmtP(F.filter(s => s.hintOk).length, F.filter(s => s.hintState).length), "裏で呼ぶ AI ヒントの成功率")])}
+      ${grp("見本・プレビュー", [
+        row("「ほかの人の例」を見た", fmtP(F.filter(s => s.exViews > 0).length, F.length), "チャットのうち（見本に寄っていないかは「KPI と効果の見方」で）"),
+        row("投稿イメージを開いた", fmtP(F.filter(s => s.previewOpens > 0).length, F.length), "チャットのうち")])}
+    </div>`;
 }
+/** 目立つところ：各図の「いちばん」を文章で抜き出す（押すとその図へ） */
+function renderFindings(F) {
+  const out = [];
+  const D = F.filter(s => s.dropped);
+  if (D.length) { const p = countBy(D.map(s => s.lastStep || "（不明）"))[0]; out.push(["途中でやめた人がいちばん多い問い", p[0], `${p[1]} 件（途中でやめた ${D.length} 件の ${fmtP(p[1], D.length)}）`, "dropAt"]); }
+  const steps = ["ひとこと", "気持ち", "どこが", "だれと", "今日の発見", "その人のふだん", "このあと"];
+  const sec = steps.map(k => [k, median(F.map(s => s.secs[k]))]).filter(x => x[1] != null).sort((a, b) => b[1] - a[1]);
+  if (sec.length) out.push(["答えるのにいちばん時間がかかる問い", sec[0][0], `中央値 ${sec[0][1].toFixed(1)} 秒`, "stepSec"]);
+  const fe = countBy(F.flatMap(s => s.feels)), fN = F.filter(s => s.feels.length).length;
+  if (fe.length) out.push(["いちばん多く選ばれた気持ち", fe[0][0], `${fe[0][1]} 回（気持ちを選んだ人の ${fmtP(F.filter(s => s.feels.includes(fe[0][0])).length, fN)}）`, "feels"]);
+  const A = F.filter(s => s.el && s.el.what != null);
+  if (A.length) { const r = ELEMENTS.map(([k, l]) => [l, pct(A.filter(s => s.el[k] === 2).length, A.length)]).sort((a, b) => a[1] - b[1]); out.push(["具体的に書けていないことが多い要素", r[0][0], `具体的に書けているのは ${r[0][1].toFixed(0)}%（${A.length} 件のうち）`, "elements"]); }
+  const E = NET.G ? NET.G.edges.slice().sort((a, b) => b.c - a.c || b.lift - a.lift) : [];
+  if (E.length) out.push(["いっしょに選ばれることがいちばん多い組み合わせ", `${E[0].a.split(":")[1]} × ${E[0].b.split(":")[1]}`, `${E[0].c} 回（偶然の ${E[0].lift.toFixed(1)} 倍）`, "net"]);
+  const CODE = { A: "c1", B: "c2", C: "c3", D: "att" }, both = F.filter(s => s.topU && CODE[s.aiCode]);
+  if (both.length) out.push(["本人の答えと AI の KPI 分類の一致", fmtP(both.filter(s => CODE[s.aiCode] === s.topU).length, both.length), `${both.length} 件のうち（ずれが多いときは重みか AI の指示を見直す）`, "agree"]);
+  $("findings").innerHTML = out.length ? out.map(([k, t, d, go]) => `<li><button type="button" class="fd" data-go="${go}"><span class="txt"><span class="k">${esc(k)}</span><span class="t">${esc(t)}</span><span class="d">${esc(d)}</span></span><span class="go">図へ<svg class="ico"><use href="#i-next"/></svg></span></button></li>`).join("") : '<li class="note">まだデータがありません</li>';
+}
+$("findings").addEventListener("click", e => {
+  const b = e.target.closest("[data-go]"); if (!b) return;
+  const card = $(b.dataset.go).closest(".card"); if (!card) return;
+  card.scrollIntoView({ behavior: REDUCE_MOTION ? "auto" : "smooth", block: "start" });
+  card.classList.remove("flash"); void card.offsetWidth; card.classList.add("flash");
+});
+/* ---------- 目次：押すとその節へ。いま見ている節に印をつける ---------- */
+const REDUCE_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TOC = [...document.querySelectorAll("#toc a")];
+TOC.forEach(a => a.addEventListener("click", e => { e.preventDefault(); const t = document.querySelector(a.getAttribute("href")); if (t) t.scrollIntoView({ behavior: REDUCE_MOTION ? "auto" : "smooth", block: "start" }); }));
+function spyToc() {
+  if (VIEW !== "main") return;
+  const y = innerHeight * .3; let cur = TOC[0];
+  TOC.forEach(a => { const t = document.querySelector(a.getAttribute("href")); if (t && t.getBoundingClientRect().top <= y) cur = a; });
+  if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) cur = TOC[TOC.length - 1];
+  TOC.forEach(a => a.classList.toggle("on", a === cur));
+  const nav = $("toc"); if (nav.scrollWidth > nav.clientWidth) { const l = cur.offsetLeft - nav.offsetLeft; if (l < nav.scrollLeft || l + cur.offsetWidth > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = l - 8; }
+}
+let spyRaf = 0;
+addEventListener("scroll", () => { if (!spyRaf) spyRaf = requestAnimationFrame(() => { spyRaf = 0; spyToc(); }); }, { passive: true });
+addEventListener("resize", () => spyToc());
 function renderFunnel(F) {
   const n = F.length, r = F.filter(s => s.reached).length, c = F.filter(s => s.copied).length;
   const stages = [["ひとことを書いた", n], ["投稿文まで", r], ["コピーした", c]];
@@ -805,7 +1116,7 @@ function renderNet(F) {
       const fill = on ? "#BE258D" : near ? "#ffffff" : "#B9C4C9", stroke = on ? "#ffffff" : near ? "#BE258D" : "#ffffff";
       return `<g class="node" tabindex="0" role="button" data-node="${esc(n)}" aria-label="${esc(n.split(":")[1])}（${c} 件）" data-tv="${c} 件" data-tl="${esc(n)}"><circle cx="${p.x}" cy="${p.y}" r="${Math.max(r, 12) + 6}" fill="transparent"/>
         <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${near ? 2.5 : 2}"/>
-        <text x="${p.x + r + 6}" y="${p.y + 4.5}" font-size="13.5" fill="${on || near ? "#16232a" : "#5B6770"}" font-weight="${on ? 800 : near ? 700 : 400}" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${esc(trim(n.split(":")[1], 10))}</text></g>`;
+        <text x="${p.x + r + 6}" y="${p.y + 4.5}" font-size="13.5" fill="${on || near ? "#16232a" : "#5B6770"}" font-weight="${on ? 800 : near ? 700 : 400}" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${esc(trim(n.split(":")[1], 9))}</text></g>`;
     }).join("")}
   </svg>`;
   $("net").innerHTML = svg;
@@ -822,7 +1133,7 @@ function renderNet(F) {
   }
   const rel = G.edges.filter(e => e.a === sel || e.b === sel).map(e => ({ n: e.a === sel ? e.b : e.a, c: e.c, lift: e.lift })).sort((a, b) => b.c - a.c || b.lift - a.lift).slice(0, 12);
   const selC = G.cnt.get(sel);
-  $("netSide").innerHTML = `<h3>選んだノード <button class="btn" id="netClear" type="button" style="padding:3px 10px;font-size:12px;margin-left:6px">選択を解除</button></h3><div class="sel">● ${esc(sel.replace(":", "：")) }（${selC} 件）</div>
+  $("netSide").innerHTML = `<h3>選んだノード <button class="btn sm" id="netClear" type="button">選択を解除</button></h3><div class="sel">● ${esc(sel.replace(":", "：")) }（${selC} 件）</div>
     <table><thead><tr><th>いっしょに出たもの</th><th class="n">回数</th><th class="n">出やすさ</th></tr></thead><tbody>
     ${rel.map(r => { const small = r.c < 3, cls = small ? "ref" : r.lift >= 1.5 ? "up" : r.lift <= .67 ? "dn" : "ref"; const ar = cls === "up" ? "↑" : cls === "dn" ? "↓" : ""; return `<tr><td>${esc(r.n.replace(":", "："))}</td><td class="n">${r.c}（${fmtP(r.c, selC)}）</td><td class="n"><span class="lift ${cls}">${ar}${r.lift.toFixed(1)}倍</span></td></tr>`; }).join("") || '<tr><td colspan="3">いっしょに出たものはありません</td></tr>'}
     </tbody></table><p class="note">↑ 1.5 倍以上（青緑）・↓ 0.67 倍以下（オレンジ）。回数が 3 未満は参考値（灰色）。少ない件数の「出やすさ」は大きくぶれます。</p>`;
@@ -873,7 +1184,7 @@ function renderSoft(F) {
       <div class="row2"><div class="bar" tabindex="0" style="width:calc(${u[i] / max * 100}% - 46px * ${u[i] / max});background:var(--series)" data-tv="${u[i].toFixed(2)}" data-tl="${l}・本人の答えから"></div><span class="val"><b>${u[i].toFixed(2)}</b></span></div>
       <div class="row2"><div class="bar" tabindex="0" style="width:calc(${a[i] / max * 100}% - 46px * ${a[i] / max});background:var(--gray)" data-tv="${a[i].toFixed(2)}" data-tl="${l}・AI の読み取り"></div><span class="val">${a[i].toFixed(2)}</span></div></div>`).join("")}</div>` +
     tableHtml(["KPI", "本人の答えから", "AI の読み取り"], SOFT.map(([k, l], i) => [l, u[i].toFixed(3), a[i].toFixed(3)])) +
-    `<p class="note">値は「その KPI らしさ」の割合の平均（4 つの合計が 1）。上の「KPI・気持ちの向きの重み」で「いまの設定で計算し直す」を選ぶと、チャットの設定の重みで過去の記録も計算し直します（選んだ答えと順番から計算）。</p>`;
+    `<p class="note">値は「その KPI らしさ」の割合の平均（4 つの合計が 1）。絞り込みの「KPI・気持ちの向きの重み」で「いまの設定で計算し直す」を選ぶと、チャットの設定の重みで過去の記録も計算し直します（選んだ答えと順番から計算）。</p>`;
 }
 function renderAgree(F) {
   const CODE = { A: "c1", B: "c2", C: "c3", D: "att" };
@@ -1119,7 +1430,7 @@ function validateSet(c) {
   return errs;
 }
 
-const ED = { base: null, cur: null, version: "", savedAt: "", savedBy: "", source: "", dirty: false, tab: "feel", open: -1, msg: "", hist: null, sim: { feel: [], why: [], who: "", next: [], find: [], face: "" } };
+const ED = { guideClosed: (() => { try { return localStorage.getItem("dropDashGuideClosed") === "1"; } catch (e) { return false; } })(), base: null, cur: null, version: "", savedAt: "", savedBy: "", source: "", dirty: false, tab: "feel", open: -1, msg: "", hist: null, sim: { feel: [], why: [], who: "", next: [], find: [], face: "" } };
 const getP = (o, path) => path.split(".").reduce((a, k) => (a == null ? a : a[k]), o);
 function setP(o, path, v) { const ks = path.split("."), last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; }
 const fmtTime = iso => { const d = new Date(iso); return isNaN(d) ? "" : `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
@@ -1138,7 +1449,7 @@ async function reloadSettings() {
   ED.cur = clone(ED.base); ED.dirty = false; ED.hist = null;
   renderSettings();
 }
-function markDirty() { ED.dirty = JSON.stringify(ED.cur) !== JSON.stringify(ED.base); const b = $("sBadge"); if (b) { b.className = "badge " + (ED.dirty ? "dirty" : "saved"); b.textContent = ED.dirty ? "保存していない変更があります" : "保存済みと同じ"; } }
+function markDirty() { ED.dirty = JSON.stringify(ED.cur) !== JSON.stringify(ED.base); const b = $("sBadge"); if (b) { b.className = "badge " + (ED.dirty ? "dirty" : "saved"); b.textContent = ED.dirty ? "保存していない変更があります" : "保存済みと同じ"; } const bar = $("saveBar"); if (bar) bar.classList.toggle("dirty", ED.dirty); }
 
 /* ---------- 画面 ---------- */
 const wCells = (path, w) => KPI.map(([k]) => `<td><input type="number" class="wnum${w[k] ? " nz" : ""}" min="0" max="1" step="0.05" value="${w[k]}" data-path="${path}.w.${k}" data-num aria-label="${k}"></td>`).join("");
@@ -1249,27 +1560,38 @@ function renderSettings() {
   const tok = getToken();
   const tabs = [["feel", "気持ちと「どこが」"], ["why", "「どこが」の共通の候補"], ["who", "だれと"], ["find", "今日の発見（任意）"], ["face", "その人のふだん（任意）"], ["next", "このあと（任意）"], ["rank", "選んだ順の重み"], ["profile", "あなたについて"], ["sim", "ためしに計算"]];
   $("setPane").innerHTML = `
-    <div class="card"><h2>チャットの設定（選択肢と重み）</h2>
-      <p class="why">ここで変えて「保存する」を押すと、全員のチャットに反映されます（チャットを開きなおしたとき・次の投稿から。最大 5 分ほど）。答えている途中の人には影響しません。保存するたびに履歴が残るので、前の版にもどせます。</p>
-      <div class="set-status">いまの設定：<b>${ED.version ? esc(ED.version) : "初期値（まだ保存なし）"}</b>${ED.savedAt ? `<span>${fmtTime(ED.savedAt)} 保存・${esc(ED.savedBy)}</span>` : ""}<span class="badge saved" id="sBadge"></span>${ED.source === "offline" ? '<span class="badge dirty">記録用 GAS に接続できないため初期値を表示中（保存できません）</span>' : ""}</div>
-      ${tok ? "" : `<form class="set-login" id="sLogin"><div class="field" style="margin:0"><label for="sName">名前</label><input id="sName" value="admin" maxlength="40" autocomplete="username"></div><div class="field" style="margin:0"><label for="sPw">管理者パスワード</label><input id="sPw" type="password" autocomplete="current-password"></div><button class="btn pri" type="submit">ログイン</button><span class="note">保存・履歴には管理者パスワードでのログインが必要です（見るだけ・ためしに計算はそのままでも使えます）</span></form>`}
-      <div class="set-actions">
-        <input id="sNote" placeholder="メモ：何を変えたか（例：かわいいの候補に「ロゴ」を追加）" maxlength="200" style="flex:1;min-width:260px">
-        <button class="btn pri" id="sSave" type="button" ${tok && ED.source !== "offline" ? "" : "disabled"}>保存する</button>
-        <button class="btn" id="sUndo" type="button">変更を取り消す</button>
-        <button class="btn" id="sDefault" type="button">初期値にもどす</button>
-        <button class="btn" id="sExport" type="button">JSON に書き出す</button>
-        <label class="btn" style="cursor:pointer">JSON を読み込む<input type="file" id="sImport" accept=".json,application/json" hidden></label>
-        <button class="btn" id="sHistory" type="button" ${tok ? "" : "disabled"}>保存の履歴</button>
+    <div class="card set-top">
+      <div class="set-title">
+        <div><h2>チャットの設定（選択肢と重み）</h2>
+          <p class="why">ここで変えて「保存する」を押すと、全員のチャットに反映されます（チャットを開きなおしたとき・次の投稿から。最大 5 分ほど）。答えている途中の人には影響しません。保存するたびに履歴が残るので、前の版にもどせます。</p></div>
+        <div class="set-tools">
+          <button class="btn ghost sm" id="sHistory" type="button" ${tok ? "" : "disabled"}><svg class="ico"><use href="#i-history"/></svg>保存の履歴</button>
+          <button class="btn ghost sm" id="sExport" type="button"><svg class="ico"><use href="#i-down"/></svg>JSON に書き出す</button>
+          <label class="btn ghost sm" style="cursor:pointer"><svg class="ico"><use href="#i-up"/></svg>JSON を読み込む<input type="file" id="sImport" accept=".json,application/json" hidden></label>
+          <button class="btn ghost sm" id="sDefault" type="button">初期値にもどす</button>
+        </div>
       </div>
-      <div class="err" id="sErr"></div>${ED.msg ? `<div class="set-msg">${esc(ED.msg)}</div>` : ""}<div id="sHist">${histHtml()}</div>
+      <div class="set-status">いまの設定：<b>${ED.version ? esc(ED.version) : "初期値（まだ保存なし）"}</b>${ED.savedAt ? `<span>${fmtTime(ED.savedAt)} 保存・${esc(ED.savedBy)}</span>` : ""}${ED.source === "offline" ? '<span class="badge dirty">記録用 GAS に接続できないため初期値を表示中（保存できません）</span>' : ""}</div>
+      ${tok ? "" : `<form class="set-login" id="sLogin"><div class="field" style="margin:0"><label for="sName">名前</label><input id="sName" value="admin" maxlength="40" autocomplete="username"></div><div class="field" style="margin:0"><label for="sPw">管理者パスワード</label><input id="sPw" type="password" autocomplete="current-password"></div><button class="btn pri" type="submit">ログイン</button><span class="note">保存・履歴には管理者パスワードでのログインが必要です（見るだけ・ためしに計算はそのままでも使えます）</span></form>`}
+      <div id="sHist">${histHtml()}</div>
+    </div>
+    <div class="savebar" id="saveBar">
+      <div class="savebar-row">
+        <span class="badge saved" id="sBadge"></span>
+        <input id="sNote" placeholder="メモ：何を変えたか（例：かわいいの候補に「ロゴ」を追加）" maxlength="200" value="${esc(ED.note || "")}" aria-label="保存のメモ">
+        <button class="btn" id="sUndo" type="button">変更を取り消す</button>
+        <button class="btn pri" id="sSave" type="button" ${tok && ED.source !== "offline" ? "" : "disabled"}>保存する</button>
+      </div>
+      <div class="err" id="sErr" role="alert"></div>${ED.msg ? `<div class="set-msg">${esc(ED.msg)}</div>` : ""}
     </div>
     <details class="card guide" id="sGuide"${ED.guideClosed ? "" : " open"}>${guideHtml()}</details>
-    <div class="subtabs" role="tablist">${tabs.map(([k, l]) => `<button type="button" role="tab" data-act="tab" data-t="${k}" class="${ED.tab === k ? "on" : ""}" aria-selected="${ED.tab === k}">${l}</button>`).join("")}</div>
-    <div class="card" id="setBody">${bodyHtml()}</div>`;
+    <div class="set-layout">
+      <div class="subtabs" role="tablist" aria-label="設定する問い">${tabs.map(([k, l]) => `<button type="button" role="tab" data-act="tab" data-t="${k}" class="${ED.tab === k ? "on" : ""}" aria-selected="${ED.tab === k}">${l}</button>`).join("")}</div>
+      <div class="card" id="setBody">${bodyHtml()}</div>
+    </div>`;
   ED.msg = "";
   markDirty();
-  $("sGuide").addEventListener("toggle", e => { ED.guideClosed = !e.target.open; });
+  $("sGuide").addEventListener("toggle", e => { ED.guideClosed = !e.target.open; try { localStorage.setItem("dropDashGuideClosed", ED.guideClosed ? "1" : ""); } catch (x) {} });
 }
 function histHtml() {
   if (!ED.hist) return "";
@@ -1281,6 +1603,7 @@ function rerenderBody() { const b = $("setBody"); if (b) b.innerHTML = bodyHtml(
 
 /* ---------- 操作（入力はその場で反映。並べ替え・追加・削除は描き直し） ---------- */
 $("setPane").addEventListener("input", e => {
+  if (e.target.id === "sNote") { ED.note = e.target.value; return; }
   const el = e.target, path = el.dataset && el.dataset.path; if (!path) return;
   let v = el.type === "checkbox" ? (el.dataset.inv !== undefined ? !el.checked : el.checked) : el.value;
   if (el.dataset.num !== undefined) { v = Number(v); if (!isFinite(v)) v = 0; if (el.classList.contains("wnum")) { v = Math.min(1, Math.max(0, v)); el.classList.toggle("nz", !!v); } }
@@ -1314,7 +1637,7 @@ $("setPane").addEventListener("click", async e => {
     else { const a = sm[k], i = a.indexOf(l); if (i >= 0) a.splice(i, 1); else if (a.length < max) a.push(l); if (k === "feel") sm.why = []; }
     rerenderBody(); return;
   }
-  if (act === "tab") { ED.tab = b.dataset.t; renderSettings(); return; }
+  if (act === "tab") { ED.tab = b.dataset.t; $("setPane").querySelectorAll(".subtabs button").forEach(x => { const on = x.dataset.t === ED.tab; x.classList.toggle("on", on); x.setAttribute("aria-selected", on); }); rerenderBody(); return; }
   if (act === "simclear") { ED.sim = { feel: [], why: [], who: "", next: [], find: [], face: "" }; rerenderBody(); return; }
   if (act === "open") { const i = Number(b.dataset.i); ED.open = ED.open === i ? -1 : i; rerenderBody(); return; }
   if (act === "up" || act === "down" || act === "del") {
@@ -1366,7 +1689,7 @@ async function saveSettings(force) {
   $("sSave").disabled = true; $("sErr").textContent = "保存しています…";
   const r = await post({ action: "save_settings", token: tok, settings: ED.cur, note: $("sNote").value.trim(), base_version: ED.version, force: !!force });
   if (r.ok) {
-    ED.version = r.version; ED.savedAt = r.saved_at; ED.savedBy = r.saved_by; ED.base = normSet(r.settings); ED.cur = clone(ED.base); ED.source = "gas"; ED.hist = null;
+    ED.version = r.version; ED.savedAt = r.saved_at; ED.savedBy = r.saved_by; ED.base = normSet(r.settings); ED.cur = clone(ED.base); ED.source = "gas"; ED.hist = null; ED.note = "";
     CURSET = clone(ED.base); CURSET_VER = r.version; if ($("fWeight").options[1]) $("fWeight").options[1].textContent = `いまの設定（${CURSET_VER}）で計算し直す`;
     ED.msg = `保存しました（${r.version}）。全員のチャットに反映されます（開きなおしたとき・次の投稿から。最大 5 分ほど）`;
     renderSettings(); if (SESS.length) render(); return;
