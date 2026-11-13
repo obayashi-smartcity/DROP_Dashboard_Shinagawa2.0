@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>DROP. Coach 分析ダッシュボード</title>
+<style>
+  /* 色の役割（可視化の色ルール）
+     構造＝濃紺／注目＝マゼンタ（1 図に 1 つ）／その他＝グレー／評価・気持ちの向き＝青・淡青・黄・赤（記号つき）
+     多い・少ない＝青緑・オレンジ（矢印つき）／段階（コーチ関与）＝紫の濃淡／2 つの比較＝紫と比較相手のグレー */
+  :root{
+    color-scheme: light;
+    --struct:#0E3B4A; --struct2:#2F5D6B;
+    --emph:#BE258D; --emph-soft:#f6e3ef;
+    --gray:#B9C4C9; --gray-ink:#5B6770; --gray-ink2:#8A979D; --none:#DDE4E7;
+    --good:#2A78D6; --good2:#9EC5F4; --mid:#F5B82E; --bad:#D03B3B;
+    --many:#0099AE; --many-soft:#d5eef2; --few:#E07B39; --few-soft:#fbe5d6;
+    --o1:#BFAAEF; --o2:#8F6CD0; --o3:#6239A0; --o4:#351162;
+    --series:#6250D6;
+    --bg:#f3f5f6; --card:#ffffff; --line:#e3e8ea; --ink:#16232a; --ink2:#46545c;
+    --info-bg:#e8f1fc; --hyp-bg:#fdf3dc; --warn-bg:#fbe7e7;
+    --font: system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  button,input,select{font-family:var(--font);font-size:14px}
+  [hidden]{display:none!important}
+  a{color:var(--struct2)}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 18px}
+  header.top{background:var(--struct);color:#fff}
+  header.top .wrap{display:flex;align-items:center;gap:16px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
+  .brand{font-weight:900;font-size:19px;letter-spacing:-.3px}
+  .brand small{display:block;font-size:11px;font-weight:700;letter-spacing:1px;opacity:.75}
+  .status{margin-left:auto;font-size:13px;opacity:.9}
+  .btn{border:1px solid var(--struct2);background:#fff;color:var(--struct);border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer}
+  .btn.pri{background:var(--struct);color:#fff;border-color:var(--struct)}
+  .btn.on-dark{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+  .btn:disabled{opacity:.45;cursor:default}
+  .banner{padding:10px 14px;border-radius:8px;margin:14px 0 0;font-size:13.5px}
+  .banner.hyp{background:var(--hyp-bg);border:1px solid #f0d58f}
+  .banner.warn{background:var(--warn-bg);border:1px solid #efb8b8}
+  .banner.info{background:var(--info-bg);border:1px solid #bcd6f5}
+
+  /* 読み込み */
+  .loader{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+  .loader .card{margin:0}
+  .loader h3{margin:0 0 6px;font-size:15px;color:var(--struct)}
+  .loader p{margin:0 0 10px;color:var(--ink2);font-size:13px}
+  .field{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+  .field label{font-size:12px;color:var(--gray-ink);font-weight:700}
+  .field input{border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .err{color:var(--bad);font-size:13px;min-height:1.2em}
+  @media (max-width:860px){ .loader{grid-template-columns:1fr} }
+
+  /* 色の見方・フィルター */
+  .legend{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:12.5px;color:var(--ink2);margin:14px 0 4px}
+  .legend b{color:var(--struct);font-size:12.5px;margin-right:2px}
+  .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+  .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0 14px;position:sticky;top:0;z-index:5}
+  .filters .field{margin:0}
+  .filters select,.filters input{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:#fff}
+  .filters .cnt{margin-left:auto;font-size:13px;color:var(--gray-ink);font-variant-numeric:tabular-nums}
+
+  /* カード */
+  .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+  .card h2{margin:0;font-size:15.5px;color:var(--struct);border-top:3px solid var(--struct);padding-top:8px;margin-top:-6px}
+  .card .why{margin:4px 0 10px;font-size:12.5px;color:var(--gray-ink)}
+  .c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}
+  @media (max-width:980px){ .c8,.c7,.c6,.c5,.c4{grid-column:span 12} }
+  .sec{grid-column:span 12;margin:10px 0 -4px;font-size:13px;font-weight:800;color:var(--struct2);letter-spacing:.5px}
+  details.tbl{margin-top:10px}
+  details.tbl summary{cursor:pointer;font-size:12.5px;color:var(--struct2);font-weight:700}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}
+  th{color:var(--gray-ink);font-weight:700;background:#f8fafa;position:sticky;top:0}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .note{font-size:12px;color:var(--gray-ink);margin-top:8px}
+  .box{border-radius:8px;padding:8px 10px;font-size:12.5px;margin-top:8px}
+  .box.ok{background:var(--info-bg)} .box.hyp{background:var(--hyp-bg)} .box.ng{background:var(--warn-bg)}
+
+  /* 数字のタイル */
+  .tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+  @media (max-width:980px){ .tiles{grid-template-columns:repeat(3,1fr)} }
+  .tile{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+  .tile .l{font-size:12px;color:var(--gray-ink);font-weight:700}
+  .tile .v{font-size:26px;font-weight:800;color:var(--ink);line-height:1.2;margin-top:2px}
+  .tile .s{font-size:12px;color:var(--gray-ink2)}
+  .tile.hero{grid-column:span 2;border-color:var(--struct2)}
+  .tile.hero .v{font-size:48px}
+
+  /* 横棒（HTML） */
+  .hb{display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:6px 10px;align-items:center}
+  .hb .lab{font-size:13px;color:var(--ink);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+  .hb .lab .sym{display:inline-block;width:16px;text-align:center;font-weight:800;color:var(--ink2);margin-right:4px}
+  .hb .trk{position:relative;height:18px;display:flex;align-items:center}
+  .hb .bar{height:16px;border-radius:0 4px 4px 0;min-width:2px;cursor:default}
+  .hb .bar:hover,.hb .bar:focus{filter:brightness(1.1);outline:2px solid rgba(14,59,74,.25);outline-offset:1px}
+  .hb .val{font-size:12.5px;color:var(--ink2);margin-left:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .hb .val b{color:var(--ink)}
+  .hb.two .trk{height:30px;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
+  .hb.two .bar{height:11px}
+  .hb.two .row2{display:flex;align-items:center;width:100%}
+  .emph-cap{font-size:12px;color:var(--gray-ink);margin-top:6px}
+  .emph-cap i{display:inline-block;width:10px;height:10px;background:var(--emph);border-radius:2px;margin-right:4px;vertical-align:-1px}
+  .keys{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin:0 0 8px}
+
+  /* 縦棒（時間帯） */
+  .cols{display:flex;align-items:flex-end;gap:6px;height:170px;padding:0 4px;border-bottom:1px solid #c3c9cc}
+  .cols .c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0}
+  .cols .c .bar{width:min(24px,80%);border-radius:4px 4px 0 0;min-height:1px}
+  .cols .c .val{font-size:11.5px;color:var(--ink2);margin-bottom:3px;font-variant-numeric:tabular-nums}
+  .cols-x{display:flex;gap:6px;padding:4px 4px 0}
+  .cols-x span{flex:1;text-align:center;font-size:11.5px;color:var(--gray-ink)}
+
+  /* 分割バー（一致・関与） */
+  .seg{display:flex;height:28px;border-radius:4px;overflow:hidden;gap:2px;background:#fff}
+  .seg div{display:flex;align-items:center;padding:0 8px;font-size:12.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;border-radius:4px}
+  .seg div.dark{color:var(--ink)}
+
+  /* 共起ネットワーク */
+  .net-wrap{display:grid;grid-template-columns:1fr 300px;gap:14px}
+  @media (max-width:980px){ .net-wrap{grid-template-columns:1fr} }
+  .net-scroll{overflow-x:auto}
+  .net-scroll svg{min-width:760px;width:100%;height:auto;display:block}
+  .net-side h3{margin:0 0 4px;font-size:14px;color:var(--struct)}
+  .net-side .sel{font-size:15px;font-weight:800;color:var(--emph);margin-bottom:6px}
+  .net-tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--gray-ink);margin-bottom:6px}
+  .lift{font-weight:800;font-variant-numeric:tabular-nums;border-radius:4px;padding:1px 6px;display:inline-block;min-width:54px;text-align:center}
+  .lift.up{background:var(--many-soft);color:#00606e}
+  .lift.dn{background:var(--few-soft);color:#8d4210}
+  .lift.ref{background:#fafbfb;color:var(--gray-ink2)}
+  g.node{cursor:pointer}
+  g.node:focus{outline:none}
+  g.node:focus circle{stroke:var(--struct);stroke-width:3}
+
+  /* 比較表 */
+  .cmp td.diff-up{background:var(--many-soft)} .cmp td.diff-dn{background:var(--few-soft)}
+  .cmp td.diff-up.strong{background:var(--many);color:#fff;font-weight:800} .cmp td.diff-dn.strong{background:var(--few);color:#fff;font-weight:800}
+  .cmp td.small{color:var(--gray-ink2)}
+  .lv{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700}
+
+  /* 投稿一覧 */
+  .posts-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  .posts-tools input{flex:1;min-width:200px;border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+  .posts{max-height:620px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+  .posts td{white-space:pre-wrap}
+  .posts tr.r{cursor:pointer}
+  .posts tr.r:hover td{background:#fafbfc}
+  .posts tr.d td{background:#f8fafa;font-size:12px;color:var(--ink2)}
+  .pill{display:inline-block;border-radius:999px;padding:0 7px;font-size:11.5px;font-weight:700;border:1px solid var(--line);color:var(--gray-ink);white-space:nowrap}
+  .vsym{font-weight:800}
+
+  #tip{position:fixed;z-index:50;pointer-events:none;background:#fff;border:1px solid var(--line);box-shadow:0 6px 18px rgba(0,0,0,.12);border-radius:8px;padding:7px 10px;font-size:12.5px;max-width:300px;display:none}
+  #tip b{display:block;font-size:15px;color:var(--ink)}
+  #tip span{color:var(--gray-ink)}
+  footer{color:var(--gray-ink2);font-size:12px;padding:20px 0 40px}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">DROP. Coach 分析ダッシュボード<small>CULTURE SNACK × 投稿づくりチャット v3 の記録</small></div>
+    <div class="status" id="status">記録を読み込んでください</div>
+    <button class="btn on-dark" id="reloadBtn" hidden>最新を読み込む</button>
+    <button class="btn on-dark" id="csvBtn" hidden>この絞り込みを CSV で保存</button>
+    <button class="btn on-dark" id="switchBtn" hidden>読み込みなおす</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="banner warn">管理者用の画面です。参加者の名前とひとことが表示されます。画面を共有・印刷するときは注意してください。</div>
+  <div class="banner hyp" id="demoBanner" hidden>いま表示しているのは <b>デモデータ（架空）</b> です。画面の見え方を確かめるためのもので、実際の記録ではありません。</div>
+
+  <section class="loader" id="loader">
+    <div class="card">
+      <h3>1. 記録用 GAS から読み込む</h3>
+      <p>LOG_DROP_COACH（chat_v3 シート）の記録を直接読み込みます。<b>管理者パスワード</b>（GAS の ADMIN_PASSWORD）が必要です。参加者用のパスワードでは読めません。</p>
+      <form id="fLogin">
+        <div class="field"><label for="aName">名前</label><input id="aName" autocomplete="username" value="admin" maxlength="40" /></div>
+        <div class="field"><label for="aPw">管理者パスワード</label><input id="aPw" type="password" autocomplete="current-password" /></div>
+        <div class="err" id="aErr"></div>
+        <button class="btn pri" id="aGo" type="submit">読み込む</button>
+      </form>
+    </div>
+    <div class="card">
+      <h3>2. CSV を読み込む</h3>
+      <p>スプレッドシートの chat_v3 シートを「ファイル → ダウンロード → カンマ区切り形式（.csv）」で保存したファイルを選びます。データはこの端末の中だけで処理されます。</p>
+      <input type="file" id="csvFile" accept=".csv,text/csv" />
+      <div class="err" id="cErr"></div>
+    </div>
+    <div class="card">
+      <h3>3. デモデータで見る</h3>
+      <p>記録がまだ無いときに、画面の見え方を確かめるための架空のデータ（140 件）を表示します。</p>
+      <button class="btn" id="demoBtn">デモデータを表示</button>
+    </div>
+  </section>
+
+  <main id="main" hidden>
+    <div class="legend" aria-label="色の見方">
+      <b>色の見方</b>
+      <span><i class="sw" style="background:var(--emph)"></i>注目してほしいところ（1 つの図に 1 つ）</span>
+      <span><i class="sw" style="background:var(--gray)"></i>その他・比較相手</span>
+      <span><i class="sw" style="background:var(--good)"></i>◎ ポジティブ <i class="sw" style="background:var(--good2);margin-left:6px"></i>○ ややポジティブ <i class="sw" style="background:var(--mid);margin-left:6px"></i>△ ふつう <i class="sw" style="background:var(--bad);margin-left:6px"></i>× ネガティブ</span>
+      <span><i class="sw" style="background:var(--many)"></i>↑ 多い <i class="sw" style="background:var(--few);margin-left:6px"></i>↓ 少ない</span>
+      <span><i class="sw" style="background:var(--o1)"></i><i class="sw" style="background:var(--o2)"></i><i class="sw" style="background:var(--o3)"></i>段階（コーチの関与）</span>
+    </div>
+
+    <div class="filters" id="filters">
+      <div class="field"><label for="fFrom">開始日</label><input type="date" id="fFrom" /></div>
+      <div class="field"><label for="fTo">終了日</label><input type="date" id="fTo" /></div>
+      <div class="field"><label for="fPhoto">写真</label><select id="fPhoto"><option value="">すべて</option><option>あり</option><option>なし</option></select></div>
+      <div class="field"><label for="fProfile">属性</label><select id="fProfile"><option value="">すべて</option></select></div>
+      <div class="field"><label for="fLevel">コーチの関与</label><select id="fLevel"><option value="">すべて</option><option>ひとことのみ</option><option>選択あり</option><option>AI仕上げ</option></select></div>
+      <div class="field"><label for="fState">状態</label><select id="fState"><option value="">すべて</option><option value="reached">投稿文まで</option><option value="copied">コピーした</option><option value="dropped">途中でやめた</option></select></div>
+      <button class="btn" id="fReset" type="button">絞り込みを解除</button>
+      <span class="cnt" id="fCount"></span>
+    </div>
+
+    <div class="grid">
+      <div class="card c12"><h2>全体</h2><p class="why">投稿文をコピーした数が、DROP への投稿につながる数の目安です（DROP 側の投稿数と照らし合わせて確認）。</p><div class="tiles" id="tiles"></div></div>
+
+      <div class="sec">1. チャットの使われ方（どこで止まる・どこに時間がかかる）</div>
+      <div class="card c4"><h2>到達のようす</h2><p class="why">ひとことを書いた人のうち、投稿文までたどり着いた人・コピーした人。</p><div id="funnel"></div></div>
+      <div class="card c4"><h2>問いごとの回答率</h2><p class="why">投稿文までたどり着いた人のうち、その問いに答えた（とばさなかった）割合。</p><div id="answerRate"></div></div>
+      <div class="card c4"><h2>問いごとにかかった時間</h2><p class="why">問いが出てから答えるまでの秒数（中央値）。長い問いは、選択肢や言い方を見直す候補です。</p><div id="stepSec"></div></div>
+      <div class="card c6"><h2>途中でやめた場所</h2><p class="why">投稿文の前に画面を閉じた人が、最後に見ていた問い。</p><div id="dropAt"></div></div>
+      <div class="card c6"><h2>時間帯</h2><p class="why">チャットを始めた時刻（1 時間ごと）。</p><div id="hours"></div></div>
+
+      <div class="sec">2. 投稿の中身（だれと・どこが・どんな気持ち・このあと）</div>
+      <div class="card c6"><h2>どんな気持ちになったか</h2><p class="why">選ばれた気持ちの数（1 人で複数）。色は気持ちの向き。</p><div id="feels"></div></div>
+      <div class="card c6"><h2>気持ちの向き（1 人ごと）</h2><p class="why">選んだ気持ちを、選んだ順の重みで平均した値（−1〜1）。AI の読み取りとの一致も見ます。</p><div id="valence"></div></div>
+      <div class="card c4"><h2>だれと一緒だったか</h2><p class="why">②属性横断・③心理的安全性の手がかり。</p><div id="who"></div></div>
+      <div class="card c4"><h2>どこがよかったか</h2><p class="why">「写真から」= AI の候補から選ばれたもの。</p><div id="why"></div></div>
+      <div class="card c4"><h2>このあと、どうしたいか</h2><p class="why">①挑戦・街への愛着の手がかり。</p><div id="next"></div></div>
+      <div class="card c4"><h2>話題（ひとことから）</h2><p class="why">ひとことの話題（AI のヒント → 画面の読み取り）。</p><div id="subjects"></div></div>
+      <div class="card c4"><h2>投稿の材料の数</h2><p class="why">投稿文に入った材料（ひとこと＋だれと・どこが・気持ち・このあと）の数。</p><div id="richness"></div></div>
+      <div class="card c4"><h2>属性</h2><p class="why">「あなたについて」の答え（端末ごとに 1 回）。</p><div id="profile"></div></div>
+
+      <div class="sec">3. つながり（共起ネットワーク）</div>
+      <div class="card c12">
+        <h2>いっしょに選ばれたもの</h2>
+        <p class="why">同じ投稿でいっしょに出てきたもの同士を線でつないでいます（人 → コンテンツ → 空間 → 感情 → 意向）。丸を押すと、そのノードとよくいっしょに出るものを右に出します。「出やすさ」は偶然に比べて何倍いっしょに出るか（1 より大きいほど結びつきが強い）。</p>
+        <div class="net-tools"><label>線を出す最小の回数 <input type="range" id="netMin" min="1" max="10" value="2" /> <b id="netMinV">2</b> 回</label><span id="netInfo"></span><button class="btn" id="netCsv" type="button">線の一覧を CSV で保存</button></div>
+        <div class="net-wrap"><div class="net-scroll" id="net"></div><div class="net-side" id="netSide"></div></div>
+      </div>
+
+      <div class="sec">4. KPI（ソフト分類）と効果の見方</div>
+      <div class="card c6"><h2>KPI のソフト分類（平均）</h2><p class="why">本人の答えから計算した分類と、AI が投稿文から読み取った分類の比較。</p><div id="soft"></div></div>
+      <div class="card c6"><h2>本人の答えと AI の読み取りの一致</h2><p class="why">いちばん大きい KPI が、AI の分類と同じだったか。ずれが多い KPI は、選択肢の重みか AI の指示を見直します。</p><div id="agree"></div></div>
+      <div class="card c6"><h2>コーチの関与で比べる</h2><p class="why">効果測定では関与の段階を分けて見ます（AI が整えた文だけで結論を出さない）。</p><div id="levels"></div></div>
+      <div class="card c6"><h2>「ほかの人の例」を見た人・見ていない人</h2><p class="why">見本に引きずられていないかの確認。差は参考（検定はしていません）。件数が 10 未満の値は灰色。</p><div id="examples"></div></div>
+
+      <div class="sec">5. 投稿の一覧</div>
+      <div class="card c12">
+        <h2>投稿文とチャットの答え</h2>
+        <p class="why">行を押すと、AI の読み取り・ノード・時間などの詳細を表示します。</p>
+        <div class="posts-tools"><input type="search" id="pSearch" placeholder="ことばで探す（ひとこと・投稿文・名前・話題）" /><span class="note" id="pCount"></span></div>
+        <div class="posts" id="posts"></div>
+      </div>
+    </div>
+  </main>
+  <footer>DROP. Coach dashboard v1.0（2026-11-13）— 記録用 GAS（DROP_COACH_LOG v7）の chat_v3 シートの列名で読み込みます。同じセッション ID の行は、いちばん新しい行を使います（コピーした・投稿文まで行ったかは全行から判定）。</footer>
+</div>
+<div id="tip" role="status"></div>
+
+<script>
+"use strict";
+const CONFIG = {
+  LOG_URL: "https://script.google.com/macros/s/AKfycbyTHPDVzPHB76Xt8GmZaiW3q_i4x9H2fishpnrWn1TbMGFCGzYIgPqLAzOetsrNMVokEA/exec",   // 00_GAS/DROP_COACH2.0/DROP_COACH_LOG
+  TOKEN_KEY: "dropDashToken", TIMEOUT_MS: 60000
+};
+const $ = id => document.getElementById(id);
+const esc = t => String(t ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pct = (a, b) => (b ? Math.round(a / b * 1000) / 10 : 0);
+const fmtP = (a, b) => (b ? pct(a, b).toFixed(0) + "%" : "−");
+const median = a => { const b = a.filter(x => typeof x === "number" && isFinite(x)).sort((x, y) => x - y); if (!b.length) return null; const m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+const mean = a => { const b = a.filter(x => typeof x === "number" && isFinite(x)); return b.length ? b.reduce((s, x) => s + x, 0) / b.length : null; };
+const num = v => { if (v === "" || v == null) return null; const n = Number(v); return isFinite(n) ? n : null; };
+const split = (v, sep) => String(v || "").split(sep).map(s => s.trim()).filter(Boolean);
+const countBy = (arr) => { const m = new Map(); arr.forEach(k => m.set(k, (m.get(k) || 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); };
+const STEP_ORDER = ["ひとこと", "だれと", "どこが", "気持ち", "このあと", "あなたについて"];
+const STEP_KEY = { text1: "ひとこと", who: "だれと", why: "どこが", feel: "気持ち", next: "このあと", profile: "あなたについて", score: "点数" };
+const LAYERS = ["人", "コンテンツ", "空間", "感情", "意向"];
+const SOFT = [["c1", "①挑戦"], ["c2", "②属性横断"], ["c3", "③心理的安全性"], ["att", "街への愛着"]];
+/* 気持ちの向き（チャットの V.feel の val と同じ）。記号と色は評価の信号色 */
+const FEEL_VAL = { "おいしい": 1, "たのしい": 1, "かわいい": 1, "すごい": 1, "きれい": 1, "ほっこり": 1, "意外": .3, "刺激をもらった": .8, "ふつう": 0, "いまいち": -1 };
+function valStyle(v) {
+  if (v == null) return { c: "var(--none)", s: "・", t: "記述（向きなし）" };
+  if (v >= .75) return { c: "var(--good)", s: "◎", t: "ポジティブ" };
+  if (v > 0) return { c: "var(--good2)", s: "○", t: "ややポジティブ" };
+  if (v === 0) return { c: "var(--mid)", s: "△", t: "ふつう" };
+  return { c: "var(--bad)", s: "×", t: "ネガティブ" };
+}
+
+/* ---------- ツールチップ（値が先・名前があと。中身は textContent） ---------- */
+const tip = $("tip");
+function showTip(e, value, label) {
+  tip.innerHTML = ""; const b = document.createElement("b"); b.textContent = value; const s = document.createElement("span"); s.textContent = label;
+  tip.append(b, s); tip.style.display = "block";
+  const r = e.target.getBoundingClientRect ? e.target.getBoundingClientRect() : { left: e.clientX, top: e.clientY, width: 0 };
+  const x = (e.clientX ?? (r.left + r.width / 2)) + 14, y = (e.clientY ?? r.top) + 14;
+  tip.style.left = Math.min(x, innerWidth - tip.offsetWidth - 8) + "px"; tip.style.top = Math.min(y, innerHeight - tip.offsetHeight - 8) + "px";
+}
+const hideTip = () => { tip.style.display = "none"; };
+document.addEventListener("pointerover", e => { const t = e.target.closest("[data-tv]"); if (t) showTip(e, t.dataset.tv, t.dataset.tl || ""); });
+document.addEventListener("pointermove", e => { const t = e.target.closest("[data-tv]"); if (t) showTip(e, t.dataset.tv, t.dataset.tl || ""); else hideTip(); });
+document.addEventListener("focusin", e => { const t = e.target.closest("[data-tv]"); if (t) showTip(e, t.dataset.tv, t.dataset.tl || ""); });
+document.addEventListener("focusout", hideTip);
+
+/* =====================================================================
+   読み込み：GAS（管理者）／CSV／デモ
+===================================================================== */
+async function post(body) {
+  const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), CONFIG.TIMEOUT_MS);
+  try {
+    const r = await fetch(CONFIG.LOG_URL, { method: "POST", redirect: "follow", signal: ctrl.signal, headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return await r.json();
+  } catch (e) { return { ok: false, code: e.name === "AbortError" ? "TIMEOUT" : "NETWORK", message: e.name === "AbortError" ? "応答がありませんでした" : "接続できませんでした（" + e.message + "）" }; }
+  finally { clearTimeout(to); }
+}
+function getToken() { try { const t = JSON.parse(sessionStorage.getItem(CONFIG.TOKEN_KEY) || "null"); if (t && t.exp > Date.now() + 30000) return t.token; } catch (e) {} return null; }
+async function loadFromGas(token) {
+  $("status").textContent = "読み込んでいます…";
+  const r = await post({ action: "export", token });
+  if (!r.ok) { if (r.code === "AUTH" || r.code === "FORBIDDEN") sessionStorage.removeItem(CONFIG.TOKEN_KEY); return r; }
+  useData(r.header, r.rows, { source: "GAS（" + (r.sheet || "") + "）", total: r.total, truncated: r.truncated, demo: false });
+  return r;
+}
+$("fLogin").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("aName").value.trim() || "admin", pw = $("aPw").value;
+  if (!pw) { $("aErr").textContent = "管理者パスワードを入れてください"; return; }
+  $("aGo").disabled = true; $("aErr").textContent = "確認しています…";
+  const l = await post({ action: "login", name, password: pw });
+  if (!l.ok) { $("aGo").disabled = false; $("aErr").textContent = l.message || "ログインできませんでした"; return; }
+  if (!l.admin) { $("aGo").disabled = false; $("aErr").textContent = "参加者用のパスワードでは記録を読み出せません。管理者パスワード（ADMIN_PASSWORD）を入れてください"; return; }
+  sessionStorage.setItem(CONFIG.TOKEN_KEY, JSON.stringify({ token: l.token, exp: Date.now() + (l.expires_in || 3600) * 1000 }));
+  $("aPw").value = "";
+  const r = await loadFromGas(l.token);
+  $("aGo").disabled = false;
+  $("aErr").textContent = r.ok ? "" : (r.message || "読み込めませんでした");
+});
+$("reloadBtn").addEventListener("click", async () => { const t = getToken(); if (!t) { showLoader(); $("aErr").textContent = "ログインの有効期限が切れました。もう一度ログインしてください"; return; } const r = await loadFromGas(t); if (!r.ok) { showLoader(); $("aErr").textContent = r.message || "読み込めませんでした"; } });
+$("switchBtn").addEventListener("click", showLoader);
+function showLoader() { $("loader").hidden = false; window.scrollTo({ top: 0 }); }
+
+/** CSV（RFC 4180：引用符・改行入りのセルに対応） */
+function parseCSV(text) {
+  const rows = []; let row = [], cell = "", q = false;
+  text = text.replace(/^﻿/, "");
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; continue; }
+    if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(x => x !== ""));
+}
+$("csvFile").addEventListener("change", async () => {
+  const f = $("csvFile").files[0]; if (!f) return;
+  $("cErr").textContent = "";
+  try {
+    const rows = parseCSV(await f.text());
+    if (rows.length < 2 || !rows[0].includes("セッションID")) throw new Error("chat_v3 シートの CSV ではないようです（1 行目に「セッションID」の列がありません）");
+    useData(rows[0], rows.slice(1), { source: "CSV（" + f.name + "）", total: rows.length - 1, demo: false });
+  } catch (e) { $("cErr").textContent = e.message; }
+  $("csvFile").value = "";
+});
+$("demoBtn").addEventListener("click", () => { const d = makeDemo(); useData(d.header, d.rows, { source: "デモデータ（架空）", total: d.rows.length, demo: true }); });
+
+/* =====================================================================
+   行 → セッション（同じセッション ID はいちばん新しい行。到達・コピーは全行から）
+===================================================================== */
+let SESS = [], META = {};
+function useData(header, rows, meta) {
+  const H = header.map(h => String(h).trim()), ix = n => H.indexOf(n);
+  const get = (r, n) => { const i = ix(n); return i < 0 ? "" : (r[i] == null ? "" : r[i]); };
+  const groups = new Map();
+  rows.forEach((r, k) => {
+    const sid = String(get(r, "セッションID") || "row" + k);
+    if (!groups.has(sid)) groups.set(sid, []);
+    groups.get(sid).push(r);
+  });
+  SESS = [...groups.values()].map(list => {
+    const ts = r => new Date(get(r, "タイムスタンプ")).getTime() || 0;
+    list.sort((a, b) => ts(a) - ts(b));
+    const r = list[list.length - 1], g = n => get(r, n);
+    const ends = list.map(x => String(get(x, "終了")));
+    const finals = list.map(x => String(get(x, "最終文面"))).filter(Boolean);
+    const started = new Date(g("開始") || g("タイムスタンプ"));
+    const secs = {}; split(g("問いごとの秒"), "/").forEach(p => { const [k, v] = p.split("="); if (k && v != null && STEP_KEY[k.trim()]) secs[STEP_KEY[k.trim()]] = num(v.trim()); });
+    const hintM = String(g("ヒント状態")).match(/^(\S+?)（([\d.]+)秒）/);
+    const aiSoft = {}; String(g("AIソフト")).replace(/(①|②|③|愛)([\d.]+)/g, (_, k, v) => { aiSoft[{ "①": "c1", "②": "c2", "③": "c3", "愛": "att" }[k]] = Number(v); });
+    const feels = split(g("気持ち（選んだ順）"), ">");
+    const soft = { c1: num(g("ソフト①挑戦")), c2: num(g("ソフト②属性横断")), c3: num(g("ソフト③心理的安全性")), att: num(g("ソフト愛着")) };
+    const softTop = Object.values(soft).some(v => v) ? SOFT.map(s => [s[0], soft[s[0]] || 0]).sort((a, b) => b[1] - a[1])[0][0] : "";
+    const aiCode = String(g("AI分類")).trim().slice(0, 1);
+    const lastStep = String(g("最後の問い"));
+    const reached = ends.some(e => e === "完了" || e === "コピー") || finals.length > 0;
+    return {
+      ts: new Date(g("タイムスタンプ")), started: isNaN(started) ? null : started, name: String(g("Name")), sid: String(g("セッションID")),
+      ends, end: ends[ends.length - 1], reached, copied: ends.includes("コピー"), dropped: !reached,
+      early: /^途中で投稿文へ/.test(lastStep), lastStep, duration: num(g("所要秒")), answered: num(g("回答数")), photo: g("写真") === "あり",
+      text1: String(g("最初のひとこと")), detected: String(g("ひとことから読み取れたもの")), subject: String(g("話題")),
+      who: String(g("だれと")), whoDetail: String(g("どんな人")), why: split(g("どこが"), "、"), whySrc: String(g("どこがの選び方")),
+      feels, valence: num(g("気持ちの向き")), next: split(g("このあと"), "、"), profile: String(g("属性")) || "（未回答）", score: num(g("体験の点数")),
+      nodes: split(g("ノード（共起用）"), "｜"), soft, softTop,
+      composed: String(g("組み立て文面")), aiText: String(g("AI文面")), final: String(g("最終文面")) || finals[finals.length - 1] || "",
+      chosen: String(g("採用")), edited: g("手で編集") === "あり", level: String(g("コーチ関与")) || "ひとことのみ", tags: String(g("ハッシュタグ")),
+      aiCat: String(g("AI分類")), aiCode, aiSoft, aiSent: num(g("AI感情の向き")), aiAct: String(g("AI行動")), aiContent: split(g("AIコンテンツ"), "、"), aiSpace: split(g("AI空間"), "、"),
+      w5h: String(g("AI 5W1H")), aiLevel: String(g("AI評価")), headline: String(g("AIひとこと")), photoMatch: String(g("写真と本文")), caveats: String(g("AI注意")),
+      hintOk: /^OK/.test(String(g("ヒント状態"))), hintSec: hintM ? Number(hintM[2]) : null, hintState: String(g("ヒント状態")),
+      exViews: num(String(g("ほかの人の例を見た")).split("回")[0]) || 0, exText: String(g("ほかの人の例を見た")), previewOpens: num(g("投稿イメージを開いた")) || 0,
+      secs, aiSec: num(g("AI秒")), model: String(g("AIモデル")), promptVer: String(g("プロンプト版")), app: String(g("アプリ版"))
+    };
+  });
+  META = meta;
+  $("demoBanner").hidden = !meta.demo;
+  $("loader").hidden = true; $("main").hidden = false;
+  $("reloadBtn").hidden = !/^GAS/.test(meta.source); $("csvBtn").hidden = false; $("switchBtn").hidden = false;
+  // フィルターの選択肢
+  const profs = countBy(SESS.map(s => s.profile)).map(x => x[0]);
+  $("fProfile").innerHTML = '<option value="">すべて</option>' + profs.map(p => `<option>${esc(p)}</option>`).join("");
+  const days = SESS.map(s => s.started).filter(Boolean).map(d => d.getTime());
+  if (days.length) { $("fFrom").value = ymd(new Date(Math.min(...days))); $("fTo").value = ymd(new Date(Math.max(...days))); }
+  $("status").textContent = `${meta.source}・${rows.length} 行 → ${SESS.length} 件のチャット` + (meta.truncated ? "（古い行は省略）" : "");
+  render();
+}
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/* ---------- 絞り込み（すべての図・表が同じ絞り込みで描き直される） ---------- */
+["fFrom", "fTo", "fPhoto", "fProfile", "fLevel", "fState"].forEach(id => $(id).addEventListener("change", render));
+$("fReset").addEventListener("click", () => { ["fPhoto", "fProfile", "fLevel", "fState"].forEach(id => { $(id).value = ""; }); const days = SESS.map(s => s.started).filter(Boolean).map(d => d.getTime()); if (days.length) { $("fFrom").value = ymd(new Date(Math.min(...days))); $("fTo").value = ymd(new Date(Math.max(...days))); } render(); });
+function filtered() {
+  const from = $("fFrom").value, to = $("fTo").value, ph = $("fPhoto").value, pr = $("fProfile").value, lv = $("fLevel").value, st = $("fState").value;
+  return SESS.filter(s => {
+    const d = s.started ? ymd(s.started) : "";
+    if (from && d && d < from) return false;
+    if (to && d && d > to) return false;
+    if (ph && (s.photo ? "あり" : "なし") !== ph) return false;
+    if (pr && s.profile !== pr) return false;
+    if (lv && s.level !== lv) return false;
+    if (st === "reached" && !s.reached) return false;
+    if (st === "copied" && !s.copied) return false;
+    if (st === "dropped" && !s.dropped) return false;
+    return true;
+  });
+}
+
+/* =====================================================================
+   部品：横棒・縦棒・表
+   - 1 系列の棒は「注目」を 1 本だけマゼンタ、ほかはグレー（色のルール 1）
+   - 値は棒の先に表示し、表でも見られる（色だけに頼らない）
+===================================================================== */
+function hbars(items, o = {}) {
+  if (!items.length) return '<p class="note">まだデータがありません</p>';
+  const max = o.max || Math.max(...items.map(x => x.v), 1);
+  const emph = o.emph === undefined ? 0 : o.emph;   // 注目する棒の番号（-1 で無し）
+  const rows = items.map((x, i) => {
+    const color = x.color || (i === emph ? "var(--emph)" : "var(--gray)");
+    const w = Math.max(0, x.v / max * 100);
+    return `<div class="lab" title="${esc(x.label)}">${x.sym ? `<span class="sym">${esc(x.sym)}</span>` : ""}${esc(x.label)}</div>
+      <div class="trk"><div class="bar" tabindex="0" style="width:calc(${w}% - 96px * ${w / 100});background:${color}" data-tv="${esc(x.tv || String(x.v))}" data-tl="${esc(x.tl || x.label)}"></div><span class="val">${x.valHtml || `<b>${esc(x.vText ?? x.v)}</b>`}</span></div>`;
+  }).join("");
+  return `<div class="hb">${rows}</div>` + (o.cap ? `<div class="emph-cap"><i></i>${esc(o.cap)}</div>` : "") + tableHtml(o.tcols || ["項目", "値"], items.map(x => [x.label, x.tText ?? x.vText ?? x.v]));
+}
+function tableHtml(cols, rows, open) {
+  return `<details class="tbl"${open ? " open" : ""}><summary>数値を表で見る</summary><table><thead><tr>${cols.map((c, i) => `<th class="${i ? "n" : ""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td class="${i ? "n" : ""}">${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></details>`;
+}
+const argmax = a => a.reduce((m, x, i) => (x > a[m] ? i : m), 0);
+const argmin = a => a.reduce((m, x, i) => (x < a[m] ? i : m), 0);
+function rankItems(pairs, n, total, unit = "件") {
+  const top = pairs.slice(0, n);
+  const rest = pairs.slice(n).reduce((s, x) => s + x[1], 0);
+  const out = top.map(([k, v]) => ({ label: k, v, vText: `${v}${unit}`, tv: `${v}${unit}（${fmtP(v, total)}）`, tl: k, tText: `${v}（${fmtP(v, total)}）` }));
+  if (rest) out.push({ label: "その他", v: rest, vText: `${rest}${unit}`, tv: `${rest}${unit}`, tl: "その他（まとめ）", color: "var(--none)" });
+  return out;
+}
+
+/* =====================================================================
+   描画
+===================================================================== */
+function render() {
+  const F = filtered();
+  $("fCount").textContent = `${F.length} / ${SESS.length} 件のチャット`;
+  renderTiles(F); renderFunnel(F); renderAnswerRate(F); renderStepSec(F); renderDropAt(F); renderHours(F);
+  renderFeels(F); renderValence(F); renderWho(F); renderWhy(F); renderNext(F); renderSubjects(F); renderRichness(F); renderProfile(F);
+  renderNet(F); renderSoft(F); renderAgree(F); renderLevels(F); renderExamples(F); renderPosts(F);
+}
+function renderTiles(F) {
+  const R = F.filter(s => s.reached), C = F.filter(s => s.copied);
+  const people = new Set(F.map(s => s.name).filter(Boolean)).size;
+  const aiOk = R.filter(s => s.aiText);
+  const t = (l, v, s, hero) => `<div class="tile${hero ? " hero" : ""}"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s || "")}</div></div>`;
+  const md = median(F.map(s => s.duration));
+  $("tiles").innerHTML =
+    t("コピーされた投稿文", C.length, `ひとことを書いた人の ${fmtP(C.length, F.length)}`, true) +
+    t("チャット", F.length, `参加者 ${people} 人`) +
+    t("投稿文まで", fmtP(R.length, F.length), `${R.length} 件`) +
+    t("答えた問いの数", mean(R.map(s => s.answered)) == null ? "−" : mean(R.map(s => s.answered)).toFixed(1), "投稿文まで行った人の平均（最大 4）") +
+    t("所要時間", md == null ? "−" : (md >= 60 ? Math.floor(md / 60) + "分" + Math.round(md % 60) + "秒" : Math.round(md) + "秒"), "中央値") +
+    t("AI の文を採用", fmtP(R.filter(s => s.chosen === "AI").length, aiOk.length), `AI の文ができた ${aiOk.length} 件のうち`) +
+    t("文を手で直した", fmtP(R.filter(s => s.edited).length, R.length), "投稿文まで行った人のうち") +
+    t("AI の待ち時間", median(R.map(s => s.aiSec)) == null ? "−" : median(R.map(s => s.aiSec)).toFixed(1) + "秒", "投稿文づくり（中央値）") +
+    t("ヒントが間に合った", fmtP(F.filter(s => s.hintOk).length, F.filter(s => s.hintState).length), "裏で呼ぶ AI ヒントの成功率") +
+    t("「ほかの人の例」を見た", fmtP(F.filter(s => s.exViews > 0).length, F.length), `投稿イメージを開いた ${fmtP(F.filter(s => s.previewOpens > 0).length, F.length)}`);
+}
+function renderFunnel(F) {
+  const n = F.length, r = F.filter(s => s.reached).length, c = F.filter(s => s.copied).length;
+  const stages = [["ひとことを書いた", n], ["投稿文まで", r], ["コピーした", c]];
+  const drops = stages.map((s, i) => (i ? stages[i - 1][1] - s[1] : -1));
+  const e = n ? argmax(drops) : -1;
+  $("funnel").innerHTML = hbars(stages.map(([k, v], i) => ({ label: k, v, vText: `${v}件（${fmtP(v, n)}）`, tv: `${v}件`, tl: `${k}（全体の ${fmtP(v, n)}${i ? `・前の段から ${fmtP(v, stages[i - 1][1])}` : ""}）`, tText: `${v}（${fmtP(v, n)}）` })),
+    { emph: e > 0 ? e : -1, max: n, cap: e > 0 ? `いちばん人が減った段：${stages[e - 1][0]} → ${stages[e][0]}（${drops[e]} 件）` : "", tcols: ["段", "件数（全体比）"] });
+}
+function renderAnswerRate(F) {
+  const R = F.filter(s => s.reached);
+  const q = [["だれと", s => !!s.who], ["どこが", s => s.why.length > 0], ["気持ち", s => s.feels.length > 0], ["このあと", s => s.next.length > 0]];
+  const vals = q.map(([k, f]) => pct(R.filter(f).length, R.length));
+  const e = R.length ? argmin(vals) : -1;
+  const early = R.filter(s => s.early).length;
+  $("answerRate").innerHTML = hbars(q.map(([k, f], i) => ({ label: k, v: vals[i], vText: `${vals[i].toFixed(0)}%`, tv: `${vals[i].toFixed(0)}%`, tl: `${k}：${R.filter(f).length} / ${R.length} 人が回答` })),
+    { emph: e, max: 100, cap: R.length ? `いちばん答えられていない問い：${q[e][0]}` : "", tcols: ["問い", "回答率（%）"] }) +
+    `<p class="note">「ここまでで投稿文をつくる」で途中から投稿文へ進んだ人：${early} 件（${fmtP(early, R.length)}）</p>`;
+}
+function renderStepSec(F) {
+  const steps = ["ひとこと", "だれと", "どこが", "気持ち", "このあと"];
+  const vals = steps.map(k => median(F.map(s => s.secs[k])));
+  const ok = vals.map(v => v ?? 0), e = vals.some(v => v != null) ? argmax(ok) : -1;
+  $("stepSec").innerHTML = hbars(steps.map((k, i) => ({ label: k, v: ok[i], vText: vals[i] == null ? "−" : vals[i].toFixed(1) + "秒", tv: vals[i] == null ? "−" : vals[i].toFixed(1) + "秒", tl: `${k}（中央値・${F.filter(s => s.secs[k] != null).length} 人）` })),
+    { emph: e, cap: e >= 0 ? `いちばん時間がかかる問い：${steps[e]}` : "", tcols: ["問い", "秒（中央値）"] });
+}
+function renderDropAt(F) {
+  const D = F.filter(s => s.dropped);
+  const pairs = countBy(D.map(s => s.lastStep || "（不明）"));
+  pairs.sort((a, b) => (STEP_ORDER.indexOf(a[0]) + 99 * (STEP_ORDER.indexOf(a[0]) < 0)) - (STEP_ORDER.indexOf(b[0]) + 99 * (STEP_ORDER.indexOf(b[0]) < 0)));
+  const items = pairs.map(([k, v]) => ({ label: k, v, vText: `${v}件`, tv: `${v}件（${fmtP(v, D.length)}）`, tl: `「${k}」で止まった` }));
+  $("dropAt").innerHTML = D.length ? hbars(items, { emph: argmax(items.map(x => x.v)), cap: "いちばん多く止まった問い", tcols: ["最後に見ていた問い", "件数"] }) + `<p class="note">途中でやめた：${D.length} 件（${fmtP(D.length, F.length)}）。ひとことを書く前にやめた人は記録されません。</p>` : '<p class="note">途中でやめた記録はありません</p>';
+}
+function renderHours(F) {
+  const hs = F.map(s => s.started && s.started.getHours()).filter(h => h != null && h !== false);
+  if (!hs.length) { $("hours").innerHTML = '<p class="note">まだデータがありません</p>'; return; }
+  const lo = Math.min(...hs), hi = Math.max(...hs), list = [];
+  for (let h = lo; h <= hi; h++) list.push([h, hs.filter(x => x === h).length]);
+  const max = Math.max(...list.map(x => x[1]), 1), e = argmax(list.map(x => x[1]));
+  $("hours").innerHTML = `<div class="cols">${list.map(([h, v], i) => `<div class="c"><span class="val">${v || ""}</span><div class="bar" tabindex="0" style="height:${v / max * 140}px;background:${i === e ? "var(--emph)" : "var(--gray)"}" data-tv="${v}件" data-tl="${h}時台"></div></div>`).join("")}</div>
+    <div class="cols-x">${list.map(([h]) => `<span>${h}時</span>`).join("")}</div><div class="emph-cap"><i></i>いちばん多い時間帯：${list[e][0]}時台</div>` + tableHtml(["時間帯", "件数"], list.map(([h, v]) => [h + "時台", v]));
+}
+function renderFeels(F) {
+  const all = F.flatMap(s => s.feels), first = F.map(s => s.feels[0]).filter(Boolean);
+  const pairs = countBy(all);
+  const items = pairs.map(([k, v]) => { const st = valStyle(k in FEEL_VAL ? FEEL_VAL[k] : null); return { label: k, v, sym: st.s, color: st.c, vText: `${v}`, tv: `${v} 回（1 番目に選んだ ${first.filter(x => x === k).length}）`, tl: `${k}・${st.t}`, tText: `${v}（1番目 ${first.filter(x => x === k).length}）` }; });
+  $("feels").innerHTML = hbars(items.slice(0, 12), { emph: -1, tcols: ["気持ち", "回数（1 番目に選んだ数）"] }) + `<p class="note">◎○△× と色は気持ちの向き。「・」は自分の言葉で書かれた気持ち（向きは AI の読み取りで見ます）。</p>`;
+}
+function renderValence(F) {
+  const V = F.map(s => s.valence).filter(v => v != null);
+  const bins = [["× ネガティブ（〜−0.25）", v => v < -.25, "var(--bad)"], ["△ ふつう（−0.25〜0.25）", v => v >= -.25 && v <= .25, "var(--mid)"], ["○ ややポジティブ（〜0.75）", v => v > .25 && v < .75, "var(--good2)"], ["◎ ポジティブ（0.75〜）", v => v >= .75, "var(--good)"]];
+  const items = bins.map(([k, f, c]) => { const v = V.filter(f).length; return { label: k, v, color: c, vText: `${v}人`, tv: `${v}人（${fmtP(v, V.length)}）`, tl: k }; });
+  // AI の読み取りとの一致（符号）
+  const both = F.filter(s => s.valence != null && s.aiSent != null);
+  const sgn = v => (v > .25 ? 1 : v < -.25 ? -1 : 0);
+  const agree = both.filter(s => sgn(s.valence) === sgn(s.aiSent)).length;
+  const neg = F.filter(s => s.valence != null && s.valence < 0);
+  $("valence").innerHTML = hbars(items, { emph: -1, tcols: ["向き", "人数"] }) +
+    (both.length ? `<div class="box ${pct(agree, both.length) >= 70 ? "ok" : "hyp"}">${pct(agree, both.length) >= 70 ? "✓" : "△"} 本人の気持ちと AI の読み取りの向きが同じ：${agree} / ${both.length} 件（${fmtP(agree, both.length)}）</div>` : "") +
+    (neg.length ? `<div class="box ng">× ネガティブな向きの投稿 ${neg.length} 件。一覧で中身を確認し、運営の改善点として拾います（投稿文はネガティブなまま残しています）。</div>` : "");
+}
+function renderWho(F) {
+  const P = countBy(F.map(s => s.who).filter(Boolean));
+  const n = F.filter(s => s.who).length;
+  $("who").innerHTML = hbars(rankItems(P, 7, n, "人"), { emph: 0, cap: "いちばん多い答え", tcols: ["だれと", "人数（割合）"] }) + `<p class="note">答えた ${n} 人（とばした・届かなかった ${F.length - n} 人）</p>`;
+}
+function renderWhy(F) {
+  const P = countBy(F.flatMap(s => s.why));
+  const aiPicked = F.filter(s => /AI候補/.test(s.whySrc)).length;
+  $("why").innerHTML = hbars(rankItems(P, 8, F.length, "回"), { emph: 0, cap: "いちばん多い答え", tcols: ["どこが", "回数（チャット数に対する割合）"] }) + `<p class="note">AI の候補（写真から）を選んだチャット：${aiPicked} 件（${fmtP(aiPicked, F.filter(s => s.why.length).length)}）</p>`;
+}
+function renderNext(F) {
+  const P = countBy(F.flatMap(s => s.next));
+  $("next").innerHTML = hbars(rankItems(P, 7, F.length, "回"), { emph: 0, cap: "いちばん多い答え", tcols: ["このあと", "回数（チャット数に対する割合）"] });
+}
+function renderSubjects(F) {
+  const P = countBy(F.map(s => s.subject).filter(Boolean));
+  const none = F.filter(s => !s.subject).length;
+  $("subjects").innerHTML = hbars(rankItems(P, 8, F.length, "件"), { emph: 0, cap: "いちばん多い話題", tcols: ["話題", "件数"] }) + `<p class="note">話題が読み取れなかったひとこと：${none} 件</p>`;
+}
+function renderRichness(F) {
+  const R = F.filter(s => s.reached);
+  const k = s => 1 + [!!s.who, s.why.length > 0, s.feels.length > 0, s.next.length > 0].filter(Boolean).length;
+  const bins = [["1〜2 つ", m => m <= 2], ["3 つ", m => m === 3], ["4 つ", m => m === 4], ["5 つ（全部）", m => m === 5]];
+  const cnt = bins.map(([, f]) => R.filter(s => f(k(s))).length);
+  const shades = ["var(--o1)", "var(--o2)", "var(--o3)", "var(--o4)"];
+  const lenAI = median(R.filter(s => s.chosen === "AI").map(s => s.final.length)), lenOwn = median(R.filter(s => s.chosen !== "AI").map(s => s.final.length));
+  $("richness").innerHTML = hbars(cnt.map((v, i) => ({ label: bins[i][0], v, color: shades[i], vText: `${v}件`, tv: `${v}件（${fmtP(v, R.length)}）`, tl: `材料 ${bins[i][0]}` })), { emph: -1, tcols: ["材料の数", "件数"] }) +
+    `<p class="note">投稿文の文字数（中央値）：AI の文 ${lenAI ?? "−"} 字／自分の言葉の文 ${lenOwn ?? "−"} 字</p>`;
+}
+function renderProfile(F) {
+  const P = countBy(F.map(s => s.profile));
+  $("profile").innerHTML = hbars(rankItems(P, 7, F.length, "人"), { emph: 0, cap: "いちばん多い属性", tcols: ["属性", "人数（割合）"] });
+}
+
+/* ---------- 共起ネットワーク（層ごとの列に並べる。選んだノードだけマゼンタ） ---------- */
+let NET = { sel: null };
+function buildNet(F) {
+  const sets = F.map(s => [...new Set(s.nodes.filter(n => LAYERS.includes(n.split(":")[0])))]).filter(a => a.length);
+  const N = sets.length, cnt = new Map();
+  sets.forEach(a => a.forEach(n => cnt.set(n, (cnt.get(n) || 0) + 1)));
+  const cols = LAYERS.map(L => [...cnt.entries()].filter(([n]) => n.startsWith(L + ":")).sort((a, b) => b[1] - a[1]).slice(0, 9));
+  const keep = new Set(cols.flat().map(x => x[0]));
+  const pair = new Map();
+  sets.forEach(a => { const b = a.filter(n => keep.has(n)); for (let i = 0; i < b.length; i++) for (let j = i + 1; j < b.length; j++) { if (b[i].split(":")[0] === b[j].split(":")[0]) continue; const k = [b[i], b[j]].sort().join("\u0001"); pair.set(k, (pair.get(k) || 0) + 1); } });
+  const edges = [...pair.entries()].map(([k, c]) => { const [a, b] = k.split("\u0001"); return { a, b, c, lift: N ? c * N / (cnt.get(a) * cnt.get(b)) : 0 }; });
+  return { N, cnt, cols, edges };
+}
+function renderNet(F) {
+  const G = buildNet(F); NET.G = G;
+  if (!G.N) { $("net").innerHTML = '<p class="note">まだデータがありません</p>'; $("netSide").innerHTML = ""; $("netInfo").textContent = ""; return; }
+  // 線が多すぎないように、最小の回数を自動で決める（手で変えられる）
+  if (!NET.userMin) { let m = 1; while (G.edges.filter(e => e.c >= m).length > 70 && m < 10) m++; $("netMin").value = m; }
+  const min = Number($("netMin").value); $("netMinV").textContent = min;
+  if (!NET.sel || !G.cnt.has(NET.sel)) NET.sel = (G.cols[3][0] || G.cols.find(c => c.length)[0])[0];
+  const W = 1000, colX = LAYERS.map((_, i) => 60 + i * 192), rowH = 46, H = Math.max(...G.cols.map(c => c.length)) * rowH + 70;
+  const pos = new Map(); G.cols.forEach((c, i) => c.forEach(([n], j) => pos.set(n, { x: colX[i], y: 62 + j * rowH })));
+  const maxC = Math.max(...[...G.cnt.values()]);
+  const E = G.edges.filter(e => e.c >= min && pos.has(e.a) && pos.has(e.b));
+  const maxE = Math.max(1, ...E.map(e => e.c));
+  const sel = NET.sel, nb = new Set(E.filter(e => e.a === sel || e.b === sel).map(e => (e.a === sel ? e.b : e.a)));
+  const path = (p, q) => { const [l, r] = p.x <= q.x ? [p, q] : [q, p]; const dx = (r.x - l.x) / 2; return `M${l.x},${l.y} C${l.x + dx},${l.y} ${r.x - dx},${r.y} ${r.x},${r.y}`; };
+  const ink = (e, on) => `<path d="${path(pos.get(e.a), pos.get(e.b))}" fill="none" stroke="${on ? "#BE258D" : "#B9C4C9"}" stroke-opacity="${on ? .85 : .45}" stroke-width="${(on ? 1.5 : 1) + e.c / maxE * (on ? 6 : 4)}" stroke-linecap="round"><title>${esc(e.a.split(":")[1])} × ${esc(e.b.split(":")[1])}：${e.c} 回</title></path>`;
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="共起ネットワーク（選択中：${esc(sel)}）">
+    ${LAYERS.map((L, i) => `<text x="${colX[i]}" y="24" text-anchor="middle" font-size="15" font-weight="800" fill="#0E3B4A">${L}</text><line x1="${colX[i]}" y1="34" x2="${colX[i]}" y2="${H - 10}" stroke="#e3e8ea" stroke-width="1"/>`).join("")}
+    ${E.filter(e => !(e.a === sel || e.b === sel)).map(e => ink(e, false)).join("")}
+    ${E.filter(e => e.a === sel || e.b === sel).map(e => ink(e, true)).join("")}
+    ${[...pos.entries()].map(([n, p]) => {
+      const c = G.cnt.get(n), r = 5 + Math.sqrt(c / maxC) * 13, on = n === sel, near = nb.has(n);
+      const fill = on ? "#BE258D" : near ? "#ffffff" : "#B9C4C9", stroke = on ? "#ffffff" : near ? "#BE258D" : "#ffffff";
+      return `<g class="node" tabindex="0" role="button" data-node="${esc(n)}" aria-label="${esc(n.split(":")[1])}（${c} 件）" data-tv="${c} 件" data-tl="${esc(n)}"><circle cx="${p.x}" cy="${p.y}" r="${Math.max(r, 12) + 6}" fill="transparent"/>
+        <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${near ? 2.5 : 2}"/>
+        <text x="${p.x + r + 6}" y="${p.y + 4.5}" font-size="13.5" fill="${on || near ? "#16232a" : "#5B6770"}" font-weight="${on ? 800 : near ? 700 : 400}" paint-order="stroke" stroke="#fff" stroke-width="4" stroke-linejoin="round">${esc(trim(n.split(":")[1], 10))}</text></g>`;
+    }).join("")}
+  </svg>`;
+  $("net").innerHTML = svg;
+  $("net").querySelectorAll("g.node").forEach(g => { const pick = () => { NET.sel = g.dataset.node; renderNet(filtered()); const el = $("net").querySelector(`g.node[data-node="${CSS.escape(NET.sel)}"]`); if (el) el.focus(); }; g.addEventListener("click", pick); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } }); });
+  $("netInfo").textContent = `${G.N} 件の投稿・ノード ${pos.size}・線 ${E.length}`;
+  // 右：選んだノードとよくいっしょに出るもの
+  const rel = G.edges.filter(e => e.a === sel || e.b === sel).map(e => ({ n: e.a === sel ? e.b : e.a, c: e.c, lift: e.lift })).sort((a, b) => b.c - a.c || b.lift - a.lift).slice(0, 12);
+  const selC = G.cnt.get(sel);
+  $("netSide").innerHTML = `<h3>選んだノード</h3><div class="sel">● ${esc(sel.replace(":", "：")) }（${selC} 件）</div>
+    <table><thead><tr><th>いっしょに出たもの</th><th class="n">回数</th><th class="n">出やすさ</th></tr></thead><tbody>
+    ${rel.map(r => { const small = r.c < 3, cls = small ? "ref" : r.lift >= 1.5 ? "up" : r.lift <= .67 ? "dn" : "ref"; const ar = cls === "up" ? "↑" : cls === "dn" ? "↓" : ""; return `<tr><td>${esc(r.n.replace(":", "："))}</td><td class="n">${r.c}（${fmtP(r.c, selC)}）</td><td class="n"><span class="lift ${cls}">${ar}${r.lift.toFixed(1)}倍</span></td></tr>`; }).join("") || '<tr><td colspan="3">いっしょに出たものはありません</td></tr>'}
+    </tbody></table><p class="note">↑ 1.5 倍以上（青緑）・↓ 0.67 倍以下（オレンジ）。回数が 3 未満は参考値（灰色）。少ない件数の「出やすさ」は大きくぶれます。</p>`;
+}
+const trim = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
+$("netMin").addEventListener("input", () => { NET.userMin = true; renderNet(filtered()); });
+$("netCsv").addEventListener("click", () => {
+  const G = NET.G; if (!G) return;
+  const rows = [["ノードA", "ノードB", "回数", "出やすさ（倍）", "Aの件数", "Bの件数", "投稿数"]].concat(G.edges.sort((a, b) => b.c - a.c).map(e => [e.a, e.b, e.c, e.lift.toFixed(3), G.cnt.get(e.a), G.cnt.get(e.b), G.N]));
+  download(`drop_coach_cooccurrence_${ymd(new Date())}.csv`, rows);
+});
+
+/* ---------- KPI ---------- */
+function renderSoft(F) {
+  const R = F.filter(s => Object.values(s.soft).some(v => v != null));
+  const A = F.filter(s => Object.keys(s.aiSoft).length);
+  const u = SOFT.map(([k]) => mean(R.map(s => s.soft[k] || 0)) || 0);
+  // AI のソフト分類は合計 1 ではないので、比べやすいように 1 人ごとに合計 1 に直してから平均
+  const a = SOFT.map(([k]) => mean(A.map(s => { const t = SOFT.reduce((x, [kk]) => x + Math.max(0, s.aiSoft[kk] || 0), 0); return t ? Math.max(0, s.aiSoft[k] || 0) / t : 0; })) || 0);
+  const max = Math.max(...u, ...a, .01);
+  $("soft").innerHTML = `<div class="keys"><span><i class="sw" style="background:var(--series)"></i>本人の答えから（${R.length} 件）</span><span><i class="sw" style="background:var(--gray)"></i>AI の読み取り（${A.length} 件）</span></div>
+    <div class="hb two">${SOFT.map(([k, l], i) => `<div class="lab">${l}</div><div class="trk">
+      <div class="row2"><div class="bar" tabindex="0" style="width:calc(${u[i] / max * 100}% - 46px * ${u[i] / max});background:var(--series)" data-tv="${u[i].toFixed(2)}" data-tl="${l}・本人の答えから"></div><span class="val"><b>${u[i].toFixed(2)}</b></span></div>
+      <div class="row2"><div class="bar" tabindex="0" style="width:calc(${a[i] / max * 100}% - 46px * ${a[i] / max});background:var(--gray)" data-tv="${a[i].toFixed(2)}" data-tl="${l}・AI の読み取り"></div><span class="val">${a[i].toFixed(2)}</span></div></div>`).join("")}</div>` +
+    tableHtml(["KPI", "本人の答えから", "AI の読み取り"], SOFT.map(([k, l], i) => [l, u[i].toFixed(3), a[i].toFixed(3)])) +
+    `<p class="note">値は「その KPI らしさ」の割合の平均（4 つの合計が 1）。重みは仮の値なので、記録の JSON から重みを変えて計算し直せます。</p>`;
+}
+function renderAgree(F) {
+  const CODE = { A: "c1", B: "c2", C: "c3", D: "att" };
+  const both = F.filter(s => s.softTop && CODE[s.aiCode]);
+  const by = SOFT.map(([k, l]) => { const g = both.filter(s => s.softTop === k); const ok = g.filter(s => CODE[s.aiCode] === k).length; return { k, l, n: g.length, ok }; });
+  const okAll = both.filter(s => CODE[s.aiCode] === s.softTop).length;
+  $("agree").innerHTML = both.length ? `<div class="seg" role="img" aria-label="一致 ${okAll} 件・不一致 ${both.length - okAll} 件">
+      <div style="width:${pct(okAll, both.length)}%;background:var(--good)" data-tv="${okAll}件" data-tl="一致">✓ 一致 ${fmtP(okAll, both.length)}</div>
+      <div style="width:${100 - pct(okAll, both.length)}%;background:var(--bad)" data-tv="${both.length - okAll}件" data-tl="不一致">✗ 不一致</div></div>
+    <table style="margin-top:10px"><thead><tr><th>本人の答えでいちばん大きい KPI</th><th class="n">件数</th><th class="n">AI と一致</th></tr></thead><tbody>
+    ${by.map(x => `<tr><td>${x.l}</td><td class="n">${x.n}</td><td class="n">${x.n ? `<span class="vsym" style="color:${pct(x.ok, x.n) >= 60 ? "var(--good)" : "var(--bad)"}">${pct(x.ok, x.n) >= 60 ? "✓" : "✗"}</span> ${fmtP(x.ok, x.n)}` : "−"}</td></tr>`).join("")}
+    </tbody></table><p class="note">✓ 60% 以上一致・✗ 60% 未満。</p>` : '<p class="note">AI の分類がある記録がまだありません</p>';
+}
+function groupStats(G) {
+  const R = G.filter(s => s.reached);
+  return { n: G.length, copy: pct(G.filter(s => s.copied).length, G.length), ans: mean(R.map(s => s.answered)), len: median(R.map(s => s.final.length)), val: mean(G.map(s => s.valence)), sec: median(G.map(s => s.duration)) };
+}
+function renderLevels(F) {
+  const L = [["ひとことのみ", "var(--o1)", "#351162"], ["選択あり", "var(--o2)", "#fff"], ["AI仕上げ", "var(--o3)", "#fff"]];
+  const R = F.filter(s => s.reached);
+  const seg = L.map(([l, c, t]) => ({ l, c, t, v: R.filter(s => s.level === l).length }));
+  $("levels").innerHTML = R.length ? `<div class="seg">${seg.filter(x => x.v).map(x => `<div style="width:${pct(x.v, R.length)}%;background:${x.c};color:${x.t}" data-tv="${x.v}件" data-tl="${x.l}">${pct(x.v, R.length) >= 14 ? `${x.l} ${fmtP(x.v, R.length)}` : ""}</div>`).join("")}</div>
+    <table style="margin-top:10px"><thead><tr><th>関与</th><th class="n">件数</th><th class="n">コピー率</th><th class="n">答えた問い</th><th class="n">文字数</th><th class="n">気持ちの向き</th></tr></thead><tbody>
+    ${seg.map(x => { const g = groupStats(R.filter(s => s.level === x.l)); return `<tr><td><span class="lv" style="background:${x.c};color:${x.t}">${x.l}</span></td><td class="n">${g.n}</td><td class="n">${g.n ? g.copy.toFixed(0) + "%" : "−"}</td><td class="n">${g.ans == null ? "−" : g.ans.toFixed(1)}</td><td class="n">${g.len ?? "−"}</td><td class="n">${g.val == null ? "−" : g.val.toFixed(2)}</td></tr>`; }).join("")}
+    </tbody></table><p class="note">投稿文まで行った ${R.length} 件。「ひとことのみ」＝問いをすべてとばした人、「選択あり」＝問いに答えて自分の言葉の文を使った人、「AI仕上げ」＝AI が整えた文を使った人。</p>` : '<p class="note">まだデータがありません</p>';
+}
+function renderExamples(F) {
+  const A = F.filter(s => s.exViews > 0), B = F.filter(s => !(s.exViews > 0));
+  const a = groupStats(A), b = groupStats(B);
+  const rows = [["コピー率（%）", a.copy, b.copy, 1, 5], ["答えた問いの数", a.ans, b.ans, 1, .3], ["投稿文の文字数", a.len, b.len, 0, 8], ["気持ちの向き", a.val, b.val, 2, .15], ["所要時間（秒）", a.sec, b.sec, 0, 20]];
+  const cell = (v, o, dig, th, n) => {
+    if (v == null) return `<td class="n">−</td>`;
+    if (n < 10) return `<td class="n small">${v.toFixed(dig)}</td>`;
+    const d = o == null ? 0 : v - o, cls = Math.abs(d) < th ? "" : d > 0 ? "diff-up" : "diff-dn";
+    return `<td class="n ${cls}">${cls === "diff-up" ? "↑" : cls === "diff-dn" ? "↓" : ""}${v.toFixed(dig)}</td>`;
+  };
+  $("examples").innerHTML = `<table class="cmp"><thead><tr><th></th><th class="n">見た（${A.length}）</th><th class="n">見ていない（${B.length}）</th></tr></thead><tbody>
+    ${rows.map(([l, x, y, dig, th]) => `<tr><td>${l}</td>${cell(x, y, dig, th, A.length)}<td class="n">${y == null ? "−" : y.toFixed(dig)}</td></tr>`).join("")}
+    </tbody></table>
+    <div class="box hyp">△ 仮説の見方：「見た」人だけ文字数や AI 採用が大きく違う場合は、見本に寄せて書いている可能性があります。見本は「ひとことを書いたあと」にしか開けないので、最初のひとことは見本の影響を受けていません。</div>
+    <p class="note">↑↓ と色（青緑＝多い・オレンジ＝少ない）は「見ていない」人と比べた向き。検定はしていないので淡い色のみ。</p>`;
+}
+
+/* ---------- 投稿一覧 ---------- */
+$("pSearch").addEventListener("input", () => renderPosts(filtered()));
+function renderPosts(F) {
+  const q = $("pSearch").value.trim();
+  const L = F.filter(s => !q || [s.text1, s.final, s.name, s.subject, s.who, s.feels.join(" ")].join(" ").includes(q)).sort((a, b) => (b.started || 0) - (a.started || 0));
+  const show = L.slice(0, 300);
+  $("pCount").textContent = `${L.length} 件` + (L.length > 300 ? "（新しい 300 件を表示）" : "");
+  const state = s => (s.copied ? "コピー" : s.reached ? "投稿文まで" : "途中で終了");
+  $("posts").innerHTML = `<table><thead><tr><th>開始</th><th>名前</th><th>ひとこと</th><th>投稿文</th><th>だれと</th><th>気持ち</th><th class="n">向き</th><th>関与</th><th>状態</th></tr></thead><tbody>
+    ${show.map((s, i) => { const v = valStyle(s.valence == null ? null : s.valence >= .75 ? 1 : s.valence > .25 ? .5 : s.valence >= -.25 ? 0 : -1);
+      return `<tr class="r" data-i="${i}" tabindex="0"><td style="white-space:nowrap">${s.started ? esc(ymd(s.started).slice(5) + " " + String(s.started.getHours()).padStart(2, "0") + ":" + String(s.started.getMinutes()).padStart(2, "0")) : ""}</td><td>${esc(s.name)}</td><td>${esc(s.text1)}</td><td>${esc(s.final || "")}</td><td>${esc(s.who)}${s.whoDetail ? `<br><span class="note">${esc(s.whoDetail)}</span>` : ""}</td><td>${esc(s.feels.join("・"))}</td>
+        <td class="n">${s.valence == null ? "−" : `<span class="vsym" style="color:${v.c === "var(--good2)" ? "#2A78D6" : v.c === "var(--mid)" ? "#8a6400" : v.c}">${v.s}</span> ${s.valence.toFixed(2)}`}</td><td><span class="pill">${esc(s.level)}${s.chosen === "AI" ? "" : ""}</span></td><td><span class="pill">${esc(state(s))}</span></td></tr>`; }).join("")}
+    </tbody></table>`;
+  $("posts").querySelectorAll("tr.r").forEach(tr => {
+    const open = () => {
+      const nx = tr.nextElementSibling; if (nx && nx.classList.contains("d")) { nx.remove(); return; }
+      const s = show[Number(tr.dataset.i)], d = document.createElement("tr"); d.className = "d";
+      const kv = [["どこが", s.why.join("、") + (s.whySrc ? `（${s.whySrc}）` : "")], ["このあと", s.next.join("、")], ["話題", s.subject], ["ひとことから読み取れたもの", s.detected], ["属性", s.profile],
+        ["自分の言葉の文", s.composed], ["AI の文", s.aiText], ["採用・手直し", `${s.chosen || "−"}・${s.edited ? "手で直した" : "直していない"}`],
+        ["AI の読み取り", [s.aiCat, s.aiAct, s.aiContent.join("・"), s.aiSpace.join("・"), s.aiSent == null ? "" : "向き " + s.aiSent].filter(Boolean).join("／")], ["AI 5W1H・評価", `${s.w5h} ${s.aiLevel}`], ["AI ひとこと", s.headline], ["写真と本文", s.photoMatch], ["AI 注意", s.caveats],
+        ["ノード", s.nodes.join("｜")], ["ほかの人の例", s.exText || "見ていない"], ["問いごとの秒", Object.entries(s.secs).map(([k, v]) => `${k} ${v}`).join("・")], ["ヒント", s.hintState], ["AI 秒・モデル", `${s.aiSec ?? "−"}秒・${s.model} ${s.promptVer}`], ["終了の記録", s.ends.join(" → ")], ["セッション ID・版", `${s.sid}・${s.app}`]];
+      const td = document.createElement("td"); td.colSpan = 9;
+      const tbl = document.createElement("table");
+      kv.forEach(([k, v]) => { const r = tbl.insertRow(); const a = r.insertCell(), b = r.insertCell(); a.textContent = k; a.style.whiteSpace = "nowrap"; a.style.width = "1%"; b.textContent = v || "−"; b.style.whiteSpace = "pre-wrap"; });
+      td.appendChild(tbl); d.appendChild(td); tr.after(d);
+    };
+    tr.addEventListener("click", open); tr.addEventListener("keydown", e => { if (e.key === "Enter") open(); });
+  });
+}
+
+/* ---------- CSV 保存 ---------- */
+function download(name, rows) {
+  const cell = v => { const s = String(v ?? ""); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const csv = "﻿" + rows.map(r => r.map(cell).join(",")).join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+$("csvBtn").addEventListener("click", () => {
+  const F = filtered();
+  const cols = [["開始", s => (s.started ? s.started.toISOString() : "")], ["名前", s => s.name], ["セッションID", s => s.sid], ["状態", s => (s.copied ? "コピー" : s.reached ? "投稿文まで" : "途中で終了")], ["所要秒", s => s.duration], ["回答数", s => s.answered], ["写真", s => (s.photo ? "あり" : "なし")],
+    ["ひとこと", s => s.text1], ["話題", s => s.subject], ["だれと", s => s.who], ["どんな人", s => s.whoDetail], ["どこが", s => s.why.join("、")], ["気持ち", s => s.feels.join(" > ")], ["気持ちの向き", s => s.valence], ["このあと", s => s.next.join("、")], ["属性", s => s.profile],
+    ["ソフト①", s => s.soft.c1], ["ソフト②", s => s.soft.c2], ["ソフト③", s => s.soft.c3], ["ソフト愛着", s => s.soft.att], ["AI分類", s => s.aiCat], ["AI感情の向き", s => s.aiSent], ["AI行動", s => s.aiAct],
+    ["最終文面", s => s.final], ["採用", s => s.chosen], ["手で編集", s => (s.edited ? "あり" : "なし")], ["コーチ関与", s => s.level], ["ほかの人の例を見た", s => s.exViews], ["ノード", s => s.nodes.join("｜")]];
+  download(`drop_coach_sessions_${ymd(new Date())}.csv`, [cols.map(c => c[0])].concat(F.map(s => cols.map(c => c[1](s)))));
+});
+
+/* =====================================================================
+   デモデータ（架空）：画面の見え方を確かめるためだけ。chat_v3 シートと同じ列名で作る
+===================================================================== */
+function makeDemo() {
+  let seed = 20261113; const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const pick = (a, w) => { if (!w) return a[Math.floor(rnd() * a.length)]; const s = w.reduce((x, y) => x + y, 0); let r = rnd() * s; for (let i = 0; i < a.length; i++) { r -= w[i]; if (r <= 0) return a[i]; } return a[a.length - 1]; };
+  const some = (a, n) => { const b = a.slice(), o = []; while (o.length < n && b.length) o.push(b.splice(Math.floor(rnd() * b.length), 1)[0]); return o; };
+  const H = ["タイムスタンプ", "Name", "セッションID", "終了", "開始", "所要秒", "回答数", "最後の問い", "写真", "最初のひとこと", "ひとことから読み取れたもの", "話題", "だれと", "どんな人", "どこが", "どこがの選び方", "気持ち（選んだ順）", "気持ちの向き", "このあと", "属性", "体験の点数", "ノード（共起用）", "ソフト①挑戦", "ソフト②属性横断", "ソフト③心理的安全性", "ソフト愛着", "組み立て文面", "AI文面", "最終文面", "採用", "手で編集", "コーチ関与", "ハッシュタグ", "AI分類", "AIソフト", "AI感情の向き", "AI行動", "AIコンテンツ", "AI空間", "AI 5W1H", "AI評価", "AIひとこと", "写真と本文", "AI注意", "ヒント状態", "ほかの人の例を見た", "投稿イメージを開いた", "表示順", "問いごとの秒", "AIモデル", "プロンプト版", "AI秒", "アプリ版"];
+  const topics = [["コーヒー", "おいしかった", "おいしい", "eat"], ["カレー", "おいしい！", "おいしい", "eat"], ["豆本", "かわいい", "かわいい", "buy"], ["焼き芋", "あったまる〜", "ほっこり", "eat"], ["会社員バンド", "すごかった", "すごい", "watch"], ["陶芸体験", "たのしい！", "たのしい", "make"], ["古本市", "意外な本があった", "意外", "buy"], ["クラフトビール", "うまい", "おいしい", "eat"], ["似顔絵", "うれしい", "", "make"], ["夕方の品川", "きれい", "きれい", "stroll"], ["ワークショップ", "刺激をもらった", "刺激をもらった", "make"], ["行列", "長くて残念", "いまいち", "stroll"]];
+  const tw = [14, 10, 9, 9, 8, 7, 6, 6, 4, 6, 5, 4];
+  const WHO = [["職場の人（上司・同僚）と", { c3: .7, c2: .3 }, 26], ["作った人・お店の人と話した", { c2: .5, c1: .3 }, 18], ["ちがう会社の人と話した", { c2: 1 }, 9], ["近所の人・学生と話した", { c2: 1, att: .3 }, 6], ["家族・友だちと", { att: .3 }, 14], ["ひとりで", {}, 20]];
+  const WHY = { eat: ["味・香り", "見た目・色・形", "作った人・演じた人", "その場の雰囲気"], buy: ["見た目・色・形", "手づくり感・技", "作った人・演じた人", "話したこと"], watch: ["作った人・演じた人", "平日とのギャップ", "その場の雰囲気"], make: ["手づくり感・技", "話したこと", "その場の雰囲気"], stroll: ["品川の景色・街", "その場の雰囲気"] };
+  const FEELS = ["おいしい", "たのしい", "かわいい", "すごい", "きれい", "ほっこり", "意外", "刺激をもらった", "ふつう"];
+  const NEXT = [["また来たい", { att: 1 }, 30], ["自分もやってみたい", { c1: 1 }, 18], ["誰かに教えたい", { att: .7 }, 16], ["職場でも話してみたい", { c3: 1 }, 10], ["あの人とまた話したい", { c2: 1 }, 9], ["品川をもっと歩きたい", { att: 1 }, 8], ["とくにない", {}, 9]];
+  const PROF = ["品川で働いている", "品川の近くに住んでいる", "遊びに来た（品川以外から）", "出展・出演している", "学生", "運営・スタッフ"], pw = [52, 14, 18, 6, 6, 4];
+  const ACTL = { watch: "見た・聴いた", eat: "食べた・飲んだ", make: "作った・体験した", buy: "買った", stroll: "ぶらぶら回った" };
+  const rows = [];
+  for (let i = 0; i < 140; i++) {
+    const day = i < 70 ? 14 : 15, h = pick([11, 12, 13, 14, 15, 16, 17, 18], [6, 14, 12, 9, 10, 12, 16, 9]);
+    const t0 = new Date(2026, 10, day, h, Math.floor(rnd() * 60), Math.floor(rnd() * 60));
+    const tp = pick(topics, tw), text1 = tp[0] + tp[1], neg = tp[2] === "いまいち";
+    const photo = rnd() < .86, profile = pick(PROF, pw);
+    const exited = rnd(), drop = exited < .13, early = !drop && exited < .25;
+    const stopAt = drop ? pick(["だれと", "どこが", "気持ち", "このあと"], [4, 4, 2, 1]) : early ? pick(["どこが", "気持ち", "このあと"], [3, 3, 2]) : "";
+    const steps = ["だれと", "どこが", "気持ち", "このあと"], upto = stopAt ? steps.indexOf(stopAt) : 4;
+    const allSkip = !drop && rnd() < .05;
+    const ans = k => !allSkip && steps.indexOf(k) < upto && rnd() > ({ だれと: .08, どこが: .1, 気持ち: .04, このあと: .16 }[k]);
+    const who = ans("だれと") ? pick(WHO, WHO.map(x => x[2])) : null;
+    const why = ans("どこが") ? some(WHY[tp[3]], 1 + (rnd() < .4 ? 1 : 0)) : [];
+    const aiWhy = why.length && photo && rnd() < .3 ? pick(["湯気", "店主の手さばき", "色あい", "ラベル"]) : "";
+    if (aiWhy) why.unshift(aiWhy);
+    let feels = ans("気持ち") ? [...new Set([tp[2], ...some(FEELS, rnd() < .5 ? 1 : 0)].filter(Boolean))] : [];
+    if (neg && feels.length) feels = ["いまいち"].concat(rnd() < .3 ? ["意外"] : []);
+    const next = ans("このあと") ? some(NEXT, 1 + (rnd() < .35 ? 1 : 0)).map(x => x[0]) : [];
+    const answered = [who, why.length, feels.length, next.length].filter(Boolean).length;
+    const vmap = { おいしい: 1, たのしい: 1, かわいい: 1, すごい: 1, きれい: 1, ほっこり: 1, 意外: .3, 刺激をもらった: .8, ふつう: 0, いまいち: -1 }, ow = [1, .6, .45, .35];
+    let vs = 0, vw = 0; feels.forEach((f, k) => { vs += vmap[f] * ow[k]; vw += ow[k]; });
+    const valence = vw ? Math.round(vs / vw * 100) / 100 : "";
+    const raw = { c1: 0, c2: 0, c3: 0, att: 0 }, add = w => Object.keys(w || {}).forEach(k => { raw[k] += w[k]; });
+    if (who) add(who[1]); next.forEach(n => add(NEXT.find(x => x[0] === n)[1])); if (feels.includes("刺激をもらった")) add({ c1: .5 }); if (why.includes("品川の景色・街")) add({ att: .5 });
+    const tot = Object.values(raw).reduce((a, b) => a + b, 0), sh = k => (tot ? Math.round(raw[k] / tot * 100) / 100 : 0);
+    const top = tot ? Object.keys(raw).sort((a, b) => raw[b] - raw[a])[0] : "att";
+    const code = rnd() < .74 ? { c1: "A", c2: "B", c3: "C", att: "D" }[top] : pick(["A", "B", "C", "D"]);
+    const label = { A: "①挑戦", B: "②属性横断", C: "③信頼・心理的安全性", D: "街への愛着" }[code];
+    const composed = [text1, who && who[0] !== "ひとりで" ? who[0].replace(/と(話した)?$/, "と") : "", why.length ? `とくに${why[0]}！` : "", ...next].filter(Boolean).join("\n");
+    const aiOk = !drop && !allSkip && rnd() < .93;
+    const aiText = aiOk ? composed.replace(/！$/m, "") + "\n" + pick(["また来たい！", "いい時間だった", "品川、いいところ"]) : "";
+    const chosen = aiOk && rnd() < .78 ? "AI" : "自分の言葉", edited = !drop && rnd() < .22;
+    const level = drop ? "" : aiOk && chosen === "AI" ? "AI仕上げ" : allSkip ? "ひとことのみ" : "選択あり";
+    const final = drop ? "" : (chosen === "AI" ? aiText : composed) + (edited ? "\nありがとう" : "");
+    const sec = { text1: 8 + rnd() * 30, who: 3 + rnd() * 9, why: 5 + rnd() * 14, feel: 3 + rnd() * 8, next: 3 + rnd() * 9 };
+    const secTxt = Object.keys(sec).filter(k => ({ text1: 1, who: who ? 1 : 0, why: why.length ? 1 : 0, feel: feels.length ? 1 : 0, next: next.length ? 1 : 0 }[k])).map(k => `${k}=${sec[k].toFixed(1)}`).join(" / ");
+    const dur = Object.values(sec).reduce((a, b) => a + b, 0) + (aiOk ? 12 : 0);
+    const nodes = [`コンテンツ:${tp[0]}`, who ? "人:" + who[0] : "", ...why.map(w => (["作った人・演じた人", "話したこと", "平日とのギャップ"].includes(w) ? "人:" : ["その場の雰囲気", "品川の景色・街"].includes(w) ? "空間:" : "コンテンツ:") + w), ...feels.map(f => "感情:" + f), ...next.map(n => "意向:" + n)].filter(Boolean);
+    const ex = rnd() < .3 ? `1回：${pick(["どこが", "気持ち", "投稿文"])}（${Math.round(20 + rnd() * 60)}秒）` : "";
+    const hint = rnd() < .9 ? `OK（${(2 + rnd() * 6).toFixed(1)}秒）` : "TIMEOUT（90秒）";
+    const base = { "タイムスタンプ": "", "Name": `参加者${String(1 + Math.floor(i * .85)).padStart(3, "0")}`, "セッションID": "demo" + String(i).padStart(4, "0"), "開始": t0.toISOString(), "所要秒": Math.round(dur * 10) / 10, "回答数": answered,
+      "写真": photo ? "あり" : "なし", "最初のひとこと": text1, "ひとことから読み取れたもの": tp[2] ? `気持ち:${tp[2]} ／ 話題:${tp[0]}` : `話題:${tp[0]}`, "話題": tp[0], "だれと": who ? who[0] : "", "どんな人": who && rnd() < .3 ? pick(["部長", "となりの部署の人", "同じビルの人", "近所の大学生"]) : "",
+      "どこが": why.join("、"), "どこがの選び方": why.length ? (aiWhy ? "AI候補・選択肢" : "選択肢") : "", "気持ち（選んだ順）": feels.join(" > "), "気持ちの向き": valence, "このあと": next.join("、"), "属性": profile, "体験の点数": "",
+      "ノード（共起用）": nodes.join("｜"), "ソフト①挑戦": sh("c1"), "ソフト②属性横断": sh("c2"), "ソフト③心理的安全性": sh("c3"), "ソフト愛着": sh("att"),
+      "組み立て文面": drop ? "" : composed, "AI文面": aiText, "最終文面": final, "採用": drop ? "" : chosen, "手で編集": drop ? "" : edited ? "あり" : "なし", "コーチ関与": level, "ハッシュタグ": "",
+      "AI分類": aiOk ? `${code} ${label}` : "", "AIソフト": aiOk ? `①${(raw.c1 / (tot || 1)).toFixed(2)} ②${(raw.c2 / (tot || 1)).toFixed(2)} ③${(raw.c3 / (tot || 1)).toFixed(2)} 愛${((raw.att + .2) / (tot || 1)).toFixed(2)}` : "",
+      "AI感情の向き": aiOk && valence !== "" ? Math.max(-1, Math.min(1, Math.round((valence + (rnd() - .5) * .6) * 100) / 100)) : "", "AI行動": aiOk ? ACTL[tp[3]] : "", "AIコンテンツ": aiOk ? tp[0] : "", "AI空間": aiOk && rnd() < .5 ? pick(["屋台", "広場", "品川駅前"]) : "",
+      "AI 5W1H": aiOk ? "何○ なぜ○ 誰○ どう○ いつ− どこ−" : "", "AI評価": aiOk ? pick(["高", "中", "中", "低"]) : "", "AIひとこと": aiOk ? "様子が伝わる投稿です" : "", "写真と本文": aiOk && photo ? "一致：写真の内容" : "", "AI注意": "",
+      "ヒント状態": hint, "ほかの人の例を見た": ex, "投稿イメージを開いた": rnd() < .35 ? 1 : 0, "表示順": "", "問いごとの秒": secTxt, "AIモデル": aiOk ? "gpt-6-luna" : "", "プロンプト版": aiOk ? "demo" : "", "AI秒": aiOk ? Math.round((9 + rnd() * 10) * 10) / 10 : "", "アプリ版": "chat-v3.0（デモ）" };
+    const ends = drop ? ["途中離脱"] : rnd() < .8 ? ["完了", "コピー"] : ["完了"];
+    ends.forEach((e, k) => { const r = { ...base, "終了": e, "タイムスタンプ": new Date(t0.getTime() + (dur + k * 30) * 1000).toISOString(), "最後の問い": drop ? stopAt : early ? `途中で投稿文へ（${stopAt}）` : "最後まで" }; rows.push(H.map(c => r[c] ?? "")); });
+  }
+  return { header: H, rows };
+}
+
+/* ---------- 起動：ログイン済み（このタブ）なら読み込む ---------- */
+(async () => { const t = getToken(); if (t) { const r = await loadFromGas(t); if (!r.ok) $("status").textContent = "記録を読み込んでください"; } })();
+</script>
+</body>
+</html>

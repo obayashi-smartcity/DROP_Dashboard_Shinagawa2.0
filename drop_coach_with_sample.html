@@ -4,199 +4,199 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#ffffff" />
-<title>DROP. Coach — チャット版（V2）</title>
+<title>DROP. Coach — 投稿づくりチャット</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
 <style>
   :root{
     --bg:#f6f5f9; --bg-b:#ecebf1; --card:#fff;
-    --stroke:#dcd9e3; --stroke-soft:#ebe9f0;
-    --text:#1d1b22; --muted:#5d5a66; --dim:#96939e;
-    --rich:#7a58b0; --rich-2:#a98cd0; --rich-soft:#efe9f7; --rich-ink:#5b3f8a;
-    --mine:#e7f4ec; --mine-ink:#2f6b4a;
-    --warn:#9a6b00; --warn-soft:#fbf3dc; --err:#b3372a; --err-soft:#fbeaea;
+    --stroke:#d6d2df; --stroke-soft:#ebe9f0;
+    --text:#1d1b22; --muted:#55525e; --dim:#8a8794;
+    --rich:#7a58b0; --rich-2:#a98cd0; --rich-soft:#efe9f7; --rich-ink:#553a85;
+    --ok:#2f6b4a; --ok-soft:#e7f4ec; --warn:#8a5f00; --err:#b3372a;
     --font:"Inter","Noto Sans JP",system-ui,-apple-system,sans-serif;
-    --dockH:140px;
+    --dockH:160px;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
   button,input,textarea{font-family:var(--font)}
   button{cursor:pointer;-webkit-tap-highlight-color:transparent}
   [hidden]{display:none!important}
   svg{flex:none}
+  /* 文字を大きく（メニュー） */
+  html.big .chat, html.big .dock-scroll, html.big .dock-act, html.big .sheet, html.big .pv-in{zoom:1.15}
 
-  /* ---------- App bar ---------- */
-  .appbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--stroke-soft)}
+  /* ---------- 上部 ---------- */
+  .top{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--stroke-soft)}
   .appbar-in{max-width:640px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:14px}
   .brand{font-weight:900;font-size:18px;letter-spacing:-.4px;line-height:1;white-space:nowrap}
   .brand i{font-style:normal;color:var(--rich)}
-  .brand small{display:block;font-size:9.5px;font-weight:800;letter-spacing:2px;color:var(--dim);margin-top:4px}
-  .prog{flex:1;height:5px;background:var(--bg-b);border-radius:3px;overflow:hidden}
+  .brand small{display:block;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--dim);margin-top:4px}
+  .prog{flex:1;height:6px;background:var(--bg-b);border-radius:3px;overflow:hidden}
   .prog span{display:block;height:100%;width:0;background:var(--rich);border-radius:3px;transition:width .35s ease}
-  .icon-btn{width:38px;height:38px;border:1px solid var(--stroke);background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted)}
-  .icon-btn svg{width:18px;height:18px}
+  .icon-btn{width:42px;height:42px;border:1px solid var(--stroke);background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  .icon-btn svg{width:20px;height:20px}
   .menu{max-width:640px;margin:0 auto;padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
-  .menu button{border:1px solid var(--stroke);background:#fff;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--muted)}
-  .menu button:hover{color:var(--text);border-color:var(--rich-2)}
+  .menu button{border:1px solid var(--stroke);background:#fff;border-radius:999px;padding:10px 14px;font-size:14px;font-weight:700;color:var(--muted)}
   .staff-flag{font-size:10px;font-weight:800;letter-spacing:1px;color:#fff;background:var(--warn);padding:3px 7px;border-radius:4px}
+  /* 投稿イメージのバー */
+  .pv{display:block;width:100%;border:none;border-top:1px solid var(--stroke-soft);background:var(--rich-soft);padding:0;text-align:left}
+  .pv-in{max-width:640px;margin:0 auto;padding:9px 14px;display:flex;align-items:center;gap:10px}
+  .pv-k{font-size:12px;font-weight:800;color:var(--rich-ink);white-space:nowrap}
+  .pv-t{flex:1;min-width:0;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pv-dots{display:flex;gap:4px}
+  .pv-dots i{width:9px;height:9px;border-radius:50%;background:#fff;border:1.5px solid var(--rich-2)}
+  .pv-dots i.on{background:var(--rich);border-color:var(--rich)}
+  .pv-open{font-size:12.5px;font-weight:800;color:var(--rich-ink);white-space:nowrap}
 
-  /* ---------- Chat ---------- */
-  .chat{max-width:640px;margin:0 auto;padding:14px 14px calc(var(--dockH) + 28px)}
-  .msg{display:flex;gap:8px;margin:10px 0;align-items:flex-start}
+  /* ---------- チャット ---------- */
+  .chat{max-width:640px;margin:0 auto;padding:14px 14px calc(var(--dockH) + 16px)}
+  .msg{display:flex;gap:8px;margin:12px 0;align-items:flex-start}
   .msg.me{justify-content:flex-end}
   .msg.new{animation:pop .28s ease}
   @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  .avatar{width:30px;height:30px;border-radius:50%;background:var(--text);color:#fff;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none;letter-spacing:-.5px}
+  .avatar{width:32px;height:32px;border-radius:50%;background:var(--text);color:#fff;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;flex:none}
   .avatar i{font-style:normal;color:var(--rich-2)}
   .avatar.ai{background:var(--rich)}
-  .bubble{max-width:82%;padding:10px 14px;font-size:15px;line-height:1.65;white-space:pre-wrap;word-break:break-word;border-radius:4px 18px 18px 18px;background:#fff;border:1px solid var(--stroke-soft)}
+  .bubble{max-width:84%;padding:11px 15px;font-size:16px;line-height:1.65;white-space:pre-wrap;word-break:break-word;border-radius:4px 18px 18px 18px;background:#fff;border:1px solid var(--stroke-soft)}
   .msg.me .bubble{background:var(--rich);border-color:var(--rich);color:#fff;border-radius:18px 4px 18px 18px}
-  .msg.me .bubble.muted{background:var(--bg-b);border-color:var(--bg-b);color:var(--muted);font-size:13.5px}
-  .msg.me .bubble.photo{padding:0;overflow:hidden;max-width:62%;background:var(--bg-b);border-color:var(--stroke-soft);border-radius:18px 4px 18px 18px}
+  .msg.me .bubble.muted{background:var(--bg-b);border-color:var(--bg-b);color:var(--muted);font-size:14.5px}
+  .msg.me .bubble.photo{padding:0;overflow:hidden;max-width:62%;background:var(--bg-b);border-color:var(--stroke-soft)}
   .msg.me .bubble.photo img{display:block;width:100%;max-height:340px;object-fit:cover}
-  .msg.me .bubble.photo .nophoto{display:block;padding:16px 18px;color:var(--muted);font-size:13px}
-  .bubble .sub{display:block;margin-top:4px;font-size:12px;color:var(--dim);white-space:normal}
+  .msg.me .bubble.photo .nophoto{display:block;padding:16px 18px;color:var(--muted);font-size:14px}
+  .bubble .sub{display:block;margin-top:6px;font-size:13.5px;color:var(--muted);white-space:normal;line-height:1.55}
   .typing .bubble{display:flex;gap:4px;align-items:center;padding:14px 16px}
   .typing .bubble i{width:7px;height:7px;border-radius:50%;background:var(--dim);animation:blink 1.1s infinite}
   .typing .bubble i:nth-child(2){animation-delay:.15s}.typing .bubble i:nth-child(3){animation-delay:.3s}
-  .typing .bubble em{font-style:normal;font-size:12.5px;color:var(--muted);margin-left:8px}
+  .typing .bubble em{font-style:normal;font-size:13.5px;color:var(--muted);margin-left:8px}
   @keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
 
-  /* ---------- Cards in chat ---------- */
-  .card{background:#fff;border:1.5px solid var(--rich);border-radius:18px;padding:14px 14px 12px;width:100%;max-width:82%}
-  .card-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-  .card-hd b{font-size:13px;letter-spacing:.5px;color:var(--rich-ink)}
-  .card-hd .cnt{margin-left:auto;font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
-  .card-photo{display:block;width:40px;height:40px;object-fit:cover;border-radius:8px}
-  .card textarea{display:block;width:100%;border:1px dashed transparent;border-radius:10px;resize:none;font-size:16px;line-height:1.75;min-height:120px;outline:none;padding:4px 6px;margin:0 -6px;color:var(--text);background:none}
-  .card textarea:focus{border-color:var(--rich-2);background:#fcfbfe}
-  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;clear:both}
-  .tag{border:1.5px solid var(--rich-2);background:var(--rich-soft);color:var(--rich-ink);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:700}
+  /* ---------- 投稿文カード ---------- */
+  .card{background:#fff;border:2px solid var(--rich);border-radius:18px;padding:14px;width:100%;max-width:86%}
+  .card-hd{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .card-hd b{font-size:14px;color:var(--rich-ink)}
+  .card-photo{display:block;width:44px;height:44px;object-fit:cover;border-radius:8px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--bg-b);border-radius:12px;padding:3px;margin-bottom:10px}
+  .seg button{border:none;background:none;border-radius:10px;padding:10px 6px;font-size:14px;font-weight:800;color:var(--muted)}
+  .seg button.on{background:#fff;color:var(--rich-ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .card textarea{display:block;width:100%;border:1.5px dashed var(--stroke);border-radius:12px;resize:none;font-size:17px;line-height:1.75;min-height:140px;outline:none;padding:8px 10px;color:var(--text);background:#fff}
+  .card textarea:focus{border-color:var(--rich);border-style:solid}
+  .card-foot{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .card-foot .cnt{font-size:13px;color:var(--dim)}
+  .switch{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);cursor:pointer;user-select:none;margin-left:auto}
+  .switch input{width:20px;height:20px;accent-color:var(--rich)}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .tag{border:1.5px solid var(--rich-2);background:var(--rich-soft);color:var(--rich-ink);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700}
   .tag.off{background:#fff;border-color:var(--stroke);color:var(--dim);text-decoration:line-through}
-  .tags-hint{font-size:11.5px;color:var(--dim);margin-top:6px}
-  .switch{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-top:8px;cursor:pointer;user-select:none}
-  .switch input{width:16px;height:16px;accent-color:var(--rich)}
-  .card.ai{border-color:var(--rich-2);background:#fcfbfe}
-  .card.ai p{margin:0;white-space:pre-wrap;font-size:15.5px;line-height:1.75}
-  .card .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
-  .using{font-size:12px;font-weight:800;color:var(--mine-ink);background:var(--mine);padding:5px 10px;border-radius:999px}
-  .note{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:8px}
-  .from{font-size:12px;color:var(--dim);margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
-  .lnk.sm{font-size:12px;padding:2px 2px;min-height:0;color:var(--rich-ink)}
+  .note{font-size:13.5px;color:var(--muted);line-height:1.6;margin-top:8px}
   .note.warn{color:var(--warn)}
   .card.staff{border-color:var(--warn);border-style:dashed;max-width:100%}
   .card.staff b{color:var(--warn)}
-  .card.staff table{width:100%;border-collapse:collapse;font-size:12.5px}
+  .card.staff table{width:100%;border-collapse:collapse;font-size:13px}
   .card.staff td{border-top:1px solid var(--stroke-soft);padding:5px 4px;vertical-align:top}
   .card.staff td:first-child{color:var(--dim);white-space:nowrap;width:1%}
-  .bars{display:grid;grid-template-columns:auto 1fr auto;gap:4px 8px;align-items:center;font-size:12px}
+  .bars{display:grid;grid-template-columns:auto 1fr auto;gap:4px 8px;align-items:center;font-size:12.5px}
   .bars s{display:block;height:8px;background:var(--bg-b);border-radius:4px;overflow:hidden;text-decoration:none}
   .bars s u{display:block;height:100%;background:var(--rich)}
   .card.staff pre{max-height:240px;overflow:auto;background:var(--bg);padding:8px;font-size:11px;border-radius:8px;white-space:pre-wrap;word-break:break-all}
 
-  /* ---------- Dock (answer area) ---------- */
-  .dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--stroke-soft);box-shadow:0 -10px 30px -22px rgba(60,40,100,.45)}
-  .dock-in{max-width:640px;margin:0 auto;padding:12px 14px calc(12px + env(safe-area-inset-bottom))}
+  /* ---------- 回答エリア ---------- */
+  .dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.98);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--stroke-soft);box-shadow:0 -10px 30px -22px rgba(60,40,100,.45)}
+  .dock-in{max-width:640px;margin:0 auto;padding:12px 14px calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;max-height:calc(100vh - 250px);max-height:calc(100dvh - 250px)}
+  .dock-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:2px 1px}
+  .dock-act{flex:none;padding-top:10px}
+  .dock-act .row{margin-top:0}
   body.editing .dock{display:none}
-  .dock-q{font-size:12px;font-weight:700;color:var(--dim);margin:0 0 8px;display:flex;gap:8px;align-items:center}
-  .dock-q b{color:var(--rich)}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{min-height:42px;padding:8px 15px;border:1.5px solid var(--stroke);border-radius:999px;background:#fff;font-size:14.5px;font-weight:600;color:var(--text);display:inline-flex;align-items:center;gap:6px;transition:background .12s,border-color .12s}
+  .dock-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-6px 0 6px;font-size:13.5px;color:var(--dim);font-weight:700;flex-wrap:wrap}
+  .dock-top .lnk{color:var(--rich-ink);padding:6px 0;min-height:36px;font-size:14px}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{min-height:46px;padding:8px 15px;border:1.5px solid var(--stroke);border-radius:999px;background:#fff;font-size:16px;font-weight:700;color:var(--text);display:inline-flex;align-items:center;gap:7px;transition:background .12s,border-color .12s}
   .chip:active{transform:scale(.97)}
   .chip.on{background:var(--rich-soft);border-color:var(--rich);color:var(--rich-ink)}
-  .chip .ord{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--rich);color:#fff;font-size:11.5px;font-weight:800;align-items:center;justify-content:center}
+  .chip .ord{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--rich);color:#fff;font-size:12px;font-weight:800;align-items:center;justify-content:center}
+  .chip .ck{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--rich);color:#fff;font-size:12px;align-items:center;justify-content:center}
   .chip.sub{color:var(--muted);border-style:dashed}
+  .chip.ai{border-style:dashed;border-color:var(--rich-2)}
+  .chip.ai small{font-size:11px;font-weight:800;color:var(--rich);background:var(--rich-soft);border-radius:4px;padding:1px 5px}
+  .chip.ai.on small{background:#fff}
   .chip.shake{animation:shake .3s}
   @keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
   .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
   .row.center{justify-content:center}
-  .row.between{justify-content:space-between}
-  .btn{min-height:46px;padding:0 20px;border:none;border-radius:999px;background:var(--rich);color:#fff;font-weight:800;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
-  .btn svg{width:18px;height:18px}
-  .btn:disabled{opacity:.45;cursor:default}
+  .btn{min-height:50px;padding:0 20px;border:none;border-radius:999px;background:var(--rich);color:#fff;font-weight:800;font-size:16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+  .btn svg{width:19px;height:19px}
+  .btn:disabled{opacity:.4;cursor:default}
   .btn.ghost{background:#fff;color:var(--rich-ink);border:1.5px solid var(--rich-2)}
-  .btn.sm{min-height:38px;padding:0 14px;font-size:13.5px}
+  .btn.plain{background:var(--bg-b);color:var(--muted)}
+  .btn.sm{min-height:42px;padding:0 16px;font-size:14.5px}
   .btn.wide{flex:1}
-  .lnk{background:none;border:none;color:var(--muted);font-size:13.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px;padding:8px 4px;min-height:36px}
-  .lnk.strong{color:var(--rich);font-weight:800}
+  .btn.full{width:100%}
+  .lnk{background:none;border:none;color:var(--muted);font-size:14px;font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:10px 6px;min-height:40px}
   .inrow{display:flex;gap:8px;align-items:flex-end}
-  .input{flex:1;min-height:46px;max-height:140px;border:1.5px solid var(--stroke);border-radius:23px;padding:11px 16px;font-size:16px;line-height:1.45;outline:none;resize:none;background:#fff;color:var(--text)}
+  .input{flex:1;min-height:50px;max-height:150px;border:1.5px solid var(--stroke);border-radius:25px;padding:12px 17px;font-size:17px;line-height:1.45;outline:none;resize:none;background:#fff;color:var(--text);width:100%}
   .input:focus{border-color:var(--rich)}
-  .send{width:46px;height:46px;border-radius:50%;border:none;background:var(--rich);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+  .input.sm{min-height:46px;font-size:16px}
+  .send{width:50px;height:50px;border-radius:50%;border:none;background:var(--rich);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
   .send:disabled{opacity:.35}
-  .send svg{width:20px;height:20px}
-  .cnt-sm{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;margin-left:auto}
+  .send svg{width:22px;height:22px}
+  .lab{font-size:13.5px;font-weight:700;color:var(--muted);margin:12px 0 6px}
+  .cnt-sm{font-size:13px;color:var(--dim);font-variant-numeric:tabular-nums;margin-left:auto}
   .scale{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}
-  .scale button{height:46px;border-radius:12px;border:1.5px solid var(--stroke);background:#fff;font-weight:800;font-size:15px;color:var(--text);padding:0}
+  .scale button{height:50px;border-radius:12px;border:1.5px solid var(--stroke);background:#fff;font-weight:800;font-size:16px;color:var(--text);padding:0}
   .scale button:active,.scale button.on{background:var(--rich);border-color:var(--rich);color:#fff}
-  .scale-lab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim);margin-top:5px;padding:0 2px}
-  .exit{display:flex;justify-content:center;margin-top:6px}
+  .scale-lab{display:flex;justify-content:space-between;font-size:12.5px;color:var(--dim);margin-top:5px;padding:0 2px}
   .login{display:grid;gap:8px}
-  .login .input{border-radius:12px}
-  .err{font-size:13px;color:var(--err);min-height:1em}
-  .wait{display:flex;align-items:center;gap:10px;justify-content:center;font-size:14px;color:var(--muted);min-height:46px}
-  .spin{width:18px;height:18px;border:2.5px solid var(--rich-soft);border-top-color:var(--rich);border-radius:50%;animation:rot .8s linear infinite}
+  .login .input{border-radius:14px}
+  .err{font-size:14px;color:var(--err);min-height:1em}
+  .wait{display:flex;align-items:center;gap:10px;justify-content:center;font-size:15px;color:var(--muted);min-height:50px}
+  .spin{width:20px;height:20px;border:2.5px solid var(--rich-soft);border-top-color:var(--rich);border-radius:50%;animation:rot .8s linear infinite}
   @keyframes rot{to{transform:rotate(360deg)}}
-  .hint{font-size:12px;color:var(--dim);margin-top:6px}
-  .dock-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-2px 0 10px;font-size:12px;color:var(--dim);font-weight:700}
-  .goal-btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--rich-2);background:var(--rich-soft);color:var(--rich-ink);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800}
-  .goal-btn svg{width:14px;height:14px}
-  .suggest{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;min-height:0}
-  .suggest:empty{display:none}
-  .sg-lab{font-size:12px;color:var(--dim);font-weight:700}
-  .sg-wait{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
-  .spin.sm{width:12px;height:12px;border-width:2px}
-  .chip.sg{min-height:34px;padding:5px 12px;font-size:13.5px;border-style:dashed;border-color:var(--rich-2);color:var(--rich-ink)}
+  .hint{font-size:13px;color:var(--dim);margin-top:6px}
 
-  /* ---------- Toast / Modal ---------- */
-  .toast{position:fixed;left:50%;top:76px;transform:translateX(-50%) translateY(-10px);background:var(--text);color:#fff;padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:60}
+  /* ---------- トースト・シート ---------- */
+  .toast{position:fixed;left:50%;top:86px;transform:translateX(-50%) translateY(-10px);background:var(--text);color:#fff;padding:11px 18px;border-radius:999px;font-size:14.5px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:60;max-width:90vw;text-align:center}
   .toast.show{opacity:1;transform:translateX(-50%)}
   .modal{position:fixed;inset:0;z-index:50;background:rgba(20,16,30,.55);display:none;align-items:flex-end;justify-content:center}
   .modal.show{display:flex}
-  .sheet{background:#fff;width:100%;max-width:640px;max-height:88vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
-  .sheet-hd{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-  .sheet-hd b{font-size:16px}
+  .sheet{background:#fff;width:100%;max-width:640px;max-height:90vh;overflow:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
+  .sheet-hd{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .sheet-hd b{font-size:18px}
   .sheet-hd .icon-btn{margin-left:auto}
-  .sheet p.lead{margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.6}
-  .sheet p.lead.small{font-size:12px;margin:8px 0 4px}
-  .mat-hd{font-size:12px;font-weight:800;color:var(--rich-ink);margin:14px 0 6px;letter-spacing:.3px}
-  .mat{border:1px solid var(--stroke-soft);border-radius:14px;overflow:hidden}
-  .mat-row{display:grid;grid-template-columns:22px 118px 1fr;gap:6px;align-items:start;padding:9px 12px;border-top:1px solid var(--stroke-soft);font-size:13px}
-  .mat-row:first-child{border-top:none}
-  .mat-row i{font-style:normal;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--stroke);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff}
-  .mat-row.done i{background:var(--rich);border-color:var(--rich)}
-  .mat-row b{font-size:13px}
-  .mat-row span{color:var(--dim);word-break:break-word}
-  .mat-row.done span{color:var(--text)}
+  .sheet p{margin:0 0 12px;font-size:15px;color:var(--muted);line-height:1.7}
+  .draft{border:2px solid var(--rich-2);background:var(--rich-soft);border-radius:14px;padding:12px 14px;font-size:17px;line-height:1.8;white-space:pre-wrap;color:var(--text)}
+  .mat{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+  .mat span{display:inline-flex;align-items:center;gap:5px;font-size:14px;font-weight:700;border-radius:999px;padding:6px 12px;border:1.5px solid var(--stroke);color:var(--dim);background:#fff}
+  .mat span.on{border-color:var(--rich);color:var(--rich-ink);background:var(--rich-soft)}
+  .mat span i{font-style:normal}
+  .sec-h{font-size:14px;font-weight:800;color:var(--rich-ink);margin:16px 0 8px}
   .ex{display:flex;gap:12px;border:1px solid var(--stroke-soft);border-radius:14px;padding:10px;background:#fff;margin-top:8px}
   .ex img{width:84px;height:84px;object-fit:cover;border-radius:10px;flex:none;background:var(--bg-b)}
-  .ex-lines{display:grid;gap:4px;min-width:0}
-  .exl{display:flex;gap:6px;align-items:baseline;font-size:13.5px;line-height:1.5}
-  .exl em{font-style:normal;flex:none;font-size:10.5px;font-weight:800;color:var(--muted);background:var(--bg-b);border-radius:4px;padding:1px 6px;white-space:nowrap}
-  .exl em.on{background:var(--rich);color:#fff}
-  .samples{display:grid;grid-template-columns:1fr;gap:10px}
-  .sample{display:flex;gap:12px;border:1px solid var(--stroke-soft);border-radius:14px;padding:10px;background:#fff}
-  .sample img{width:84px;height:84px;object-fit:cover;border-radius:10px;flex:none;background:var(--bg-b)}
-  .sample b{display:block;font-size:11.5px;color:var(--dim);margin-bottom:3px;font-weight:700}
-  .sample p{margin:0;font-size:13.5px;line-height:1.6;white-space:pre-wrap}
-  @media (min-width:700px){ .samples{grid-template-columns:1fr 1fr} .modal{align-items:center} .sheet{border-radius:20px;max-height:84vh} }
+  .ex p{margin:0;font-size:15px;line-height:1.65;white-space:pre-wrap;color:var(--text)}
+  @media (min-width:700px){ .modal{align-items:center} .sheet{border-radius:20px;max-height:86vh} }
+  /* 小さい画面（iPhone SE など）：問いが隠れないように、上部を詰めて回答エリアを少し低く */
+  @media (max-height:640px){ .brand small{display:none} .appbar-in{padding:8px 14px} .pv-in{padding:6px 14px} .dock-in{max-height:calc(100vh - 280px);max-height:calc(100dvh - 280px)} }
 </style>
 </head>
 <body>
-<header class="appbar">
+<header class="top">
   <div class="appbar-in">
-    <div class="brand">DROP<i>.</i> Coach<small>CHAT · V2</small></div>
+    <div class="brand">DROP<i>.</i> Coach<small>投稿づくりチャット</small></div>
     <div class="prog" aria-hidden="true"><span id="progBar"></span></div>
     <span class="staff-flag" id="staffFlag" hidden>STAFF</span>
     <button type="button" class="icon-btn" id="menuBtn" aria-label="メニュー" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
   </div>
   <nav class="menu" id="menu" hidden>
+    <button type="button" id="mBig">文字を大きく</button>
+    <button type="button" id="mExamples">ほかの人の例</button>
+    <button type="button" id="mAbout">このチャットについて</button>
     <button type="button" id="mRestart">最初からやり直す</button>
-    <button type="button" id="mSamples">完成イメージ（見本）</button>
     <button type="button" id="mProfile">「あなたについて」を答え直す</button>
     <button type="button" id="mLogout" hidden>ログアウト</button>
   </nav>
+  <button type="button" class="pv" id="pvBar" hidden aria-label="いまの投稿イメージを見る">
+    <span class="pv-in"><span class="pv-k">あなたの投稿</span><span class="pv-t" id="pvText"></span><span class="pv-dots" id="pvDots"></span><span class="pv-open">見る</span></span>
+  </button>
 </header>
 
 <main class="chat" id="chat" aria-live="polite">
@@ -210,137 +210,104 @@
 
 <div class="modal" id="modal" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="sheet-hd"><b id="modalTitle">完成イメージ</b><button type="button" class="icon-btn" id="modalX" aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="sheet-hd"><b id="modalTitle"></b><button type="button" class="icon-btn" id="modalX" aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div id="sheetBody"></div>
   </div>
 </div>
 
 <!-- 見本投稿の控え：json/sample_drop.json を読めないとき（file:// で直接開いたときなど）に使う。
-     json/sample_drop.json を更新したら、ここも同じ内容に更新すること -->
-<script type="application/json" id="sampleFallback">{"mart":"sample_drop","source":"CULTURE_SNACK_DROP_投稿例集_v4（2026/11/12）","note":"運営作成の模範投稿（架空）。DROP.Coach（サンプル参照版）の比較材料。写真は json/sample_img/。line_roles は各行の役割（V2 チャット版の「完成イメージ」で表示。見たもの／誰と・きっかけ／心に残ったところ／気持ち／次にしたいこと）","record_count":8,"records":[{"artwork_id":"model-v4-1-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-1.jpg","image_file_path":"json/sample_img/1-1.jpg","sentence":"隣のビルの経理さん、週末は豆本作家！\nこんな人がいたなんて\n毎日通う品川を身近に感じる\n同僚にも教えたい！\n来年は私も出展してみたい","account_id":"","account_name":"運営作成 ①-1 豆本（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","心に残ったところ","気持ち","次にしたいこと","次にしたいこと"]},{"artwork_id":"model-v4-1-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-2.jpg","image_file_path":"json/sample_img/1-2.jpg","sentence":"会社員バンド、ボーカルは平日SE！\n働きながらここまでやれるんだ\n刺激もらった〜\n押し入れのギター、また弾きたくなる\n帰ったら弦を張り替えよう","account_id":"","account_name":"運営作成 ①-2 会社員バンド（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","心に残ったところ","気持ち","気持ち","次にしたいこと"]},{"artwork_id":"model-v4-2-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-1.jpg","image_file_path":"json/sample_img/2-1.jpg","sentence":"平日は銀行員、今日はカレー屋さん！\n並んでくれた人と辛さの話で盛り上がる\n同じビルなのに初めて話した\n来週ランチ行く約束\nまた屋台出したくなる","account_id":"","account_name":"運営作成 ②-1 カレー屋台（出展した社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","誰と・きっかけ","心に残ったところ","次にしたいこと","気持ち"]},{"artwork_id":"model-v4-2-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-2.jpg","image_file_path":"json/sample_img/2-2.jpg","sentence":"ランタンづくり、隣は近所の大学生\n不器用な私に教えてくれた\nひと回り下なのに意外と話が合う\n通勤中に会ったら声かけようかな\n品川に知り合いが増えた","account_id":"","account_name":"運営作成 ②-2 ランタンづくり（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","誰と・きっかけ","心に残ったところ","次にしたいこと","気持ち"]},{"artwork_id":"model-v4-3-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-1.jpg","image_file_path":"json/sample_img/3-1.jpg","sentence":"部長がコーヒー淹れてた！\n「何が好き？」って聞かれた\n会社じゃ話したことなかった\n仕事以外の話、していいんだと思えた\nチームメンバーにも聞いてみたい","account_id":"","account_name":"運営作成 ③-1 部長のコーヒー（出展企業の社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","誰と・きっかけ","心に残ったところ","気持ち","次にしたいこと"]},{"artwork_id":"model-v4-3-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-2.jpg","image_file_path":"json/sample_img/3-2.jpg","sentence":"企業ブースの社員さん、週末は落語家\n上司っぽい人が一番前で笑ってた\n趣味を応援しあえる職場っていいな\n私も社内で話してみたい\nまずは自分の趣味から","account_id":"","account_name":"運営作成 ③-2 社員の落語（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","見たもの","気持ち","次にしたいこと","次にしたいこと"]},{"artwork_id":"model-v4-p1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p1.jpg","image_file_path":"json/sample_img/p1.jpg","sentence":"すぐ帰るつもりの仕事帰り\n焼き芋につられて会場をひと回り\nベンチで隣の人と「寒いですね」\n聞けば同じ会社の人だった\n品川の夜、ちょっと好きになる","account_id":"","account_name":"運営作成 ＋1 焼き芋（仕事帰りにふらっと）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["誰と・きっかけ","見たもの","誰と・きっかけ","心に残ったところ","気持ち"]},{"artwork_id":"model-v4-p2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p2.jpg","image_file_path":"json/sample_img/p2.jpg","sentence":"子どもが手品に釘づけ！\nスタンプ集めそっちのけ\n演じてたのは近所の会社の人\n私にはとても無理だけど\n来年も家族で応援しに来たい","account_id":"","account_name":"運営作成 ＋2 手品（家族でスタンプラリー）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","見たもの","誰と・きっかけ","気持ち","次にしたいこと"]}]}</script>
+     json/sample_drop.json を更新したら、ここも同じ内容に更新すること（README の手順） -->
+<script type="application/json" id="sampleFallback">{"mart":"sample_drop","source":"CULTURE_SNACK_DROP_投稿例集_v4（2026/11/12）","note":"運営作成の模範投稿（架空）。DROP.Coach（サンプル参照版）の比較材料。写真は json/sample_img/。line_roles は各行の役割（V2 チャット版の「完成イメージ」で表示。見たもの／誰と・きっかけ／心に残ったところ／気持ち／次にしたいこと）","record_count":8,"records":[{"artwork_id":"model-v4-1-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-1.jpg","image_file_path":"json/sample_img/1-1.jpg","sentence":"隣のビルの経理さん、週末は豆本作家！\nこんな人がいたなんて\n毎日通う品川を身近に感じる\n同僚にも教えたい！\n来年は私も出展してみたい","account_id":"","account_name":"運営作成 ①-1 豆本（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-1-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-2.jpg","image_file_path":"json/sample_img/1-2.jpg","sentence":"会社員バンド、ボーカルは平日SE！\n働きながらここまでやれるんだ\n刺激もらった〜\n押し入れのギター、また弾きたくなる\n帰ったら弦を張り替えよう","account_id":"","account_name":"運営作成 ①-2 会社員バンド（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-2-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-1.jpg","image_file_path":"json/sample_img/2-1.jpg","sentence":"平日は銀行員、今日はカレー屋さん！\n並んでくれた人と辛さの話で盛り上がる\n同じビルなのに初めて話した\n来週ランチ行く約束\nまた屋台出したくなる","account_id":"","account_name":"運営作成 ②-1 カレー屋台（出展した社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-2-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-2.jpg","image_file_path":"json/sample_img/2-2.jpg","sentence":"ランタンづくり、隣は近所の大学生\n不器用な私に教えてくれた\nひと回り下なのに意外と話が合う\n通勤中に会ったら声かけようかな\n品川に知り合いが増えた","account_id":"","account_name":"運営作成 ②-2 ランタンづくり（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-3-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-1.jpg","image_file_path":"json/sample_img/3-1.jpg","sentence":"部長がコーヒー淹れてた！\n「何が好き？」って聞かれた\n会社じゃ話したことなかった\n仕事以外の話、していいんだと思えた\nチームメンバーにも聞いてみたい","account_id":"","account_name":"運営作成 ③-1 部長のコーヒー（出展企業の社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-3-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-2.jpg","image_file_path":"json/sample_img/3-2.jpg","sentence":"企業ブースの社員さん、週末は落語家\n上司っぽい人が一番前で笑ってた\n趣味を応援しあえる職場っていいな\n私も社内で話してみたい\nまずは自分の趣味から","account_id":"","account_name":"運営作成 ③-2 社員の落語（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-p1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p1.jpg","image_file_path":"json/sample_img/p1.jpg","sentence":"すぐ帰るつもりの仕事帰り\n焼き芋につられて会場をひと回り\nベンチで隣の人と「寒いですね」\n聞けば同じ会社の人だった\n品川の夜、ちょっと好きになる","account_id":"","account_name":"運営作成 ＋1 焼き芋（仕事帰りにふらっと）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-p2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p2.jpg","image_file_path":"json/sample_img/p2.jpg","sentence":"子どもが手品に釘づけ！\nスタンプ集めそっちのけ\n演じてたのは近所の会社の人\n私にはとても無理だけど\n来年も家族で応援しに来たい","account_id":"","account_name":"運営作成 ＋2 手品（家族でスタンプラリー）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"}]}</script>
 <script>
 "use strict";
 /* =====================================================================
-   DROP. Coach — チャット版 V2（drop_coach_with_sample.html）  2026/11/13
+   DROP. Coach — 投稿づくりチャット v3（drop_coach_with_sample.html）  2026/11/13
    ---------------------------------------------------------------------
-   2026/11/13 定例の意見を反映した「チャット形式・選択メイン」の投稿コーチ
-   - 写真 → ひとこと（必須・自由入力・選択肢を見る前に聞く）→ タップで答える問い → 投稿文
-   - v2.1（2026/11/13 テスト後）：ログイン必須（全員分を記録）／ひとことは「写真について」に変えて必須／
-     「なにしてた？」のあとに「なにを？」を聞く／気持ち・どこが・このあとに自由記述欄／
-     体験の点数（10 点満点）は体験を答えたあとに聞く／投稿文は AI が自動で作る（失敗時は画面で組み立て）
-   - v2.2：ひとことを送った直後に、裏で AI のヒントを 1 回だけ呼ぶ（待たせない）。「なにを？」に写真からの候補を出し、
-     途中で 1 回だけ「この人だけの問い」を聞く／体験の点数は「チャットの評価ではない」と明記／
-     見本は「完成イメージ」として、ひとことを書いたあとに自分で開けるようにした（材料の集まり具合と、行の役割つきの見本 1 件）
-   - 2 問答えたら「ここで投稿文にする」でいつでも抜けられる
-   - 気持ちはハッシュタグで複数選択（選んだ順に重み＝ソフト分類）。「どこが？」で要素も選ぶ
-   - 文面は画面内ですぐ組み立てる（AI 待ちなし）。AI での仕上げは任意で 1 回だけ
-   - 選んだタグを 4 層（行動／最初の関心＝感情／コンテンツ要素・人・空間／愛着の関心・意向）と
-     コクヨ KPI ①②③・街への愛着に対応づけて記録（共起ネットワーク・効果測定用）
-   - 選択肢の表示順はシャッフルして記録（位置の偏りの検証用）。中立・ネガティブの選択肢も置く
+   2026/11/13 の改良会議（README と docs の会議メモ）で決めた作り
+   - 聞いてから聞く：ひとことを受けて返し、ひとことに書かれた気持ち・人は先に選んでおく。問いの言い方もひとことの話題を使う
+   - 問いは 4 つ：だれと → どこが → 気持ち → このあと（＋端末ごとに 1 回「あなたについて」）。点数は聞かず、気持ちから向きを計算
+   - 上部の「あなたの投稿」バーで、答えるたびに投稿が育つのを見せる（深掘りのゴールが見える）。見本は「ほかの人の例」としてここから
+   - AI は 2 回・待たせない：ひとことの直後に裏でヒント（話題・写真から見える候補）、最後に投稿文（分析用の読み取りも）
+   - 最後は「AI が整えた文／自分の言葉の文」を本人が選べる。ハッシュタグは付けない設定から始める
+   - 文字・ボタンを大きく。メニューから「文字を大きく」。いつでも「ここまでで投稿文をつくる」
    設定
-   - GAS_URL : V2 仕上げ用 GAS（gas/DROP_COACH_GPT.gs v8）の /exec URL。空なら AI なしで動く
-   - LOG_URL : V2 記録用 GAS（gas/DROP_COACH_LOG.gs v6）の /exec URL。空なら記録しない
-   ※ V1 の GAS とは別。V1 の URL を入れないこと（V1 の GAS は variant "chat" を受け付けない）
-   - URL に ?staff=1 を付けると、分析用の記録（タグ・重み・JSON）と、この端末の記録の CSV 保存が出る
+   - GAS_URL : 仕上げ用 GAS（gas/DROP_COACH_GPT.gs v9）の /exec URL
+   - LOG_URL : 記録用 GAS（gas/DROP_COACH_LOG.gs v7）の /exec URL
+   - URL に ?staff=1 を付けると、分析用の記録（ノード・重み・JSON）と、この端末の記録の CSV 保存が出る
 ===================================================================== */
-const APP_VERSION = "chat-v2.2 (2026-11-13)";
+const APP_VERSION = "chat-v3.0 (2026-11-13)";
 const CONFIG = {
-  GAS_URL: "https://script.google.com/macros/s/AKfycbw4Z6_8PsnpD-rsyWM4j0spAWosP5wwALRy3reD6r8iShnCt0_Zioef3NEVkBx6ln457Q/exec",   // V2 仕上げ用 GAS（00_GAS/DROP_COACH2.0/DROP_COACH_GPT）
-  LOG_URL: "https://script.google.com/macros/s/AKfycbyTHPDVzPHB76Xt8GmZaiW3q_i4x9H2fishpnrWn1TbMGFCGzYIgPqLAzOetsrNMVokEA/exec",   // V2 記録用 GAS（00_GAS/DROP_COACH2.0/DROP_COACH_LOG）
+  GAS_URL: "https://script.google.com/macros/s/AKfycbw4Z6_8PsnpD-rsyWM4j0spAWosP5wwALRy3reD6r8iShnCt0_Zioef3NEVkBx6ln457Q/exec",   // 00_GAS/DROP_COACH2.0/DROP_COACH_GPT
+  LOG_URL: "https://script.google.com/macros/s/AKfycbyTHPDVzPHB76Xt8GmZaiW3q_i4x9H2fishpnrWn1TbMGFCGzYIgPqLAzOetsrNMVokEA/exec",   // 00_GAS/DROP_COACH2.0/DROP_COACH_LOG
   DATA_SOURCES: ["json/sample_drop.json"],
   EVENT: "culture-snack-2026",
-  LOGIN_AT_START: true,       // GAS 設定済み・未ログインなら最初に 1 回だけ Name とパスワードを聞く
+  LOGIN_AT_START: true,       // GAS 設定済み・未ログインなら最初に 1 回だけ名前とパスワードを聞く
   ALLOW_NO_LOGIN: false,      // true にすると「ログインせずに使う（AI・記録なし）」を出す（全員分を記録する方針のため false）
-  AUTO_AI: true,              // 投稿文の段階に入ったら自動で AI が投稿文を作る（失敗したら画面で組み立てた文面を使う）
-  AI_MAX: 2,                  // 1 セッションで投稿文を AI で作る上限（つづきを答えたあとの作り直し分を含む）
-  HINT_ON: true,              // ひとことを送った直後に、裏で AI のヒントを 1 回呼ぶ（「なにを？」の候補・この人だけの問い）
-  EXIT_AFTER: 2,              // 何問答えたら「ここで投稿文にする」を出すか（ひとこと・選択の問いを数える。写真・気分・あなたについては数えない）
-  ASK_MOOD: true,             // 体験の点数（10 点満点）を聞く（体験を答えたあとに聞く。記録の「気分」列に入る）
-  ASK_PROFILE: true,          // 「あなたについて」を聞く（この端末で 1 回だけ。投稿者属性の分析用）
-  SHUFFLE: true,              // 選択肢の表示順をシャッフル（「その他」「とくにない」などは末尾に固定）。表示順は記録する
-  HASHTAGS_ON: true,          // 投稿文にハッシュタグを付ける（初期値。画面で切り替え可）
-  MAX_TAGS: 3,                // 自動で付けるハッシュタグの上限
-  FIXED_TAGS: [],             // 常に付けるハッシュタグ（例：["#カルチャースナック"]）
+  AUTO_AI: true,              // 投稿文の段階に入ったら自動で AI が投稿文を作る（失敗したら自分の言葉の文を使う）
+  AI_MAX: 2,                  // 1 セッションで投稿文を AI で作る上限
+  HINT_ON: true,              // ひとことの直後に裏で AI のヒントを 1 回呼ぶ（話題・「どこが」の写真からの候補）
+  ASK_SCORE: false,           // 体験そのものの点数（10 点満点）を聞く。既定は聞かない（選んだ気持ちから「気持ちの向き」を計算）
+  ASK_PROFILE: true,          // 「あなたについて」を聞く（この端末で 1 回だけ）
+  SHUFFLE: true,              // 選択肢の表示順をシャッフル（「ふつう」「いまいち」「ひとりで」「とくにない」は末尾に固定）。表示順は記録する
+  HASHTAGS_ON: false,         // 投稿文にハッシュタグを付ける（初期値。付けたい人だけ画面でオン）
+  MAX_TAGS: 3, FIXED_TAGS: [],
   SEND_SAMPLES: true,         // AI に見本投稿 8 例の本文を渡す
-  SEND_SAMPLE_IMAGES: false,  // 見本投稿の写真も AI に渡す（true にすると AI の待ち時間が長くなる）
+  SEND_SAMPLE_IMAGES: false,  // 見本投稿の写真も AI に渡す（待ち時間が長くなる）
   DROP_URL: "",               // DROP の投稿画面の URL（入れるとコピー後に「DROP を開く」ボタンを出す）
-  BOT_DELAY: 380,             // コーチの返事の間（ミリ秒）
-  TIMEOUT_MS: 90000,
+  BOT_DELAY: 420, TIMEOUT_MS: 90000,
   IMG_MAX_EDGE: 512, IMG_QUALITY: 0.8, PREVIEW_EDGE: 1080, MAX_MB: 30,
   MAX_TEXT1: 100, MAX_DETAIL: 30, MAX_FREE: 20, MAX_FINAL: 300,
-  RESUME_HOURS: 6,            // 途中で閉じても、この時間以内なら続きから
-  KEYS: { SESSION: "dropChatV2Session", PHOTO: "dropChatV2Photo", TOKEN: "dropChatV2Token", LOG_TOKEN: "dropChatV2LogToken",
-          NAME: "dropChatV2Name", PW: "dropChatV2Pw", PROFILE: "dropChatV2Profile", HISTORY: "dropChatV2History" }
+  RESUME_HOURS: 6,
+  KEYS: { SESSION: "dropChatV3Session", PHOTO: "dropChatV3Photo", BIG: "dropChatV3Big", HISTORY: "dropChatV3History",
+          TOKEN: "dropChatV2Token", LOG_TOKEN: "dropChatV2LogToken", NAME: "dropChatV2Name", PW: "dropChatV2Pw", PROFILE: "dropChatV2Profile" }
 };
 
 /* =====================================================================
    選択肢（統制語彙）
-   - layer：共起ネットワークのノードの層（行動／感情／コンテンツ／人／空間／意向）
-   - w：ソフト分類の重み（c1=①挑戦, c2=②属性横断, c3=③信頼・心理的安全性, att=街への愛着）。仮の値。
-        選んだ答えはそのまま記録するので、分析時に重みを見直して計算し直せる
-   - fixed：シャッフルせず末尾に置く／neutral：中立（投稿文・ハッシュタグにしない）／negative：ネガティブ
-   - free：「その他」（自由入力）
+   - layer：共起ネットワークのノードの層（人／コンテンツ／空間／感情／意向）
+   - w：ソフト分類の重み（c1=①挑戦, c2=②属性横断, c3=③信頼・心理的安全性, att=街への愛着）。仮の値（記録から後で再計算できる）
+   - val：気持ちの向き（-1〜1）。選んだ気持ちから「気持ちの向き」を計算する
+   - key：ひとことから読み取るための言葉（正規表現）。外れても画面で選び直せる
+   - fixed：シャッフルせず末尾／neutral：中立（投稿文にしない）／negative：ネガティブ／hidden：画面に出さない（自由記述・AI 候補の受け皿）
 ===================================================================== */
 const V = {
-  act: [
-    { id: "watch",  label: "見た・聴いた",         solo: "ステージや展示をじっくり", dq: "なにを見た・聴いた？", dph: "例：会社員バンドのライブ、豆本の展示", dline: "{d}を見た" },
-    { id: "eat",    label: "食べた・飲んだ",       solo: "食べて飲んで",           dq: "なにを食べた・飲んだ？", dph: "例：焼き芋、スパイスカレー", dline: "{d}を味わった" },
-    { id: "make",   label: "作った・体験した",     solo: "ものづくり体験",         dq: "なにを作った・体験した？", dph: "例：ランタンづくり", dline: "{d}に挑戦", w: { c1: .2 } },
-    { id: "buy",    label: "買った",               solo: "お買いもの",             dq: "なにを買った？", dph: "例：手づくりの豆本", dline: "{d}をゲット" },
-    { id: "talk",   label: "だれかと話した",       solo: "いろんな人とおしゃべり", dq: "どんな話をした？", dph: "例：好きな本の話", dline: "話題は{d}", w: { c2: .3 } },
-    { id: "host",   label: "出展・出演・お手伝い", solo: "出展してきた",           dq: "なにを出展・出演した？", dph: "例：カレー屋台", dline: "{d}で出展", w: { c1: .3, c2: .2 } },
-    { id: "stroll", label: "ぶらぶら回った",       solo: "会場をぶらぶら",         dq: "どこが気になった？", dph: "例：夜のイルミネーション", dline: "{d}が気になった", w: { att: .3 } },
-    { id: "other",  label: "その他", free: true, fixed: true }
+  who: [
+    { id: "maker",   label: "作った人・お店の人と話した", w: { c2: .5, c1: .3 }, ph: "例：隣のビルの経理さん、平日はSEの人", key: "作家|店主|お店の人|作った人|出展者|出演者|演者|作り手|職人",
+      line: d => d ? `作ったのは${d}` : "作った人と話せた" },
+    { id: "work",    label: "職場の人（上司・同僚）と", w: { c3: .7, c2: .3 }, ph: "例：部長、となりの部署の人", key: "部長|課長|上司|同僚|先輩|後輩|チーム|社内|職場|会社の人",
+      line: d => d ? `${d}と一緒に` : "職場の人と一緒に" },
+    { id: "otherco", label: "ちがう会社の人と話した", w: { c2: 1 }, ph: "例：同じビルの銀行員さん", key: "他社|別の会社|違う会社|ちがう会社|隣のビル",
+      line: d => d ? `${d}と話した` : "ちがう会社の人と話した" },
+    { id: "local",   label: "近所の人・学生と話した", w: { c2: 1, att: .3 }, ph: "例：近所の大学生", key: "近所|学生|地元",
+      line: d => d ? `${d}と話した` : "近所の人と話した" },
+    { id: "family",  label: "家族・友だちと", w: { att: .3 }, ph: "例：子ども、学生時代の友だち", key: "子ども|子供|家族|娘|息子|夫|妻|友だち|友達|友人",
+      line: d => d ? `${d}と一緒に` : "" },
+    { id: "alone",   label: "ひとりで", neutral: true, fixed: true, key: "ひとりで|一人で|1人で", line: () => "" },
+    { id: "other",   label: "その他", free: true, fixed: true, line: (d, v) => v || "" }
+  ],
+  why: [
+    { id: "taste",  label: "味・香り",           say: "味わい",         layer: "コンテンツ" },
+    { id: "look",   label: "見た目・色・形",     say: "見た目",         layer: "コンテンツ" },
+    { id: "craft",  label: "手づくり感・技",     say: "手づくり感",     layer: "コンテンツ", w: { c1: .3 } },
+    { id: "person", label: "作った人・演じた人", say: "作った人",       layer: "人", w: { c2: .3 } },
+    { id: "talk",   label: "話したこと",         say: "話したこと",     layer: "人", w: { c2: .3 } },
+    { id: "gap",    label: "平日とのギャップ",   say: "平日とのギャップ", layer: "人", tag: "#B面", w: { c1: .2, c3: .2 } },
+    { id: "vibe",   label: "その場の雰囲気",     say: "その場の雰囲気", layer: "空間", w: { att: .3 } },
+    { id: "town",   label: "品川の景色・街",     say: "品川の景色",     layer: "空間", tag: "#品川", w: { att: .5 } },
+    { id: "other",  label: "自由記述", free: true, hidden: true, layer: "コンテンツ" }
   ],
   feel: [
-    { id: "kawaii",  label: "#かわいい",   tag: "#かわいい",   ex: "かわいい！",       withE: "{e}がかわいい！",       key: "かわい|可愛" },
-    { id: "oishii",  label: "#おいしい",   tag: "#おいしい",   ex: "おいしい！",       withE: "{e}がおいしい！",       key: "おいし|美味" },
-    { id: "sugoi",   label: "#すごい",     tag: "#すごい",     ex: "すごすぎる！",     withE: "{e}がすごい！",         key: "すご|凄", w: { c1: .3 } },
-    { id: "omoshiroi", label: "#おもしろい", tag: "#おもしろい", ex: "おもしろい！",   withE: "{e}がおもしろい！",     key: "おもしろ|面白" },
-    { id: "tanoshii", label: "#たのしい",  tag: "#たのしい",   ex: "たのしい！",       withE: "{e}がたのしい！",       key: "たのし|楽し" },
-    { id: "hokkori", label: "#ほっこり",   tag: "#ほっこり",   ex: "ほっこり",         withE: "{e}にほっこり",         key: "ほっこり", w: { att: .2 } },
-    { id: "ochitsuku", label: "#落ち着く", tag: "#落ち着く",   ex: "なんだか落ち着く", withE: "{e}が落ち着く",         key: "落ち着|おちつ", w: { att: .2 } },
-    { id: "natsukashii", label: "#なつかしい", tag: "#なつかしい", ex: "なつかしい気持ちに", withE: "{e}がなつかしい", key: "なつかし|懐かし" },
-    { id: "igai",    label: "#意外",       tag: "#意外",       ex: "意外な発見！",     withE: "{e}に意外な発見",       key: "意外", w: { c2: .2, c3: .2 } },
-    { id: "wakuwaku", label: "#わくわく",  tag: "#わくわく",   ex: "わくわくする！",   withE: "{e}にわくわく",         key: "わくわく|ワクワク", w: { c1: .2 } },
-    { id: "shigeki", label: "#刺激",       tag: "#刺激",       ex: "刺激もらった",     withE: "{e}に刺激をもらった",   key: "刺激", w: { c1: .5 } },
-    { id: "futsuu",  label: "#ふつう",     neutral: true, fixed: true },
-    { id: "zannen",  label: "#ちょっと残念", negative: true, fixed: true, ex: "ちょっと残念", withE: "{e}がちょっと残念", key: "残念" },
-    { id: "other",   label: "その他", free: true, fixed: true, hidden: true, ex: "{v}", withE: "{e}が{v}" }   // 自由記述欄に入れたもの
-  ],
-  elem: [
-    { id: "look",   label: "見た目・色・形",   say: "色や形",       layer: "コンテンツ" },
-    { id: "small",  label: "小ささ・細かさ",   say: "細かさ",       layer: "コンテンツ" },
-    { id: "hand",   label: "手づくり感",       say: "手づくり感",   layer: "コンテンツ", tag: "#手づくり" },
-    { id: "taste",  label: "味・香り",         say: "味",           layer: "コンテンツ" },
-    { id: "sound",  label: "音・声",           say: "音",           layer: "コンテンツ" },
-    { id: "skill",  label: "技・うまさ",       say: "技",           layer: "コンテンツ", w: { c1: .3 } },
-    { id: "idea",   label: "アイデア",         say: "アイデア",     layer: "コンテンツ", w: { c1: .2 } },
-    { id: "person", label: "作った人・演じた人", say: "作った人",   layer: "人", w: { c2: .3 } },
-    { id: "talk",   label: "話した内容",       say: "話",           layer: "人", w: { c2: .3 } },
-    { id: "gap",    label: "平日とのギャップ", say: "平日とのギャップ", layer: "人", tag: "#B面", w: { c1: .2, c3: .2 } },
-    { id: "vibe",   label: "雰囲気・空間",     say: "雰囲気",       layer: "空間", w: { att: .3 } },
-    { id: "town",   label: "品川の景色・街",   say: "品川の景色",   layer: "空間", tag: "#品川", w: { att: .5 } },
-    { id: "other",  label: "その他", free: true, fixed: true, hidden: true, layer: "コンテンツ" }   // 自由記述欄に入れたもの
-  ],
-  who: [
-    { id: "maker",   label: "作った人・出展者と話した", w: { c2: .5, c1: .3 },
-      detail: { q: "どんな人でしたか？ わかる範囲でひとことだけ", ph: "例：隣のビルの経理さん、平日はSEの人" },
-      line: (d, act) => d ? (act === "watch" ? `演じてたのは${d}` : `作ったのは${d}`) : (act === "watch" ? "演じた人と話せた" : "作った人と話せた") },
-    { id: "work",    label: "職場・同じ会社の人と", w: { c3: .7, c2: .3 },
-      detail: { q: "どんな人でしたか？（名前は書かなくて大丈夫）", ph: "例：部長、となりの部署の人" },
-      line: d => d ? `${d}と一緒に` : "職場の人と一緒に" },
-    { id: "otherco", label: "ちがう会社の人と話した", w: { c2: 1 },
-      detail: { q: "どんな人でしたか？", ph: "例：同じビルの銀行員さん" },
-      line: d => d ? `${d}と話した` : "ちがう会社の人と話した" },
-    { id: "local",   label: "近所の人・学生と話した", w: { c2: 1, att: .3 },
-      detail: { q: "どんな人でしたか？", ph: "例：近所の大学生" },
-      line: d => d ? `${d}と話した` : "近所の人と話した" },
-    { id: "family",  label: "家族・友だちと", w: { att: .3 },
-      detail: { q: "だれと一緒でしたか？", ph: "例：子ども、学生時代の友だち" },
-      line: d => d ? `${d}と一緒に` : "" },
-    { id: "alone",   label: "ひとりで", neutral: true, fixed: true, line: () => "" },
-    { id: "other",   label: "その他", free: true, fixed: true, line: (d, act, v) => v || "" }
+    { id: "oishii",  label: "おいしい",       tag: "#おいしい", val: 1,   ex: "おいしい！",     withE: "{e}がおいしい！",     q: "どこがおいしかったですか？", key: "おいし|美味|うま[いか]" },
+    { id: "tanoshii", label: "たのしい",      tag: "#たのしい", val: 1,   ex: "たのしい！",     withE: "{e}がたのしい！",     q: "どこがたのしかったですか？", key: "たのし|楽し" },
+    { id: "kawaii",  label: "かわいい",       tag: "#かわいい", val: 1,   ex: "かわいい！",     withE: "{e}がかわいい！",     q: "どこがかわいかったですか？", key: "かわい|可愛" },
+    { id: "sugoi",   label: "すごい",         tag: "#すごい",   val: 1,   ex: "すごすぎる！",   withE: "{e}がすごい！",       q: "どこがすごかったですか？",   key: "すご[いかく]|凄|感動", w: { c1: .3 } },
+    { id: "kirei",   label: "きれい",         tag: "#きれい",   val: 1,   ex: "きれい！",       withE: "{e}がきれい！",       q: "どこがきれいでしたか？",     key: "きれい|綺麗|キレイ|美し" },
+    { id: "hokkori", label: "ほっこり",       tag: "#ほっこり", val: 1,   ex: "ほっこり",       withE: "{e}にほっこり",       q: "どこにほっこりしましたか？", key: "ほっこり|あったか|あったま|温か|癒", w: { att: .2 } },
+    { id: "igai",    label: "意外",           tag: "#意外",     val: .3,  ex: "意外な発見！",   withE: "{e}に意外な発見",     q: "どこが意外でしたか？",       key: "意外|びっくり|驚", w: { c2: .2, c3: .2 } },
+    { id: "shigeki", label: "刺激をもらった", tag: "#刺激",     val: .8,  ex: "刺激をもらった", withE: "{e}に刺激をもらった", q: "どこに刺激をもらいましたか？", key: "刺激|憧れ|あこが", w: { c1: .5 } },
+    { id: "futsuu",  label: "ふつう",   val: 0,  neutral: true, fixed: true },
+    { id: "zannen",  label: "いまいち", val: -1, negative: true, fixed: true, ex: "ちょっと残念", withE: "{e}がちょっと残念", q: "どこがいまいちでしたか？", key: "残念|いまいち|イマイチ|微妙" },
+    { id: "other",   label: "自由記述", free: true, hidden: true, val: null, ex: "{v}", withE: "{e}が{v}" }
   ],
   next: [
     { id: "try",     label: "自分もやってみたい",   say: "私もやってみたい",     w: { c1: 1 } },
@@ -350,7 +317,7 @@ const V = {
     { id: "revisit", label: "また来たい",           say: "また来たい！",         w: { att: 1 } },
     { id: "walk",    label: "品川をもっと歩きたい", say: "品川をもっと歩きたい", w: { att: 1 } },
     { id: "none",    label: "とくにない", neutral: true, fixed: true, say: "" },
-    { id: "other",   label: "その他", free: true, fixed: true, hidden: true, say: "{v}" }   // 自由記述欄に入れたもの
+    { id: "other",   label: "自由記述", free: true, hidden: true, say: "{v}" }
   ],
   profile: [
     { id: "worker",    label: "品川で働いている" },
@@ -362,9 +329,9 @@ const V = {
     { id: "other",     label: "その他", free: true, fixed: true }
   ]
 };
-const ORDER_W = { feel: [1, .6, .45, .35], elem: [.8, .5, .4], next: [1, .8] };   // 選んだ順の重み（先に選んだものほど大きい）
-const NODE_LAYER = { act: "行動", feel: "感情", who: "人", next: "意向" };
+const ORDER_W = { feel: [1, .6, .45, .35], why: [.8, .5, .4, .3], next: [1, .8] };   // 選んだ順の重み
 const SOFT_LABEL = { c1: "①挑戦", c2: "②属性横断", c3: "③心理的安全性", att: "愛着" };
+const ACT_LABEL = { watch: "見た・聴いた", eat: "食べた・飲んだ", make: "作った・体験した", buy: "買った", talk: "話した", host: "出展・出演・お手伝い", stroll: "ぶらぶら回った" };
 
 /* ---------- 共通 ---------- */
 const $ = id => document.getElementById(id);
@@ -378,7 +345,7 @@ const uid = () => {
   return (Date.now().toString(36) + Math.random().toString(36).slice(2, 12)).slice(0, 20);
 };
 const shuffle = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
-const store = (area) => ({
+const store = area => ({
   get(k, d) { try { const v = window[area].getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { window[area].setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
   del(k) { try { window[area].removeItem(k); } catch (e) {} }
@@ -386,102 +353,118 @@ const store = (area) => ({
 const LS = store("localStorage"), SS = store("sessionStorage");
 const STAFF = new URLSearchParams(location.search).get("staff") === "1";
 const item = (kind, id) => (V[kind] || []).find(x => x.id === id);
-const plainLabel = s => String(s || "").replace(/^#/, "");
 const ICON = {
   camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
-  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>',
-  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 12.5h8M8 16h5"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg>',
   open: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>'
 };
 
 /* ---------- 状態 ---------- */
-let S = null;                 // 1 回分のチャット（セッション）。localStorage に保存して、再読み込みしても続きから
-let PHOTO = { img: "", imgAi: "", w: 0, h: 0 };   // 写真は sessionStorage（大きいため）
+let S = null;                                   // 1 回分のチャット。localStorage に保存して再読み込みしても続きから
+let PHOTO = { img: "", imgAi: "", w: 0, h: 0 };  // 写真は sessionStorage（大きいため）
 let SAMPLES = [];
-const RT = { busy: false, typing: false, rendered: 0, multi: [], free: null, freeText: {}, gen: 0 };   // 画面だけの一時状態（保存しない）。gen は「最初から」で増やし、前のセッションの処理を止める
+const RT = { busy: false, typing: false, rendered: 0, sel: [], who: null, freeText: {}, gen: 0 };   // 画面だけの一時状態
 
 function newSession() {
   return {
-    v: 22, sid: uid(), started: new Date().toISOString(), t0: now(),
+    v: 30, sid: uid(), started: new Date().toISOString(), t0: now(),
     msgs: [], cur: null, phase: "ask",
-    ans: { text1: "", mood: null, act: null, actDetail: "", actDetailSrc: "", feel: [], elem: [], who: null, whoDetail: "", aiQ: "", next: [], profile: null },
-    hint: null, goalViews: [], goalSample: null,
+    det: { feels: [], who: "", next: false, subject: "" },          // ひとことから読み取ったもの
+    ans: { text1: "", who: null, why: [], feel: [], next: [], profile: null, score: null },
     asked: [], done: [], skipped: [], order: {}, times: {}, early: false, noLogin: false,
-    composed: "", final: "", base: "", chosen: "組み立て", edited: false, tagsOn: CONFIG.HASHTAGS_ON, tagOff: [],
-    ai: null, aiText: "", aiUsed: false, aiCount: 0, aiOk: null, aiStale: false, aiError: "",
+    hint: null, previewOpens: 0, exViews: [],
+    composed: "", aiText: "", chosen: "自分の言葉", edits: {}, tagsOn: CONFIG.HASHTAGS_ON, tagOff: [],
+    ai: null, aiCount: 0, aiOk: null, aiStale: false, aiError: "",
     copied: 0, logged: false, loggedKey: null, abandonSent: false
   };
 }
 function save() { if (S) LS.set(CONFIG.KEYS.SESSION, S); }
 
 /* =====================================================================
-   問い（チャットの流れ）
-   count:false は「答えた数」に数えない（抜けられるまでの数に入れない）
+   ひとことの読み取り（画面内の簡易な辞書。外れても選び直せる）
+   - 気持ち：V.feel の key に当たる言葉 → 気持ちの問いで先に選んでおく
+   - だれと：V.who の key に当たる言葉 → だれとの問いで先に選んでおく
+   - 話題：最初の気持ちの言葉より前（例「コーヒーおいしかった」→「コーヒー」）。問いの言い方に使う。AI のヒントが届けばそちらを優先
 ===================================================================== */
-const topFeel = () => {
-  const f = S.ans.feel.find(x => { const it = item("feel", x.id); return it && !it.neutral; });
-  return f ? { ...item("feel", f.id), v: f.label } : null;
-};
+function detect(text) {
+  const t = String(text || "");
+  const feels = [], pos = [];
+  V.feel.forEach(f => { if (!f.key) return; const m = t.match(new RegExp(f.key)); if (m) { feels.push(f.id); pos.push(m.index); } });
+  const w = V.who.find(x => x.key && new RegExp(x.key).test(t));
+  const next = /たい|また来|来年|次は|やってみ|行こう|しよう/.test(t);
+  let subject = "";
+  if (pos.length && Math.min(...pos) > 0) {
+    subject = t.slice(0, Math.min(...pos)).replace(/^(この|その|あの|写真の|今日の)/, "");
+    for (let k = 0; k < 3; k++) subject = subject.replace(/[\s、。,.!！?？〜~…]+$/, "").replace(/(が|は|も|を|の|って|で|に|と)$/, "");
+    if (subject.length > 12 || /[たてだる]$/.test(subject)) subject = "";
+  }
+  return { feels, who: w ? w.id : "", next, subject };
+}
+const subjectOf = () => (S.hint && S.hint.subject) || S.det.subject || "";
+
+/* =====================================================================
+   問い
+===================================================================== */
 const whoItem = () => (S.ans.who ? item("who", S.ans.who.id) : null);
-const actItem = () => (S.ans.act ? item("act", S.ans.act.id) : null);
 const hasPhoto = () => S.done.includes("photo") && !S.skipped.includes("photo");
+function firstFeel() {   // いちばん大事な気持ち（選んだもの → ひとことから読み取ったもの）
+  const f = S.ans.feel.find(x => { const it = item("feel", x.id); return it && !it.neutral; });
+  if (f) return { ...item("feel", f.id), v: f.label };
+  const d = S.det.feels.map(id => item("feel", id)).find(it => it && !it.neutral);
+  return d ? { ...d, v: d.label } : null;
+}
+function preNote(kind) {
+  if (kind === "who" && S.det.who && S.ans.who == null) return `ひとことから「${item("who", S.det.who).label}」を選んでおきました。違っていたら変えてください`;
+  if (kind === "feel" && S.det.feels.length) return `ひとことから「${S.det.feels.map(id => item("feel", id).label).join("・")}」を選んでおきました。ほかにもあれば足してください`;
+  return "";
+}
 const STEPS = [
   { id: "login", kind: "login", count: false,
     when: () => CONFIG.LOGIN_AT_START && anyGas() && !S.noLogin && !getCreds() && !hasTokens(),
-    q: () => "はじめに、名前とパスワードを入れてください（この端末では1回だけ）。記録と、AI で投稿文を作るのに使います" },
-  { id: "photo", kind: "photo", count: false, q: () => "まずは投稿する写真を1枚えらんでください（なくても大丈夫です）" },
+    q: () => "はじめに、名前（ニックネームでOK）と、運営からお知らせしたパスワードを入れてください。この端末では1回だけです",
+    sub: () => "答えは、イベントの効果を確かめる分析にだけ使います。投稿文は、あなたがコピーしてDROPに投稿するまで公開されません" },
+  { id: "photo", kind: "photo", count: false, q: () => "投稿する写真を1枚えらんでください（写真なしでも大丈夫です）" },
   { id: "text1", kind: "text", required: true, max: CONFIG.MAX_TEXT1, multiline: true,
-    q: () => (hasPhoto() ? "この写真について、ひとことどうぞ。" : "いちばん伝えたいことを、ひとことどうぞ。") + "投稿したいと思った気持ちを、そのまま書いてOKです（これが投稿文のもとになります）",
-    ph: () => (hasPhoto() ? "例：焼き芋あったまる〜" : "例：豆本かわいい！") },
-  { id: "act", kind: "single", opts: "act", q: () => "そこで、なにをしていましたか？" },
-  { id: "actDetail", kind: "text", max: CONFIG.MAX_DETAIL, when: () => !!(actItem() && actItem().dq),
-    q: () => actItem().dq + "（ひとことで）", ph: () => actItem().dph },
-  { id: "feel", kind: "multi", opts: "feel", max: 4, freePh: "ほかの気持ちがあれば自由に",
-    q: () => "どんな気持ちになりましたか？ いくつでも選べます（先に選んだものほど大事にします）" },
-  { id: "elem", kind: "multi", opts: "elem", max: 3, freePh: "ほかにあれば自由に（例：店主さんの笑顔）", when: () => !!topFeel(),
-    q: () => `「${plainLabel(topFeel().v)}」と感じたのは、どこ？（いくつでも・自由に書いてもOK）` },
-  { id: "who", kind: "single", opts: "who", q: () => "だれと過ごしましたか？" },
-  { id: "whoDetail", kind: "text", max: CONFIG.MAX_DETAIL, when: () => !!(whoItem() && whoItem().detail),
-    q: () => whoItem().detail.q, ph: () => whoItem().detail.ph },
-  // 写真とひとことから AI が作った「この人だけの問い」（ヒントが届いていて、ここまで来たときだけ）
-  { id: "aiQ", kind: "text", max: 40, when: () => !!(S.hint && S.hint.followup_q),
-    q: () => (hasPhoto() ? "写真を見て、ひとつだけ聞かせてください。" : "ひとつだけ聞かせてください。") + S.hint.followup_q,
-    ph: () => S.hint.followup_ph || "思ったままの言葉で" },
-  { id: "mood", kind: "scale", count: false, when: () => CONFIG.ASK_MOOD,
-    q: () => (S.ans.actDetail ? `「${S.ans.actDetail}」の体験そのものは` : "今日のその体験そのものは") + "、10点満点で何点ですか？",
+    q: () => hasPhoto() ? "この写真のこと、ひとことどうぞ。思ったままで大丈夫です" : "今日のこと、ひとことどうぞ。思ったままで大丈夫です",
+    sub: () => "これが投稿文のもとになります。キーボードのマイクで話して入力もできます",
+    ph: () => hasPhoto() ? "例：コーヒーおいしかった" : "例：豆本かわいい！" },
+  { id: "who", kind: "who", opts: "who", q: () => "そのとき、だれと一緒でしたか？", sub: () => preNote("who") },
+  { id: "why", kind: "multi", opts: "why", max: 3, freePh: "ほかにあれば、ひとことで",
+    q: () => { const s = subjectOf(), f = firstFeel(); return (s ? `${s}の、` : "") + (f && f.q ? f.q : "どこがよかったですか？"); },
+    sub: () => (S.hint && (S.hint.why_options || []).length ? (hasPhoto() ? "写真から見つけた候補もあります。" : "AI の案もあります。") : "") + "いくつでも選べます" },
+  { id: "feel", kind: "multi", opts: "feel", max: 4, freePh: "ほかの言葉で",
+    q: () => S.det.feels.length ? "ほかにも、どんな気持ちになりましたか？" : "どんな気持ちになりましたか？（いくつでも）",
+    sub: () => preNote("feel") },
+  { id: "score", kind: "scale", count: false, when: () => CONFIG.ASK_SCORE,
+    q: () => (subjectOf() ? `「${subjectOf()}」の体験そのものは` : "今日のその体験そのものは") + "、10点満点で何点ですか？",
     sub: () => "※このチャットの点数ではありません" },
-  { id: "next", kind: "multi", opts: "next", max: 2, freePh: "ほかにあれば自由に（例：友だちを誘って来る）",
-    q: () => "このあと、どうしたいですか？（2つまで・自由に書いてもOK）" },
+  { id: "next", kind: "multi", opts: "next", max: 2, freePh: "ほかにあれば（例：友だちを誘う）",
+    q: () => "このあと、どうしたいですか？（2つまで）" },
   { id: "profile", kind: "single", opts: "profile", count: false,
     when: () => CONFIG.ASK_PROFILE && !LS.get(CONFIG.KEYS.PROFILE, null),
     q: () => "さいごに、あなたについて教えてください（この端末では1回だけ聞きます）" }
 ];
-const stepOf = id => STEPS.find(s => s.id === id);
-/* 記録に残す問いの名前（id → 日本語） */
-const STEP_LABEL = { login: "ログイン", photo: "写真", text1: "ひとこと", act: "なにしてた", actDetail: "なにを", feel: "気持ち", elem: "どこが",
-  who: "だれと", whoDetail: "どんな人", aiQ: "AIの問い", mood: "点数", next: "このあと", profile: "あなたについて" };
+const STEP_LABEL = { login: "ログイン", photo: "写真", text1: "ひとこと", who: "だれと", why: "どこが", feel: "気持ち", score: "点数", next: "このあと", profile: "あなたについて" };
 const stepName = id => STEP_LABEL[id] || id || "";
+const stepOf = id => STEPS.find(s => s.id === id);
 const applicable = st => !st.when || st.when();
 function nextStepAfter(id) {
   const i = id ? STEPS.findIndex(s => s.id === id) : -1;
   for (let k = i + 1; k < STEPS.length; k++) { const st = STEPS[k]; if (!S.done.includes(st.id) && applicable(st)) return st; }
   return null;
 }
-function remainingSteps() { return STEPS.filter(st => !S.done.includes(st.id) && st.kind !== "login" && applicable(st)); }
+function remainingSteps() { return STEPS.filter(st => !S.done.includes(st.id) && !["login", "photo"].includes(st.id) && applicable(st)); }
 function answeredCount() { return S.done.filter(id => { const st = stepOf(id); return st && st.count !== false && !S.skipped.includes(id); }).length; }
 
 /* ---------- 表示 ---------- */
 function renderMsgs() {
-  const box = $("msgs");
-  const n = S.msgs.length;
-  box.innerHTML = S.msgs.map((m, i) => msgHtml(m, i >= RT.rendered && RT.rendered > 0 || (RT.rendered === 0 && i === n - 1))).join("") +
-    (RT.typing ? `<div class="msg bot typing"><div class="avatar">D<i>.</i></div><div class="bubble"><i></i><i></i><i></i>${RT.typingText ? `<em id="typingText">${esc(RT.typingText)}</em>` : ""}</div></div>` : "");
+  const box = $("msgs"), n = S.msgs.length;
+  box.innerHTML = S.msgs.map((m, i) => msgHtml(m, (RT.rendered > 0 && i >= RT.rendered) || (RT.rendered === 0 && i === n - 1))).join("") +
+    (RT.typing ? `<div class="msg bot typing"><div class="avatar">D<i>.</i></div><div class="bubble"><i></i><i></i><i></i>${RT.typingText ? `<em>${esc(RT.typingText)}</em>` : ""}</div></div>` : "");
   RT.rendered = n;
-  bindCards();
-  renderProgress();
-  scrollEnd();
+  bindCards(); renderProgress(); renderPreviewBar(); scrollEnd();
 }
 function msgHtml(m, isNew) {
   const cls = "msg " + m.who + (isNew ? " new" : "");
@@ -495,27 +478,80 @@ function msgHtml(m, isNew) {
 }
 function scrollEnd() { requestAnimationFrame(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" })); }
 function renderProgress() {
-  const total = S.done.filter(id => id !== "login").length + (S.phase === "ask" ? remainingSteps().length : 0);
-  const pct = S.phase === "ask" ? (total ? Math.round(S.done.filter(id => id !== "login").length / total * 100) : 0) : 100;
-  $("progBar").style.width = pct + "%";
+  const done = S.done.filter(id => !["login"].includes(id)).length;
+  const total = done + (S.phase === "ask" ? remainingSteps().length + (S.done.includes("photo") ? 0 : 1) : 0);
+  $("progBar").style.width = (S.phase === "ask" ? (total ? Math.round(done / total * 100) : 0) : 100) + "%";
 }
 function bot(text, extra = {}) {
   const g = RT.gen;
   return new Promise(res => {
     RT.typing = true; renderMsgs();
     setTimeout(() => {
-      if (g !== RT.gen) return res(false);   // 「最初から」が押されたら前のセッションには書かない
+      if (g !== RT.gen) return res(false);
       RT.typing = false; S.msgs.push({ who: "bot", text, ...extra }); renderMsgs(); save(); res(true);
     }, CONFIG.BOT_DELAY);
   });
 }
 function me(text, extra = {}) { S.msgs.push({ who: "me", text, ...extra }); renderMsgs(); save(); }
 let toastTimer = null;
-function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 1800); }
-function dock(html) { $("dockIn").innerHTML = html; syncDockH(); }
+function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 2200); }
+function dock(html, act) { $("dockIn").innerHTML = `<div class="dock-scroll" id="dockScroll">${html}</div>` + (act ? `<div class="dock-act">${act}</div>` : ""); syncDockH(); if (!document.body.classList.contains("editing")) scrollEnd(); }   // 回答エリアの高さが変わっても最後の問いが隠れないように
 function lockDock() { RT.busy = true; dock(`<div class="wait"><span class="spin"></span></div>`); }
 function syncDockH() { document.documentElement.style.setProperty("--dockH", $("dock").offsetHeight + "px"); }
 if ("ResizeObserver" in window) new ResizeObserver(syncDockH).observe($("dock"));
+
+/* ---------- 投稿イメージ（上部のバーとシート） ---------- */
+const MATERIALS = [
+  { key: "text1", label: "ひとこと",         done: () => !!S.ans.text1 },
+  { key: "who",   label: "だれと",           done: () => !!S.ans.who || (!!S.det.who && !S.done.includes("who")) },
+  { key: "why",   label: "どこがよかったか", done: () => S.ans.why.length > 0 },
+  { key: "feel",  label: "気持ち",           done: () => S.ans.feel.length > 0 || S.det.feels.length > 0 },
+  { key: "next",  label: "このあと",         done: () => S.ans.next.length > 0 || S.det.next }
+];
+function renderPreviewBar() {
+  const show = !!S && S.phase === "ask" && S.done.includes("text1");
+  $("pvBar").hidden = !show;
+  if (!show) return;
+  $("pvText").textContent = composeText().replace(/\n/g, " ／ ");
+  $("pvDots").innerHTML = MATERIALS.map(m => `<i class="${m.done() ? "on" : ""}" title="${esc(m.label)}"></i>`).join("");
+}
+function openPreview() {
+  if (!S || !S.done.includes("text1")) return;
+  S.previewOpens = (S.previewOpens || 0) + 1; save();
+  const n = MATERIALS.filter(m => m.done()).length;
+  openSheet("いまの投稿イメージ", `
+    <p>答えるたびに、あなたの投稿がこう育っていきます。最後に AI が読みやすく整えます（AI の文と、自分の言葉の文は、あとで選べます）。</p>
+    <div class="draft">${esc(composeText())}</div>
+    <div class="sec-h">入っているもの（${n} / ${MATERIALS.length}）</div>
+    <div class="mat">${MATERIALS.map(m => `<span class="${m.done() ? "on" : ""}"><i>${m.done() ? "✓" : "・"}</i>${esc(m.label)}</span>`).join("")}</div>
+    <p style="margin-top:8px;font-size:13.5px">全部そろわなくても大丈夫です。いつでも「ここまでで投稿文をつくる」で終われます。</p>
+    <div class="row"><button type="button" class="btn ghost wide" id="shEx">ほかの人の例</button><button type="button" class="btn wide" id="shBack">チャットにもどる</button></div>
+    <div id="shExList"></div>`);
+  $("shBack").addEventListener("click", closeModal);
+  $("shEx").addEventListener("click", () => { $("shEx").hidden = true; $("shExList").innerHTML = examplesHtml(); logExView("投稿イメージから"); });
+}
+$("pvBar").addEventListener("click", openPreview);
+/** ほかの人の例：ひとことを書く前は見せない（最初の言葉が例に引きずられないように）。ラベル（①-1 など）は出さない */
+function examplesHtml() {
+  return `<div class="sec-h">ほかの人の例（運営が作った見本・架空）</div><p style="font-size:13.5px">言い回しはまねしなくて大丈夫です。</p>` +
+    shuffle(SAMPLES).map(p => `<div class="ex">${p.img ? `<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ""}<p>${esc(p.s)}</p></div>`).join("");
+}
+function logExView(from) { S.exViews = (S.exViews || []).concat([{ step: S.phase === "compose" ? "投稿文" : stepName(S.cur), from, at_sec: Math.round((now() - S.t0) / 1000) }]); save(); }
+function openExamples() {
+  if (!S || !S.done.includes("text1")) { toast("最初のひとことを書いたあとで見られます"); return; }
+  if (!SAMPLES.length) { toast("例を読み込めませんでした"); return; }
+  openSheet("ほかの人の例", examplesHtml() + `<div class="row"><button type="button" class="btn full" id="shBack">もどる</button></div>`);
+  $("shBack").addEventListener("click", closeModal);
+  logExView("メニュー・投稿文");
+}
+function openSheet(title, html) {
+  $("modalTitle").textContent = title; $("sheetBody").innerHTML = html;
+  $("modal").classList.add("show"); $("modal").setAttribute("aria-hidden", "false"); $("modal").querySelector(".sheet").scrollTop = 0;
+}
+function closeModal() { $("modal").classList.remove("show"); $("modal").setAttribute("aria-hidden", "true"); }
+$("modalX").addEventListener("click", closeModal);
+$("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
 /* =====================================================================
    チャットの進行
@@ -526,54 +562,61 @@ async function ask(st) {
   if (!S.asked.includes(st.id)) S.asked.push(st.id);
   S.times[st.id] = { shown: now() };
   if (st.opts) prepareOrder(st);
-  setMultiFromAns(st);
-  RT.free = null;
-  await bot(st.q(), st.sub ? { sub: st.sub() } : {});
+  setSelFromAns(st);
+  const sub = st.sub ? st.sub() : "";
+  await bot(st.q(), sub ? { sub } : {});
   if (g !== RT.gen) return;
-  RT.busy = false;
-  renderDock(); save();
+  RT.busy = false; renderDock(); save();
 }
 async function advance(fromId, g = RT.gen) {
   if (g !== RT.gen) return;
   const n = nextStepAfter(fromId);
   if (n) await ask(n); else await toCompose(false);
 }
-function markDone(st) {
-  if (!S.done.includes(st.id)) S.done.push(st.id);
-  const t = S.times[st.id]; if (t) t.answered = now();
-}
+function markDone(st) { if (!S.done.includes(st.id)) S.done.push(st.id); const t = S.times[st.id]; if (t) t.answered = now(); }
 async function answered(st, display, extra) {
   markDone(st); S.skipped = S.skipped.filter(x => x !== st.id);
   if (display != null) me(display, extra);
-  lockDock();
-  await advance(st.id);
+  lockDock(); await advance(st.id);
 }
 async function skipStep(st) {
   if (RT.busy) return;
-  if (st.id === "profile") LS.set(CONFIG.KEYS.PROFILE, { id: "none", label: "答えない" });   // 答えたくない人には次から聞かない
+  if (st.id === "profile") LS.set(CONFIG.KEYS.PROFILE, { id: "none", label: "答えない" });
   if (!S.skipped.includes(st.id)) S.skipped.push(st.id);
-  markDone(st); me("とばす", { muted: true }); lockDock();
-  await advance(st.id);
+  markDone(st); me("とばす", { muted: true }); lockDock(); await advance(st.id);
 }
 async function exitEarly() {
   if (RT.busy) return;
-  S.early = true; me("ここで投稿文にする", { muted: true }); lockDock();
-  await toCompose(true);
+  S.early = true; me("ここまでで投稿文をつくる", { muted: true }); lockDock(); await toCompose(true);
 }
-/** 選択肢の表示順（シャッフル。末尾固定の項目はそのまま）。一度決めた順は保存して使い回す */
 function prepareOrder(st) {
   if (S.order[st.id]) return;
-  const list = V[st.opts];
-  const body = list.filter(x => !x.fixed && !x.hidden), tail = list.filter(x => x.fixed && !x.hidden);
+  const list = V[st.opts].filter(x => !x.hidden);
+  const body = list.filter(x => !x.fixed), tail = list.filter(x => x.fixed);
   S.order[st.id] = (CONFIG.SHUFFLE ? shuffle(body) : body).concat(tail).map(x => x.id);
 }
-function optionsOf(st) { return (S.order[st.id] || V[st.opts].map(x => x.id)).map(id => item(st.opts, id)).filter(x => x && !x.hidden); }
-/** 複数選択の問い：保存済みの答えを、チップの選択（RT.multi）と自由記述（RT.freeText）に分けて戻す */
-function setMultiFromAns(st) {
-  const a = st.kind === "multi" ? (S.ans[st.id] || []) : [];
-  RT.multi = a.filter(x => x.id !== "other").map(x => ({ ...x }));
-  const f = a.find(x => x.id === "other");
-  RT.freeText[st.id] = f ? plainLabel(f.label) : "";
+function optionsOf(st) {
+  const base = (S.order[st.id] || V[st.opts].map(x => x.id)).map(id => item(st.opts, id)).filter(x => x && !x.hidden);
+  if (st.id === "why" && S.hint && (S.hint.why_options || []).length) {
+    return S.hint.why_options.map(l => ({ id: "ai:" + l, label: l, ai: true })).concat(base);
+  }
+  return base;
+}
+/** 選択の初期値：答えたことがあればそれ。初めての問いは、ひとことから読み取ったものを先に選んでおく */
+function setSelFromAns(st) {
+  RT.freeText[st.id] = "";
+  if (st.kind === "who") {
+    RT.who = S.ans.who ? { ...S.ans.who } : (S.det.who ? { id: S.det.who, label: item("who", S.det.who).label, detail: "", pre: true } : null);
+    return;
+  }
+  if (st.kind !== "multi") { RT.sel = []; return; }
+  const a = S.ans[st.id] || [];
+  if (a.length) {
+    RT.sel = a.filter(x => x.id !== "other").map(x => ({ ...x }));
+    const f = a.find(x => x.id === "other"); RT.freeText[st.id] = f ? f.label : "";
+  } else if (st.id === "feel" && S.det.feels.length) {
+    RT.sel = S.det.feels.map(id => ({ id, label: item("feel", id).label, pre: true }));
+  } else RT.sel = [];
 }
 
 /* ---------- 回答エリア ---------- */
@@ -582,57 +625,59 @@ function renderDock() {
   if (S.phase === "compose") return renderComposeDock();
   const st = stepOf(S.cur);
   if (!st) { dock(""); return; }
-  const exitOk = st.kind !== "login" && answeredCount() >= CONFIG.EXIT_AFTER && remainingSteps().length > 0;
-  const exitHtml = exitOk ? `<div class="exit"><button type="button" class="lnk strong" id="dExit">ここで投稿文にする →</button></div>` : "";
-  // ひとことを書いたあとから「完成イメージ」を開ける（最初のひとことは見本に引きずられないよう、見せる前に聞く）
-  const topHtml = st.kind !== "login" && S.done.includes("text1")
-    ? `<div class="dock-top"><span>あと${remainingSteps().length}問</span><button type="button" class="goal-btn" id="dGoal">${ICON.eye}完成イメージを見る</button></div>` : "";
-  const skipHtml = `<button type="button" class="lnk" id="dSkip">とばす</button>`;
-  let html = "";
+  const rest = remainingSteps().length;
+  const canExit = S.done.includes("text1") && st.kind !== "login" && rest > 0;
+  // 上：あと N つ・ここまでで投稿文をつくる（選択肢と一緒にスクロール）／下：とばす・次へ（いつも見える位置に固定）
+  const top = S.done.includes("text1") && st.kind !== "login"
+    ? `<div class="dock-top"><span>あと${rest}つ・とばしてもOK</span>${canExit ? `<button type="button" class="lnk" id="dExit">ここまでで投稿文をつくる</button>` : ""}</div>` : "";
+  const skipBtn = `<button type="button" class="btn ghost sm" id="dSkip">とばす</button>`;
+  const okBtn = (on, n) => `<button type="button" class="btn wide" id="dOk" ${on ? "" : "disabled"}>次へ${n ? `（${n}）` : ""}</button>`;
+  let html = "", act = "";
   if (st.kind === "login") {
     html = loginHtml("はじめる") + (CONFIG.ALLOW_NO_LOGIN ? `<div class="row center"><button type="button" class="lnk" id="dNoLogin">ログインせずに使う（AI・記録なし）</button></div>` : "");
   } else if (st.kind === "photo") {
-    html = `<div class="row center"><button type="button" class="btn wide" id="dPhoto">${ICON.camera}写真をえらぶ</button><button type="button" class="btn ghost" id="dNoPhoto">写真なしで進む</button></div><div class="err" id="dErr"></div>`;
+    html = `<div class="row"><button type="button" class="btn wide" id="dPhoto">${ICON.camera}写真をえらぶ</button><button type="button" class="btn ghost" id="dNoPhoto">写真なしで進む</button></div><div class="err" id="dErr"></div>`;
   } else if (st.kind === "text") {
-    const max = st.max || 100;
-    html = `${st.id === "actDetail" ? `<div class="suggest" id="dSuggest"></div>` : ""}<div class="inrow"><textarea class="input" id="dIn" rows="1" maxlength="${max}" placeholder="${esc(st.ph ? st.ph() : "")}" enterkeyhint="send"></textarea><button type="button" class="send" id="dSend" aria-label="送る" disabled>${ICON.send}</button></div>
-      <div class="row">${st.required ? `<span class="hint" style="margin:0">ここは必ず書いてください（短くて大丈夫です）</span>` : skipHtml}<span class="cnt-sm" id="dCnt">0 / ${max}</span></div>${exitHtml}`;
-  } else if (st.kind === "scale") {
-    html = `<div class="scale">${Array.from({ length: 10 }, (_, i) => `<button type="button" data-v="${i + 1}" aria-label="${i + 1}">${i + 1}</button>`).join("")}</div>
-      <div class="scale-lab"><span>1 イマイチ</span><span>5 ふつう</span><span>10 最高</span></div><div class="row">${skipHtml}</div>${exitHtml}`;
+    html = `<div class="inrow"><textarea class="input" id="dIn" rows="1" maxlength="${st.max}" placeholder="${esc(st.ph ? st.ph() : "")}" enterkeyhint="send"></textarea><button type="button" class="send" id="dSend" aria-label="送る" disabled>${ICON.send}</button></div>
+      <div class="row">${st.required ? `<span class="hint" style="margin:0">ここは必ず書いてください（短くて大丈夫です）</span>` : skipBtn}<span class="cnt-sm" id="dCnt">0 / ${st.max}</span></div>`;
+  } else if (st.kind === "who") {
+    const sel = RT.who, it = sel ? item("who", sel.id) : null;
+    html = `<div class="chips">${optionsOf(st).map(o => `<button type="button" class="chip${sel && sel.id === o.id ? " on" : ""}${o.free ? " sub" : ""}" data-id="${o.id}" aria-pressed="${!!(sel && sel.id === o.id)}">${sel && sel.id === o.id ? '<span class="ck">✓</span>' : ""}${esc(o.label)}</button>`).join("")}</div>
+      ${it && (it.ph || it.free) ? `<div class="lab">${it.free ? "だれと一緒でしたか？" : "どんな人でしたか？（わかる範囲で・名前は書かなくてOK）"}</div><input class="input sm" id="dDetail" maxlength="${CONFIG.MAX_DETAIL}" placeholder="${esc(it.free ? "例：サークルの仲間" : it.ph)}" value="${esc(it.free ? (sel.label === it.label ? "" : sel.label) : (sel.detail || ""))}" enterkeyhint="done" />` : ""}`;
+    act = `<div class="row">${skipBtn}${okBtn(!!sel)}</div>`;
   } else if (st.kind === "single") {
-    html = `<div class="chips">${optionsOf(st).map(o => `<button type="button" class="chip${o.free ? " sub" : ""}" data-id="${o.id}">${esc(o.label)}</button>`).join("")}</div>
-      ${freeHtml()}<div class="row">${st.id === "profile" ? `<button type="button" class="lnk" id="dSkip">答えない</button>` : skipHtml}</div>${exitHtml}`;
+    html = `<div class="chips">${optionsOf(st).map(o => `<button type="button" class="chip${o.free ? " sub" : ""}" data-id="${o.id}">${esc(o.label)}</button>`).join("")}</div><div id="dFreeBox"></div>`;
+    act = `<div class="row"><button type="button" class="btn ghost sm" id="dSkip">${st.id === "profile" ? "答えない" : "とばす"}</button></div>`;
   } else if (st.kind === "multi") {
-    const sel = RT.multi, fv = RT.freeText[st.id] || "";
-    const n = sel.length + (fv.trim() ? 1 : 0);
+    const sel = RT.sel, fv = RT.freeText[st.id] || "", n = sel.length + (fv.trim() ? 1 : 0);
+    const aiTag = hasPhoto() ? "写真から" : "AIの案";
     html = `<div class="chips">${optionsOf(st).map(o => {
         const k = sel.findIndex(x => x.id === o.id);
-        return `<button type="button" class="chip${k >= 0 ? " on" : ""}" data-id="${o.id}" aria-pressed="${k >= 0}">${k >= 0 ? `<span class="ord">${k + 1}</span>` : ""}${esc(o.label)}</button>`;
+        return `<button type="button" class="chip${k >= 0 ? " on" : ""}${o.ai ? " ai" : ""}" data-id="${esc(o.id)}" aria-pressed="${k >= 0}">${k >= 0 ? `<span class="ord">${k + 1}</span>` : ""}${o.ai ? `<small>${aiTag}</small>` : ""}${esc(o.label)}</button>`;
       }).join("")}</div>
-      <div class="inrow" style="margin-top:10px"><input class="input" id="dFreeM" maxlength="${CONFIG.MAX_FREE}" placeholder="${esc(st.freePh || "ほかにあれば自由に")}（${CONFIG.MAX_FREE}字まで）" value="${esc(fv)}" enterkeyhint="done" /></div>
-      <div class="row between">${skipHtml}<span class="hint" id="dMax">${st.max ? `選ぶのは${st.max}つまで` : ""}</span><button type="button" class="btn sm" id="dOk" ${n ? "" : "disabled"}>これでOK${n ? `（${n}）` : ""}</button></div>${exitHtml}`;
+      <input class="input sm" style="margin-top:10px" id="dFreeM" maxlength="${CONFIG.MAX_FREE}" placeholder="${esc(st.freePh || "ほかにあれば")}" value="${esc(fv)}" enterkeyhint="done" />
+      <div class="hint" id="dMax">${st.max ? `選べるのは${st.max}つまで（先に選んだものほど大事にします）` : ""}</div>`;
+    act = `<div class="row">${skipBtn}${okBtn(n, n)}</div>`;
+  } else if (st.kind === "scale") {
+    html = `<div class="scale">${Array.from({ length: 10 }, (_, i) => `<button type="button" data-v="${i + 1}">${i + 1}</button>`).join("")}</div>
+      <div class="scale-lab"><span>1 イマイチ</span><span>5 ふつう</span><span>10 最高</span></div>`;
+    act = `<div class="row">${skipBtn}</div>`;
   }
-  dock(topHtml + html);
+  dock(top + html, act);
   bindDock(st);
-}
-function freeHtml() {
-  if (!RT.free) return "";
-  return `<div class="inrow" style="margin-top:10px"><input class="input" id="dFree" maxlength="${CONFIG.MAX_FREE}" placeholder="自分の言葉で（${CONFIG.MAX_FREE}字まで）" enterkeyhint="done" /><button type="button" class="send" id="dFreeOk" aria-label="決定">${ICON.send}</button></div>`;
 }
 function loginHtml(label) {
   return `<form class="login" id="dLogin" autocomplete="on">
     <input class="input" id="lName" name="username" autocomplete="nickname" maxlength="40" placeholder="名前（ニックネームでOK）" value="${esc(getName())}" />
     <input class="input" id="lPw" name="password" type="password" autocomplete="current-password" placeholder="パスワード（運営からお知らせしたもの）" />
     <div class="err" id="lErr"></div>
-    <button type="submit" class="btn" id="lGo">${esc(label)}</button>
+    <button type="submit" class="btn full" id="lGo">${esc(label)}</button>
   </form>`;
 }
 function bindDock(st) {
   const on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
   on("dSkip", () => skipStep(st));
   on("dExit", exitEarly);
-  on("dGoal", openGoal);
   if (st.kind === "login") {
     bindLogin(async () => { markDone(st); me("ログインしました", { muted: true }); lockDock(); await advance(st.id); });
     on("dNoLogin", async () => { if (RT.busy || !CONFIG.ALLOW_NO_LOGIN) return; S.noLogin = true; markDone(st); me("ログインせずに使う", { muted: true }); lockDock(); await advance(st.id); });
@@ -643,136 +688,103 @@ function bindDock(st) {
   }
   if (st.kind === "text") {
     const ta = $("dIn"), send = $("dSend");
-    const sync = () => { ta.style.height = "auto"; ta.style.height = Math.min(140, ta.scrollHeight) + "px"; send.disabled = !ta.value.trim(); $("dCnt").textContent = `${ta.value.length} / ${st.max}`; syncDockH(); };
+    const sync = () => { ta.style.height = "auto"; ta.style.height = Math.min(150, ta.scrollHeight) + "px"; send.disabled = !ta.value.trim(); $("dCnt").textContent = `${ta.value.length} / ${st.max}`; syncDockH(); };
     ta.addEventListener("input", sync);
-    ta.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing && !(st.multiline && matchMedia("(pointer:coarse)").matches)) { e.preventDefault(); send.click(); } });
+    ta.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing && !matchMedia("(pointer:coarse)").matches) { e.preventDefault(); send.click(); } });
     send.addEventListener("click", async () => {
       if (RT.busy) return;
-      const v = st.multiline ? ta.value.replace(/\r\n?/g, "\n").replace(/\n{2,}/g, "\n").trim() : oneLine(ta.value);
+      const v = ta.value.replace(/\r\n?/g, "\n").replace(/\n{2,}/g, "\n").trim().slice(0, st.max);
       if (!v) return;
-      if (st.id === "text1") S.ans.text1 = v.slice(0, st.max);
-      if (st.id === "actDetail") { S.ans.actDetail = v.slice(0, st.max); S.ans.actDetailSrc = ((S.hint && S.hint.what) || []).includes(S.ans.actDetail) ? "AI候補" : "自分で"; }
-      if (st.id === "aiQ") S.ans.aiQ = v.slice(0, st.max);
-      if (st.id === "text1") fireHint();   // 裏で AI のヒントを呼ぶ（待たない）
-      if (st.id === "whoDetail") S.ans.whoDetail = v.slice(0, st.max);
+      if (st.id === "text1") {
+        S.ans.text1 = v; S.det = detect(v);
+        markDone(st); me(v); lockDock();
+        fireHint();   // 裏で AI のヒント（待たない）
+        const g = RT.gen, d = S.det, short = v.length > 22 ? v.slice(0, 21) + "…" : v;
+        const neg = d.feels.some(id => (item("feel", id) || {}).negative);
+        const n = remainingSteps().length;
+        if (!await bot((neg ? `「${short}」、教えてくれてありがとうございます。` : `「${short}」、いいですね！`) + `あと${n}つだけ、タップで聞かせてください`, { sub: "答えるたびに、上の「あなたの投稿」が育っていきます。とばしても大丈夫です" })) return;
+        await advance(st.id, g);
+        return;
+      }
       await answered(st, v);
     });
     if (st.id === "text1" && S.ans.text1) { ta.value = S.ans.text1; sync(); }
-    if (st.id === "actDetail") renderSuggest();
     if (!matchMedia("(pointer:coarse)").matches) ta.focus();
   }
-  if (st.kind === "scale") {
-    $("dockIn").querySelectorAll(".scale button").forEach(b => b.addEventListener("click", async () => {
+  if (st.kind === "who") {
+    $("dockIn").querySelectorAll(".chip").forEach(b => b.addEventListener("click", async () => {
       if (RT.busy) return;
-      S.ans.mood = Number(b.dataset.v);
-      b.classList.add("on");
-      await answered(st, `${S.ans.mood}点`);
+      const o = item("who", b.dataset.id);
+      if (o.neutral) { RT.who = { id: o.id, label: o.label, detail: "", pre: false }; return finishWho(st); }   // ひとりで → すぐ次へ
+      RT.who = { id: o.id, label: o.label, detail: "", pre: false };
+      renderDock(); const d = $("dDetail"); if (d && !matchMedia("(pointer:coarse)").matches) d.focus();
     }));
+    const d = $("dDetail");
+    if (d) d.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); $("dOk").click(); } });
+    on("dOk", () => finishWho(st));
   }
   if (st.kind === "single") {
     $("dockIn").querySelectorAll(".chip").forEach(b => b.addEventListener("click", async () => {
       if (RT.busy) return;
       const o = item(st.opts, b.dataset.id);
-      if (o.free) { RT.free = { step: st.id }; renderDock(); const f = $("dFree"); if (f) f.focus(); return; }
-      await pickSingle(st, o, o.label);
+      if (o.free) {
+        $("dFreeBox").innerHTML = `<div class="inrow" style="margin-top:10px"><input class="input sm" id="dFree" maxlength="${CONFIG.MAX_FREE}" placeholder="自分の言葉で" enterkeyhint="done" /><button type="button" class="send" id="dFreeOk" aria-label="決定">${ICON.send}</button></div>`;
+        const f = $("dFree"); f.focus(); syncDockH();
+        const go = () => { const v = oneLine(f.value).slice(0, CONFIG.MAX_FREE); if (v) pickSingle(st, o, v); };
+        $("dFreeOk").addEventListener("click", go);
+        f.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); go(); } });
+        return;
+      }
+      pickSingle(st, o, o.label);
     }));
-    bindFree(st, async v => pickSingle(st, item(st.opts, "other"), v));
   }
   if (st.kind === "multi") {
     const fi = $("dFreeM");
-    const syncOk = () => {
-      const n = RT.multi.length + (fi && fi.value.trim() ? 1 : 0), ok = $("dOk");
-      ok.disabled = !n; ok.textContent = n ? `これでOK（${n}）` : "これでOK"; syncDockH();
-    };
-    if (fi) {
-      fi.addEventListener("input", () => { RT.freeText[st.id] = fi.value; syncOk(); });
-      fi.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); fi.blur(); if (!$("dOk").disabled) $("dOk").click(); } });
-    }
+    const syncOk = () => { const n = RT.sel.length + (fi.value.trim() ? 1 : 0), ok = $("dOk"); ok.disabled = !n; ok.textContent = n ? `次へ（${n}）` : "次へ"; };
+    fi.addEventListener("input", () => { RT.freeText[st.id] = fi.value; syncOk(); });
+    fi.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); fi.blur(); if (!$("dOk").disabled) $("dOk").click(); } });
     $("dockIn").querySelectorAll(".chip").forEach(b => b.addEventListener("click", () => {
       if (RT.busy) return;
-      const o = item(st.opts, b.dataset.id);
-      const k = RT.multi.findIndex(x => x.id === o.id);
-      if (k >= 0) { RT.multi.splice(k, 1); renderDock(); return; }
-      if (st.max && RT.multi.length >= st.max) { b.classList.add("shake"); const m = $("dMax"); if (m) m.style.color = "var(--err)"; setTimeout(() => b.classList.remove("shake"), 320); return; }
-      // 「とくにない」「ふつう」は他と同時に選べない
-      if (o.neutral) RT.multi = [];
-      else RT.multi = RT.multi.filter(x => !(item(st.opts, x.id) || {}).neutral);
-      RT.multi.push({ id: o.id, label: o.label });
+      const o = optionsOf(st).find(x => x.id === b.dataset.id); if (!o) return;
+      const k = RT.sel.findIndex(x => x.id === o.id);
+      if (k >= 0) { RT.sel.splice(k, 1); renderDock(); return; }
+      if (st.max && RT.sel.length >= st.max) { b.classList.add("shake"); const m = $("dMax"); if (m) m.style.color = "var(--err)"; setTimeout(() => b.classList.remove("shake"), 320); return; }
+      if (o.neutral) RT.sel = [];
+      else RT.sel = RT.sel.filter(x => !(item(st.opts, x.id) || {}).neutral);
+      RT.sel.push({ id: o.id, label: o.label, ...(o.ai ? { src: "AI候補" } : {}) });
       renderDock();
     }));
     on("dOk", async () => {
       if (RT.busy) return;
-      const fv = oneLine(fi ? fi.value : "").replace(/^[#＃]/, "").slice(0, CONFIG.MAX_FREE);
-      let list = RT.multi.map(x => ({ ...x }));
-      if (fv) { list = list.filter(x => !(item(st.opts, x.id) || {}).neutral); list.push({ id: "other", label: st.id === "feel" ? "#" + fv : fv }); }
+      const fv = oneLine(fi.value).replace(/^[#＃]/, "").slice(0, CONFIG.MAX_FREE);
+      let list = RT.sel.map(x => ({ ...x }));
+      if (fv) { list = list.filter(x => !(item(st.opts, x.id) || {}).neutral); list.push({ id: "other", label: fv, src: "自分で" }); }
       if (!list.length) return;
+      list.forEach(x => { if (!x.src) x.src = "選択肢"; });
       S.ans[st.id] = list;
-      if (st.id === "feel" && !topFeel()) S.ans.elem = [];
       await answered(st, list.map(x => x.label).join("　"));
     });
   }
+  if (st.kind === "scale") {
+    $("dockIn").querySelectorAll(".scale button").forEach(b => b.addEventListener("click", async () => {
+      if (RT.busy) return;
+      S.ans.score = Number(b.dataset.v); b.classList.add("on");
+      await answered(st, `${S.ans.score}点`);
+    }));
+  }
 }
-function bindFree(st, done) {
-  const f = $("dFree"), ok = $("dFreeOk");
-  if (!f) return;
-  const go = () => { const v = oneLine(f.value).slice(0, CONFIG.MAX_FREE); if (!v) { f.focus(); return; } done(v); };
-  ok.addEventListener("click", go);
-  f.addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); go(); } });
+async function finishWho(st) {
+  if (RT.busy || !RT.who) return;
+  const it = item("who", RT.who.id), d = $("dDetail");
+  const v = d ? oneLine(d.value).slice(0, CONFIG.MAX_DETAIL) : "";
+  if (it.free) { if (!v) { if (d) d.focus(); return; } S.ans.who = { id: it.id, label: v, detail: "", pre: false }; }
+  else S.ans.who = { id: it.id, label: it.label, detail: it.ph ? v : "", pre: !!RT.who.pre && it.id === S.det.who };
+  await answered(st, S.ans.who.label + (S.ans.who.detail ? `（${S.ans.who.detail}）` : ""));
 }
 async function pickSingle(st, o, label) {
   const v = { id: o.id, label };
-  if (st.id === "act") {
-    if (!S.ans.act || S.ans.act.id !== o.id) { S.ans.actDetail = ""; S.done = S.done.filter(x => x !== "actDetail"); S.skipped = S.skipped.filter(x => x !== "actDetail"); }
-    S.ans.act = v;
-  }
-  if (st.id === "who") {
-    const changed = !S.ans.who || S.ans.who.id !== o.id;
-    S.ans.who = v;
-    if (changed) { S.ans.whoDetail = ""; S.done = S.done.filter(x => x !== "whoDetail"); S.skipped = S.skipped.filter(x => x !== "whoDetail"); }
-  }
   if (st.id === "profile") { S.ans.profile = v; LS.set(CONFIG.KEYS.PROFILE, v); }
   await answered(st, label);
-}
-
-/* =====================================================================
-   ヒント（v2.2）：ひとことを送った直後に裏で 1 回だけ AI を呼ぶ。ユーザーは待たない
-   - what：「なにを？」の答えの候補（届いていれば、その問いでタップできる候補として出す）
-   - followup_q：この人だけの問い（届いていれば「どんな人？」のあとに 1 回だけ聞く。間に合わなければ聞かない）
-===================================================================== */
-async function fireHint() {
-  if (!CONFIG.HINT_ON || !gasOn() || !S || (S.hint && S.hint.status !== "待ち") || RT.hintBusy) return;
-  const g = RT.gen, sid = S.sid, t0 = now();
-  RT.hintBusy = true;
-  S.hint = { status: "待ち", what: [], act: "", photo_summary: "", followup_q: "", followup_ph: "" }; save();
-  try {
-    if (!getToken(CONFIG.KEYS.TOKEN) && !await autoLogin()) { S.hint.status = "ログインなし"; save(); return; }
-    const body = { action: "hint", variant: "chat", token: getToken(CONFIG.KEYS.TOKEN),
-      context: { event: CONFIG.EVENT, sample_total: SAMPLES.length }, target: { text: S.ans.text1 } };
-    if (PHOTO.imgAi) body.target.image_data = PHOTO.imgAi;
-    const res = await post(body, CONFIG.GAS_URL);
-    if (g !== RT.gen || !S || S.sid !== sid) return;
-    const sec = Math.round((now() - t0) / 100) / 10;
-    S.hint = res.ok && res.result
-      ? { status: "OK", cached: !!res.cached, elapsed_sec: sec, ...res.result }
-      : { status: res.code || "ERROR", message: res.message || "", elapsed_sec: sec, what: [], act: "", photo_summary: "", followup_q: "", followup_ph: "" };
-    save();
-    if (S.phase === "ask" && S.cur === "actDetail") renderSuggest();
-    if (S.phase === "ask") renderProgress();
-  } finally { RT.hintBusy = false; }
-}
-/** 「なにを？」の問いに、ヒントの候補を出す（入力欄の上。タップで入力欄に入り、書き直せる） */
-function renderSuggest() {
-  const box = $("dSuggest"); if (!box) return;
-  const h = S.hint;
-  if (h && h.status === "待ち") { box.innerHTML = `<span class="sg-wait"><span class="spin sm"></span>${hasPhoto() ? "写真から" : ""}候補をさがしています（待たずに書いてOK）</span>`; syncDockH(); return; }
-  const what = (h && h.what) || [];
-  if (!what.length) { box.innerHTML = ""; syncDockH(); return; }
-  box.innerHTML = `<span class="sg-lab">${hasPhoto() ? "写真から" : "ひとことから"}：</span>${what.map(w => `<button type="button" class="chip sg" data-v="${esc(w)}">${esc(w)}</button>`).join("")}`;
-  box.querySelectorAll("[data-v]").forEach(b => b.addEventListener("click", () => {
-    const ta = $("dIn"); if (!ta) return;
-    ta.value = b.dataset.v; ta.dispatchEvent(new Event("input")); ta.focus();
-  }));
-  syncDockH();
 }
 
 /* ---------- 写真 ---------- */
@@ -811,64 +823,70 @@ $("file").addEventListener("change", async () => {
       if (!src.w || !src.h) throw new Error("empty image");
       PHOTO = { sid: S.sid, img: drawToDataUrl(src.el, src.w, src.h, CONFIG.PREVIEW_EDGE, 0.85), imgAi: drawToDataUrl(src.el, src.w, src.h, CONFIG.IMG_MAX_EDGE, CONFIG.IMG_QUALITY), w: src.w, h: src.h };
     } finally { src.close(); }
-  } catch (e) {
-    console.warn(e); RT.busy = false; renderDock(); err("この写真を読み込めませんでした。JPEG / PNG の写真を選んでください"); return;
-  }
-  if (!SS.set(CONFIG.KEYS.PHOTO, PHOTO)) console.warn("写真を一時保存できませんでした（容量超過）。再読み込みすると写真は消えます");
-  const st = stepOf("photo");
-  markDone(st); S.skipped = S.skipped.filter(x => x !== "photo");
+  } catch (e) { console.warn(e); RT.busy = false; renderDock(); err("この写真を読み込めませんでした。JPEG / PNG の写真を選んでください"); return; }
+  if (!SS.set(CONFIG.KEYS.PHOTO, PHOTO)) console.warn("写真を一時保存できませんでした（容量超過）");
+  markDone(stepOf("photo")); S.skipped = S.skipped.filter(x => x !== "photo");
   me("", { photo: true });
-  const g = RT.gen;
-  await bot("ありがとうございます！");
-  await advance("photo", g);
+  await advance("photo", RT.gen);
 });
 
 /* =====================================================================
-   投稿文の組み立て（画面内・即時。AI は使わない）
-   行の役割の目安：見た（ひとこと）→ 誰と → 気づき（どこが＋気持ち）→ 次の一歩。ハッシュタグは別に付ける
-   ※ 選んでいない気持ち・出来事は足さない（選択肢の言葉を短い言い回しにするだけ）
+   ヒント：ひとことを送った直後に裏で 1 回だけ AI を呼ぶ（待たない）
+   - subject：問いの言い方に使う話題（「コーヒーの、どこがおいしかったですか？」）
+   - why_options：「どこが？」の問いに「写真から」として出す候補（届いていれば）
+===================================================================== */
+async function fireHint() {
+  if (!CONFIG.HINT_ON || !gasOn() || !S || (S.hint && S.hint.status !== "待ち") || RT.hintBusy) return;
+  const g = RT.gen, sid = S.sid, t0 = now();
+  RT.hintBusy = true;
+  S.hint = { status: "待ち" }; save();
+  try {
+    if (!getToken(CONFIG.KEYS.TOKEN) && !await autoLogin()) { S.hint = { status: "ログインなし" }; save(); return; }
+    const body = { action: "hint", variant: "chat", token: getToken(CONFIG.KEYS.TOKEN), context: { event: CONFIG.EVENT, sample_total: SAMPLES.length }, target: { text: S.ans.text1 } };
+    if (PHOTO.imgAi) body.target.image_data = PHOTO.imgAi;
+    const res = await post(body, CONFIG.GAS_URL);
+    if (g !== RT.gen || !S || S.sid !== sid) return;
+    const sec = Math.round((now() - t0) / 100) / 10;
+    S.hint = res.ok && res.result ? { status: "OK", cached: !!res.cached, elapsed_sec: sec, ...res.result } : { status: res.code || "ERROR", message: res.message || "", elapsed_sec: sec };
+    save();
+    if (S.phase === "ask" && S.cur === "why" && !RT.busy) renderDock();   // 「どこが？」を表示中なら候補を足す
+    if (S.phase === "ask") renderPreviewBar();
+  } finally { RT.hintBusy = false; }
+}
+
+/* =====================================================================
+   投稿文（自分の言葉の文＝画面で即時に組み立て／AI が整えた文）
 ===================================================================== */
 function composeText() {
   const A = S.ans, lines = [];
-  const t1 = String(A.text1 || "").split(/\n/).map(s => s.replace(/[。．]+$/g, "").trim()).filter(Boolean).slice(0, 3);
-  const tf = topFeel();
+  const t1raw = String(A.text1 || "");
+  String(t1raw).split(/\n/).map(s => s.replace(/[。．]+$/g, "").trim()).filter(Boolean).slice(0, 3).forEach(l => lines.push(l));
   const w = whoItem();
-  const whoLine = w && w.line ? w.line(A.whoDetail, A.act && A.act.id, A.who && A.who.label) : "";
-  // 「誰と」の行があるときは、人の要素を「どこが」の言い回しから外す（作った人が二重になるため）
-  const elems = A.elem.map(e => { const it = item("elem", e.id); if (whoLine && it && it.layer === "人" && it.id !== "gap") return ""; return it && it.free ? e.label : (it ? it.say : ""); }).filter(Boolean).slice(0, 2);
-  const ePhrase = elems.join("と");
-  const fill = (tpl, e) => String(tpl || "").replace("{e}", e).replace("{v}", plainLabel(tf ? tf.v : ""));
-  const act = actItem();
-  const t1Has = tf && tf.key ? new RegExp(tf.key).test(A.text1 || "") : false;
-  let whyDone = false;
-  if (t1.length) lines.push(...t1);
-  else if (tf && ePhrase) { lines.push(fill(tf.withE, ePhrase)); whyDone = true; }
-  else if (tf) { lines.push(fill(tf.ex, "")); whyDone = true; }
-  else if (act && act.solo) lines.push(act.solo);
-  else if (A.act && act && act.free) lines.push(A.act.label);
-  // なにを（「なにを食べた？」などの答え）
-  const d = String(A.actDetail || "").trim();
-  if (d && act && act.dline && !String(A.text1 || "").includes(d)) lines.push(act.dline.replace("{d}", d));
-  if (whoLine) lines.push(whoLine);
-  if (!whyDone && tf) {
-    if (ePhrase) lines.push(t1Has ? `とくに${ePhrase}！` : fill(tf.withE, ePhrase));
-    else if (!t1Has) lines.push(fill(tf.ex, ""));
-  }
-  if (A.aiQ) lines.push(A.aiQ.replace(/[。．]+$/g, ""));   // AI の問いへの答え（本人の言葉）
+  if (w && w.line) { const l = w.line(A.who.detail, A.who.label); if (l) lines.push(l); }
+  const f = firstFeel();
+  const t1HasFeel = f && f.key ? new RegExp(f.key).test(t1raw) : false;
+  const whys = A.why.map(x => { const it = item("why", x.id); return it && !it.free && it.say ? it.say : x.label; }).filter(Boolean).slice(0, 2).join("と");
+  const fill = (tpl, e) => String(tpl || "").replace("{e}", e).replace("{v}", f ? f.v : "");
+  if (whys) lines.push(t1HasFeel ? (f.negative ? `気になったのは${whys}` : `とくに${whys}！`) : f && f.withE ? fill(f.withE, whys) : `${whys}がよかった`);
+  else if (f && !t1HasFeel && f.ex) lines.push(fill(f.ex, ""));
+  // 2 番目以降に選んだ気持ち（ひとことに無いもの）を 1 つ
+  const f2 = A.feel.map(x => ({ ...item("feel", x.id), v: x.label })).find(x => x && x.id !== (f && f.id) && !x.neutral && !(x.key && new RegExp(x.key).test(t1raw)));
+  if (f2 && f2.ex) lines.push(String(f2.ex).replace("{v}", f2.v));
   A.next.forEach(n => { const it = item("next", n.id); if (!it || it.neutral) return; const s = it.free ? n.label : it.say; if (s) lines.push(s.replace("{v}", n.label)); });
   return uniq(lines.map(s => s.trim()).filter(Boolean)).slice(0, 6).join("\n");
 }
-/** 投稿に付けるハッシュタグ（気持ちのタグ → 要素のタグの順。中立・ネガティブは付けない） */
 function autoTags() {
   const t = [];
-  S.ans.feel.forEach(f => { const it = item("feel", f.id); if (!it || it.neutral || it.negative) return; if (it.tag) t.push(it.tag); else if (it.free && /^#\S{1,12}$/.test(f.label)) t.push(f.label); });
-  S.ans.elem.forEach(e => { const it = item("elem", e.id); if (it && it.tag) t.push(it.tag); });
+  S.ans.feel.forEach(x => { const it = item("feel", x.id); if (it && it.tag && !it.neutral && !it.negative) t.push(it.tag); });
+  S.ans.why.forEach(x => { const it = item("why", x.id); if (it && it.tag) t.push(it.tag); });
   return uniq(t).slice(0, CONFIG.MAX_TAGS).concat(CONFIG.FIXED_TAGS || []);
 }
 const activeTags = () => (S.tagsOn ? autoTags().filter(t => !S.tagOff.includes(t)) : []);
+const baseOf = c => (c === "AI" ? S.aiText : S.composed);
+const bodyOf = c => (S.edits && S.edits[c] != null ? S.edits[c] : baseOf(c)) || "";
+const isEdited = () => S.edits && S.edits[S.chosen] != null && S.edits[S.chosen].trim() !== String(baseOf(S.chosen) || "").trim();
 function finalText() {
-  const body = String(S.final || "").replace(/\r\n?/g, "\n").trim();
-  const tags = activeTags();
+  const body = bodyOf(S.chosen).replace(/\r\n?/g, "\n").trim(), tags = activeTags();
   return (body + (tags.length ? "\n" + tags.join(" ") : "")).trim();
 }
 async function toCompose(early) {
@@ -876,26 +894,22 @@ async function toCompose(early) {
   S.phase = "compose"; S.cur = null; S.early = !!early;
   S.composed = composeText();
   S.msgs = S.msgs.filter(m => m.card !== "compose");
-  if (!S.edited && S.chosen !== "AI") { S.final = S.composed; S.base = S.composed; S.chosen = "組み立て"; }
-  const useAI = CONFIG.AUTO_AI && gasOn() && (S.aiCount || 0) < CONFIG.AI_MAX && !S.edited;
-  if (useAI && !await bot(early ? "ここまでの答えで、投稿文を作ります" : "ありがとうございます！ 答えをもとに投稿文を作ります")) return;
+  renderPreviewBar();
+  const useAI = CONFIG.AUTO_AI && gasOn() && (S.aiCount || 0) < CONFIG.AI_MAX && !isEdited();
+  if (!useAI && S.chosen === "AI" && !S.aiText) S.chosen = "自分の言葉";
+  if (useAI && !await bot(early ? "ここまでの答えで、投稿文をつくります" : "ありがとうございます！ 答えをもとに投稿文をつくります")) return;
   await finishCompose(useAI, g);
 }
-/** 投稿文の段階：AI で作る（useAI）→ 投稿文カードを出す → 記録（finish） */
 async function finishCompose(useAI, g = RT.gen) {
   if (useAI) {
     const r = await runAI();
     if (g !== RT.gen) return;
-    if (r === "login") { RT.loginFor = "compose"; RT.busy = false; await bot("投稿文を作るために、名前とパスワードを入れてください（この端末では1回だけ）"); renderComposeDock(); save(); return; }
-    if (r === "ok") { if (!await bot((S.ai.result && S.ai.result.headline) || "投稿文ができました", { ai: true })) return; }
-    else {
-      if (!S.edited) { S.final = S.composed; S.base = S.composed; S.chosen = "組み立て"; }
-      if (!await bot(`AI で作れなかったので、答えをつないだ文面にしました（${S.aiError || "不明なエラー"}）。このまま使っても、直してもOKです`)) return;
-    }
+    if (r === "login") { RT.loginFor = "compose"; RT.busy = false; await bot("投稿文をつくるために、名前とパスワードを入れてください（この端末では1回だけ）"); renderComposeDock(); save(); return; }
+    if (r === "ok") { if (!await bot((S.ai.result && S.ai.result.headline) || "投稿文ができました", { ai: true, sub: "上が AI が整えた文です。「自分の言葉の文」に切り替えたり、自由に直したりできます" })) return; }
+    else { S.chosen = "自分の言葉"; if (!await bot(`AI で整えられなかったので、あなたの言葉をつないだ文にしました（${S.aiError || "不明なエラー"}）。このまま使っても、直してもOKです`)) return; }
   } else {
-    const lead = !String(S.final || "").trim() ? "まだ文面がありません。下の枠に、ひとことだけでも自由に書いてみてください"
-      : S.edited ? "直してくれた文面は、そのままにしています"
-      : (S.early ? "ここまでの答えで投稿文を作りました。" : "投稿文ができました。") + "そのまま使っても、自由に直してもOKです";
+    const lead = !String(bodyOf(S.chosen)).trim() ? "まだ文がありません。下の枠に、ひとことだけでも書いてみてください"
+      : isEdited() ? "直してくれた文は、そのままにしています" : "投稿文ができました。そのまま使っても、自由に直してもOKです";
     if (!await bot(lead)) return;
   }
   S.msgs.push({ who: "bot", card: "compose" });
@@ -904,104 +918,75 @@ async function finishCompose(useAI, g = RT.gen) {
   sendLog("finish");
 }
 function composeCardHtml() {
-  const tags = autoTags();
-  const len = finalText().length;
-  const from = S.chosen === "AI"
-    ? `<div class="from">AI があなたの答えから整えました。<button type="button" class="lnk sm" id="cLocal">AI を使わない文面にする</button></div>`
-    : (S.aiText ? `<div class="from"><button type="button" class="lnk sm" id="cAi">AI が整えた文面に戻す</button></div>` : "");
+  const tags = autoTags(), len = finalText().length;
   const cav = S.chosen === "AI" && S.ai && S.ai.result ? (S.ai.result.caveats || []).map(c => `<div class="note warn">※ ${esc(c)}</div>`).join("") : "";
   return `<div class="card" id="composeCard">
-    <div class="card-hd">${PHOTO.img ? `<img class="card-photo" src="${esc(PHOTO.img)}" alt="">` : ""}<b>あなたの投稿文</b><span class="cnt" id="cCnt">${len} 字</span></div>
-    <textarea id="cText" rows="5" maxlength="${CONFIG.MAX_FINAL}" aria-label="投稿文（直せます）">${esc(S.final)}</textarea>
-    ${from}
-    ${tags.length ? `<div class="tags">${tags.map(t => `<button type="button" class="tag${S.tagsOn && !S.tagOff.includes(t) ? "" : " off"}" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>
-    <label class="switch"><input type="checkbox" id="cTagsOn" ${S.tagsOn ? "checked" : ""}>ハッシュタグをつける</label>
-    <div class="tags-hint">タグを押すと外せます。文面はタップして自由に直せます</div>` : `<div class="tags-hint">文面はタップして自由に直せます</div>`}
+    <div class="card-hd">${PHOTO.img ? `<img class="card-photo" src="${esc(PHOTO.img)}" alt="">` : ""}<b>あなたの投稿文</b></div>
+    ${S.aiText ? `<div class="seg" role="tablist"><button type="button" role="tab" data-v="AI" class="${S.chosen === "AI" ? "on" : ""}" aria-selected="${S.chosen === "AI"}">AI が整えた文</button><button type="button" role="tab" data-v="自分の言葉" class="${S.chosen === "自分の言葉" ? "on" : ""}" aria-selected="${S.chosen === "自分の言葉"}">自分の言葉の文</button></div>` : ""}
+    <textarea id="cText" rows="5" maxlength="${CONFIG.MAX_FINAL}" aria-label="投稿文（タップして直せます）">${esc(bodyOf(S.chosen))}</textarea>
+    <div class="card-foot"><span class="cnt" id="cCnt">${len} 字・タップして直せます</span><label class="switch"><input type="checkbox" id="cTagsOn" ${S.tagsOn ? "checked" : ""}>ハッシュタグをつける</label></div>
+    ${S.tagsOn && tags.length ? `<div class="tags">${tags.map(t => `<button type="button" class="tag${S.tagOff.includes(t) ? " off" : ""}" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div><div class="hint">タグを押すと外せます</div>` : ""}
     ${cav}
   </div>`;
 }
-
 function bindCards() {
   const ta = $("cText");
   if (ta) {
-    const grow = () => { ta.style.height = "auto"; ta.style.height = Math.max(120, ta.scrollHeight) + "px"; };
+    const grow = () => { ta.style.height = "auto"; ta.style.height = Math.max(140, ta.scrollHeight) + "px"; };
     grow();
-    ta.addEventListener("input", () => {
-      S.final = ta.value; S.edited = S.final.trim() !== String(S.base || "").trim();
-      $("cCnt").textContent = finalText().length + " 字"; grow(); save(); renderStaff();
-    });
+    ta.addEventListener("input", () => { S.edits = S.edits || {}; S.edits[S.chosen] = ta.value; $("cCnt").textContent = finalText().length + " 字・タップして直せます"; grow(); save(); renderStaff(); });
     ta.addEventListener("focus", () => document.body.classList.add("editing"));
     ta.addEventListener("blur", () => setTimeout(() => document.body.classList.remove("editing"), 60));
   }
-  document.querySelectorAll("#composeCard .tag").forEach(b => b.addEventListener("click", () => {
-    const t = b.dataset.tag;
-    if (!S.tagsOn) { S.tagsOn = true; S.tagOff = S.tagOff.filter(x => x !== t); }
-    else S.tagOff = S.tagOff.includes(t) ? S.tagOff.filter(x => x !== t) : S.tagOff.concat(t);
-    refreshCompose();
-  }));
+  document.querySelectorAll("#composeCard .seg button").forEach(b => b.addEventListener("click", () => { if (S.chosen === b.dataset.v) return; S.chosen = b.dataset.v; refreshCompose(); }));
+  document.querySelectorAll("#composeCard .tag").forEach(b => b.addEventListener("click", () => { const t = b.dataset.tag; S.tagOff = S.tagOff.includes(t) ? S.tagOff.filter(x => x !== t) : S.tagOff.concat(t); refreshCompose(); }));
   const tg = $("cTagsOn"); if (tg) tg.addEventListener("change", () => { S.tagsOn = tg.checked; if (S.tagsOn) S.tagOff = []; refreshCompose(); });
-  const toAi = $("cAi"); if (toAi) toAi.addEventListener("click", () => { S.final = S.aiText; S.base = S.aiText; S.chosen = "AI"; S.edited = false; refreshCompose(true); toast("AI が整えた文面に戻しました"); });
-  const toLocal = $("cLocal"); if (toLocal) toLocal.addEventListener("click", () => { S.final = S.composed; S.base = S.composed; S.chosen = "組み立て"; S.edited = false; refreshCompose(true); toast("答えをつないだだけの文面にしました"); });
 }
-/** 投稿文カードだけ描き直す（全体を描き直すと入力中の位置が飛ぶため） */
-function refreshCompose(all) {
-  if (all) { RT.rendered = S.msgs.length; renderMsgs(); }
-  else {
-    const card = $("composeCard");
-    if (card) { card.outerHTML = composeCardHtml(); bindCards(); }
-  }
-  save(); renderStaff();
-}
-
-/* ---------- 投稿文の段階の回答エリア ---------- */
+function refreshCompose() { const card = $("composeCard"); if (card) { card.outerHTML = composeCardHtml(); bindCards(); } save(); renderStaff(); }
 function renderComposeDock() {
-  if (RT.aiWait) { dock(`<div class="wait"><span class="spin"></span><span>AI が投稿文を作っています… <b id="aiSec">0</b> 秒</span></div>`); return; }
+  if (RT.aiWait) { dock(`<div class="wait"><span class="spin"></span><span>AI が投稿文を整えています… <b id="aiSec">0</b> 秒</span></div>`); return; }
   if (RT.loginFor) {
-    dock(`<div class="dock-q">名前とパスワードを入れてください（この端末では1回だけ）</div>${loginHtml("ログインして投稿文を作る")}<div class="row center"><button type="button" class="lnk" id="dCancel">AI を使わずに続ける</button></div>`);
+    dock(`${loginHtml("ログインして投稿文をつくる")}<div class="row center"><button type="button" class="lnk" id="dCancel">AI を使わずに続ける</button></div>`);
     bindLogin(async () => { RT.loginFor = null; lockDock(); await finishCompose(true); });
     $("dCancel").addEventListener("click", async () => { RT.loginFor = null; lockDock(); await finishCompose(false); });
     return;
   }
   const canRedo = gasOn() && (S.aiCount || 0) < CONFIG.AI_MAX && (S.aiOk === false || S.aiStale);
   const rest = remainingSteps().filter(st => st.id !== "profile");
-  dock(`<div class="row">
-      <button type="button" class="btn wide" id="dCopy">${ICON.copy}${S.copied ? "もう一度コピー" : "コピーして投稿へ"}</button>
-      ${canRedo ? `<button type="button" class="btn ghost" id="dAI">${ICON.spark}AI で作り直す</button>` : ""}
-      ${S.copied && CONFIG.DROP_URL ? `<a class="btn ghost" href="${esc(CONFIG.DROP_URL)}" target="_blank" rel="noopener">${ICON.open}DROP を開く</a>` : ""}
+  dock(`<button type="button" class="btn full" id="dCopy">${ICON.copy}${S.copied ? "もう一度コピーする" : "コピーして DROP に投稿へ"}</button>
+    <div class="row">
+      ${canRedo ? `<button type="button" class="btn ghost wide sm" id="dAI">${ICON.spark}AI で整え直す</button>` : ""}
+      ${S.copied && CONFIG.DROP_URL ? `<a class="btn ghost wide sm" href="${esc(CONFIG.DROP_URL)}" target="_blank" rel="noopener">${ICON.open}DROP を開く</a>` : ""}
+      ${S.early && rest.length ? `<button type="button" class="btn ghost wide sm" id="dResume">つづきを答える（あと${rest.length}つ）</button>` : ""}
     </div>
-    <div class="row center">
-      ${S.early && rest.length ? `<button type="button" class="lnk" id="dResume">つづきを答える（あと${rest.length}問）</button>` : ""}
-      <button type="button" class="lnk" id="dSamples">完成イメージ（見本）</button>
-      <button type="button" class="lnk" id="dRestart">${S.copied ? "次の投稿を作る" : "最初から"}</button>
-    </div>`);
+    <div class="row center"><button type="button" class="lnk" id="dEx">ほかの人の例</button><button type="button" class="lnk" id="dRestart">${S.copied ? "次の投稿をつくる" : "最初から"}</button></div>`);
   $("dCopy").addEventListener("click", copyFinal);
   const ai = $("dAI"); if (ai) ai.addEventListener("click", redoAI);
   const rs = $("dResume"); if (rs) rs.addEventListener("click", resume);
-  $("dSamples").addEventListener("click", openSamples);
+  $("dEx").addEventListener("click", openExamples);
   $("dRestart").addEventListener("click", () => restart());
 }
 async function redoAI() {
   if (RT.busy || RT.aiWait) return;
   S.msgs = S.msgs.filter(m => m.card !== "compose");
-  S.edited = false;
-  me("AI で作り直す", { muted: true }); lockDock();
+  if (S.edits) delete S.edits.AI;
+  me("AI で整え直す", { muted: true }); lockDock();
   await finishCompose(true);
 }
 async function resume() {
   if (RT.busy) return;
-  S.early = false; if (S.aiOk) S.aiStale = true; me("つづきを答える", { muted: true }); lockDock();
+  S.early = false; if (S.aiOk) S.aiStale = true;
+  me("つづきを答える", { muted: true }); lockDock();
   const n = nextStepAfter(null);
   if (n) await ask(n); else await toCompose(false);
 }
 async function copyFinal() {
   const text = finalText();
-  if (!text) { toast("文面が空です"); return; }
+  if (!text) { toast("文が空です"); return; }
   let ok = false;
   try { await navigator.clipboard.writeText(text); ok = true; }
-  catch (e) {
-    try { const t = document.createElement("textarea"); t.value = text; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.select(); ok = document.execCommand("copy"); t.remove(); } catch (e2) {}
-  }
-  if (!ok) { toast("コピーできませんでした。文面を長押ししてコピーしてください"); return; }
+  catch (e) { try { const t = document.createElement("textarea"); t.value = text; t.style.position = "fixed"; t.style.opacity = "0"; document.body.appendChild(t); t.select(); ok = document.execCommand("copy"); t.remove(); } catch (e2) {} }
+  if (!ok) { toast("コピーできませんでした。文を長押ししてコピーしてください"); return; }
   const first = !S.copied;
   S.copied++; save();
   if (first) await bot("コピーしました！ DROP に貼りつけて、写真と一緒に投稿してください。おつかれさまでした");
@@ -1011,20 +996,16 @@ async function copyFinal() {
 }
 
 /* =====================================================================
-   AI 仕上げ（V2 仕上げ用 GAS → Azure OpenAI）。1 セッション 1 回だけ
+   AI（仕上げ用 GAS → Azure OpenAI）
 ===================================================================== */
 const gasOn = () => !!CONFIG.GAS_URL && /^https:\/\//.test(CONFIG.GAS_URL);
 const logOn = () => !!CONFIG.LOG_URL && /^https:\/\//.test(CONFIG.LOG_URL);
 const anyGas = () => gasOn() || logOn();
-function getToken(key) {
-  const t = LS.get(key, null);
-  if (t && t.token && t.exp > now() + 30000) return t.token;
-  LS.del(key); return null;
-}
+function getToken(key) { const t = LS.get(key, null); if (t && t.token && t.exp > now() + 30000) return t.token; LS.del(key); return null; }
 function setToken(token, sec, key) { LS.set(key, { token, exp: now() + sec * 1000 }); }
 const hasTokens = () => (!gasOn() || !!getToken(CONFIG.KEYS.TOKEN)) && (!logOn() || !!getToken(CONFIG.KEYS.LOG_TOKEN));
 const getName = () => LS.get(CONFIG.KEYS.NAME, "") || "";
-/* Name・パスワードはこの端末に保存（パスワードは平文で localStorage に入る点に注意。メニューのログアウトで削除） */
+/* 名前・パスワードはこの端末に保存（パスワードは平文で localStorage に入る点に注意。メニューのログアウトで削除） */
 function getCreds() { const n = getName(), pw = LS.get(CONFIG.KEYS.PW, ""); return n && pw ? { name: n, pw } : null; }
 async function post(body, url) {
   const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), CONFIG.TIMEOUT_MS);
@@ -1073,144 +1054,128 @@ function bindLogin(onOk) {
   });
 }
 function qaList() {
-  const A = S.ans, out = [];
-  const q = id => stepOf(id).q();
-  const ok = id => S.done.includes(id) && !S.skipped.includes(id);
-  if (ok("act") && A.act) out.push({ q: q("act"), a: A.act.label });
-  if (ok("actDetail") && A.actDetail && actItem() && actItem().dq) out.push({ q: actItem().dq, a: A.actDetail });
-  if (ok("feel") && A.feel.length) out.push({ q: "どんな気持ちになりましたか？（選んだ順）", a: A.feel.map(f => plainLabel(f.label)).join("、") });
-  if (ok("elem") && A.elem.length && topFeel()) out.push({ q: q("elem"), a: A.elem.map(e => e.label).join("、") });
-  if (ok("who") && A.who) out.push({ q: q("who"), a: A.who.label + (A.whoDetail ? `（${A.whoDetail}）` : "") });
-  if (ok("aiQ") && A.aiQ && S.hint && S.hint.followup_q) out.push({ q: S.hint.followup_q, a: A.aiQ });
-  if (ok("mood") && A.mood) out.push({ q: "この体験は10点満点で何点？（文面には書かない）", a: A.mood + "点" });
-  if (ok("next") && A.next.length) out.push({ q: q("next"), a: A.next.map(n => n.label).join("、") });
+  const A = S.ans, out = [], ok = id => S.done.includes(id) && !S.skipped.includes(id);
+  if (ok("who") && A.who) out.push({ q: "そのとき、だれと一緒でしたか？", a: A.who.label + (A.who.detail ? `（${A.who.detail}）` : "") });
+  if (ok("why") && A.why.length) out.push({ q: stepOf("why").q(), a: A.why.map(x => x.label + (x.src === "AI候補" ? "（AI の候補から選んだ）" : "")).join("、") });
+  if (ok("feel") && A.feel.length) out.push({ q: "どんな気持ちになりましたか？（選んだ順）", a: A.feel.map(x => x.label).join("、") });
+  if (ok("score") && A.score) out.push({ q: "体験そのものの点数（10点満点。文面には書かない）", a: A.score + "点" });
+  if (ok("next") && A.next.length) out.push({ q: "このあと、どうしたいですか？", a: A.next.map(x => x.label).join("、") });
   return out;
 }
-/** AI で投稿文を作る（V2 仕上げ用 GAS → Azure OpenAI）。戻り値："ok"｜"login"（ログインが必要）｜"error" */
+/** 戻り値："ok"｜"login"（ログインが必要）｜"error" */
 async function runAI() {
   if (RT.aiWait || !gasOn()) return "error";
-  if (!getToken(CONFIG.KEYS.TOKEN)) {
-    dock(`<div class="wait"><span class="spin"></span><span>ログインしています…</span></div>`);
-    if (!await autoLogin()) return "login";
-  }
-  const g = RT.gen;
+  if (!getToken(CONFIG.KEYS.TOKEN)) { dock(`<div class="wait"><span class="spin"></span><span>ログインしています…</span></div>`); if (!await autoLogin()) return "login"; }
+  const g = RT.gen, t0 = now();
   RT.aiWait = true; renderComposeDock();
-  const t0 = now();
-  RT.typing = true; RT.typingText = "投稿文を作っています"; renderMsgs();
+  RT.typing = true; RT.typingText = "投稿文を整えています"; renderMsgs();
   const tick = setInterval(() => { const s = $("aiSec"); if (s) s.textContent = Math.floor((now() - t0) / 1000); }, 250);
-  const working = String(S.final || S.composed || "").trim();
+  const working = String(bodyOf("自分の言葉") || S.composed || "").trim();
   const body = {
     action: "coach", variant: "chat", force: false,
     context: { event: CONFIG.EVENT, sample_total: SAMPLES.length },
     target: { text: S.ans.text1 || working, source: S.ans.text1 ? "first" : "composed" },
-    answers: qaList(),
-    working_text: working,
+    answers: qaList(), working_text: working,
     references: CONFIG.SEND_SAMPLES ? SAMPLES.map(p => ({ text: p.s, name: p.n })) : []
   };
   const stop = () => { clearInterval(tick); RT.aiWait = false; RT.typing = false; RT.typingText = ""; };
-  if (!String(body.target.text || "").trim()) { stop(); S.aiOk = false; S.aiError = "文面が空です"; return "error"; }
+  if (!String(body.target.text || "").trim()) { stop(); S.aiOk = false; S.aiError = "文が空です"; return "error"; }
   if (PHOTO.imgAi) body.target.image_data = PHOTO.imgAi;
   if (CONFIG.SEND_SAMPLE_IMAGES) await attachSampleImages(body.references);
   let res = await post({ ...body, token: getToken(CONFIG.KEYS.TOKEN) }, CONFIG.GAS_URL);
-  if (!res.ok && res.code === "AUTH") {
-    LS.del(CONFIG.KEYS.TOKEN);
-    if (await autoLogin()) res = await post({ ...body, token: getToken(CONFIG.KEYS.TOKEN) }, CONFIG.GAS_URL);
-  }
+  if (!res.ok && res.code === "AUTH") { LS.del(CONFIG.KEYS.TOKEN); if (await autoLogin()) res = await post({ ...body, token: getToken(CONFIG.KEYS.TOKEN) }, CONFIG.GAS_URL); }
   stop();
   if (g !== RT.gen) return "error";
-  const sec = Math.round((now() - t0) / 100) / 10;
   S.ai = { status: res.ok ? "OK" : (res.code || "ERROR"), message: res.ok ? "" : (res.message || ""), cached: !!res.cached,
-    model: res.model || "", prompt_version: res.prompt_version || "", elapsed_sec: sec, images_used: res.images_used || 0, result: res.ok ? res.result : null };
+    model: res.model || "", prompt_version: res.prompt_version || "", elapsed_sec: Math.round((now() - t0) / 100) / 10, images_used: res.images_used || 0, result: res.ok ? res.result : null };
   if (res.ok && res.result && res.result.rewrite) {
-    S.aiCount = (S.aiCount || 0) + 1; S.aiUsed = true; S.aiOk = true; S.aiStale = false; S.aiError = "";
-    S.aiText = res.result.rewrite; S.final = S.aiText; S.base = S.aiText; S.chosen = "AI"; S.edited = false;
+    S.aiCount = (S.aiCount || 0) + 1; S.aiOk = true; S.aiStale = false; S.aiError = "";
+    S.aiText = res.result.rewrite; S.chosen = "AI"; if (S.edits) delete S.edits.AI;
     if (res.images_note) toast(res.images_note);
     save(); return "ok";
   }
-  S.aiOk = false; S.aiError = res.message || "不明なエラー";
-  save();
+  S.aiOk = false; S.aiError = res.message || "不明なエラー"; save();
   return res.code === "AUTH" ? "login" : "error";
 }
-/** 見本投稿の写真を AI 用に縮小して付ける（CONFIG.SEND_SAMPLE_IMAGES=true のときだけ） */
 async function attachSampleImages(refs) {
   await Promise.all(refs.map((r, i) => new Promise(res => {
     const p = SAMPLES[i]; if (!p || !p.img) return res();
     const img = new Image();
     img.onload = () => { try { r.image_data = drawToDataUrl(img, img.naturalWidth, img.naturalHeight, CONFIG.IMG_MAX_EDGE, CONFIG.IMG_QUALITY); } catch (e) {} res(); };
-    img.onerror = () => res();
-    img.src = p.img;
+    img.onerror = () => res(); img.src = p.img;
   })));
 }
 
 /* =====================================================================
-   記録（分析用）
-   - ノード：「層:タグ」。共起ネットワークにそのまま使う（行動／感情／コンテンツ・人・空間／人／意向）
-   - ソフト分類：選んだタグの重み（V の w × 選んだ順の重み）を足して、合計 1 にしたもの
-   - コーチ関与：ひとことのみ／選択あり／AI 仕上げ（効果測定で分けて扱う）
+   記録（分析用。gas/DROP_COACH_LOG.gs v7 が列に展開する）
+   - ノード：「層:タグ」（コンテンツ＝話題・どこが／人＝だれと・どこが／空間／感情＝気持ち／意向＝このあと）
+   - ソフト分類：選んだ答えの重み（V の w × 選んだ順の重み）を足して合計 1 にしたもの
+   - 気持ちの向き：選んだ気持ちの val を、選んだ順の重みで平均（-1〜1）
+   - コーチ関与：ひとことのみ／選択あり／AI仕上げ（効果測定で分けて扱う）
 ===================================================================== */
 function weighted(list, kind) {
-  const ws = list.map((_, i) => (ORDER_W[kind] || [])[i] ?? .3);
-  const sum = ws.reduce((a, b) => a + b, 0) || 1;
-  return list.map((x, i) => ({ id: x.id, label: plainLabel(x.label), w: r2(ws[i] / sum) }));
+  const ws = list.map((_, i) => (ORDER_W[kind] || [])[i] ?? .3), sum = ws.reduce((a, b) => a + b, 0) || 1;
+  return list.map((x, i) => ({ id: x.id, label: x.label, src: x.src || "", pre: !!x.pre, w: r2(ws[i] / sum), ...(kind === "feel" ? { val: (item("feel", x.id) || {}).val ?? null } : {}) }));
 }
 function softOf() {
   const A = S.ans, raw = { c1: 0, c2: 0, c3: 0, att: 0 };
   const add = (kind, id, k) => { const it = item(kind, id); if (!it || !it.w) return; Object.keys(it.w).forEach(d => { raw[d] += it.w[d] * k; }); };
-  if (A.act) add("act", A.act.id, 1);
-  A.feel.forEach((f, i) => add("feel", f.id, ORDER_W.feel[i] ?? .3));
-  A.elem.forEach((e, i) => add("elem", e.id, ORDER_W.elem[i] ?? .3));
   if (A.who) add("who", A.who.id, 1);
-  A.next.forEach((n, i) => add("next", n.id, ORDER_W.next[i] ?? .6));
-  const tot = Object.values(raw).reduce((a, b) => a + b, 0);
-  const share = {}; Object.keys(raw).forEach(k => { share[k] = tot ? r2(raw[k] / tot) : 0; raw[k] = r2(raw[k]); });
+  A.why.forEach((x, i) => add("why", x.id, ORDER_W.why[i] ?? .3));
+  A.feel.forEach((x, i) => add("feel", x.id, ORDER_W.feel[i] ?? .3));
+  A.next.forEach((x, i) => add("next", x.id, ORDER_W.next[i] ?? .6));
+  const tot = Object.values(raw).reduce((a, b) => a + b, 0), share = {};
+  Object.keys(raw).forEach(k => { share[k] = tot ? r2(raw[k] / tot) : 0; raw[k] = r2(raw[k]); });
   return { share, raw, total: r2(tot) };
 }
+function valenceOf() {
+  let s = 0, w = 0;
+  S.ans.feel.forEach((x, i) => { const v = (item("feel", x.id) || {}).val; if (typeof v !== "number") return; const k = ORDER_W.feel[i] ?? .3; s += v * k; w += k; });
+  return w ? r2(s / w) : null;
+}
 function nodesOf() {
-  const A = S.ans, n = [];
-  if (A.act) n.push({ layer: "行動", label: A.act.label });
-  if (A.actDetail) n.push({ layer: "コンテンツ", label: A.actDetail });   // 「なにを？」の答え（自由記述）＝コンテンツのノード
-  A.feel.forEach(f => n.push({ layer: "感情", label: plainLabel(f.label) }));
-  A.elem.forEach(e => { const it = item("elem", e.id); n.push({ layer: it ? it.layer : "コンテンツ", label: e.label }); });
-  if (A.who) n.push({ layer: "人", label: A.who.label });
-  A.next.forEach(x => n.push({ layer: "意向", label: x.label }));
-  return n;
+  const A = S.ans, n = [], subj = subjectOf();
+  if (subj) n.push("コンテンツ:" + subj);
+  if (A.who) n.push("人:" + (A.who.id === "other" ? "その他" : A.who.label));
+  A.why.forEach(x => { const it = item("why", x.id); n.push((it ? it.layer : "コンテンツ") + ":" + x.label); });
+  A.feel.forEach(x => n.push("感情:" + x.label));
+  A.next.forEach(x => n.push("意向:" + x.label));
+  return uniq(n);
 }
 function coachLevel() {
-  if (S.aiUsed && S.chosen === "AI") return "AI仕上げ";
-  const chips = ["act", "feel", "elem", "who", "next"].some(id => S.done.includes(id) && !S.skipped.includes(id));
-  return chips ? "選択あり" : "ひとことのみ";
+  if (S.aiOk && S.chosen === "AI") return "AI仕上げ";
+  return ["who", "why", "feel", "next"].some(id => S.done.includes(id) && !S.skipped.includes(id)) ? "選択あり" : "ひとことのみ";
 }
 function buildRecord(end) {
-  const A = S.ans, soft = softOf();
-  const stepSec = {};
+  const A = S.ans, soft = softOf(), stepSec = {};
   Object.keys(S.times).forEach(k => { const t = S.times[k]; if (t.answered && t.shown) stepSec[k] = r2((t.answered - t.shown) / 1000); });
   const lastAsked = S.asked.filter(id => id !== "login").slice(-1)[0] || "";
+  const h = S.hint || {};
   return {
-    schema: "drop_chat_v2", app_version: APP_VERSION, session_id: S.sid, end,
+    schema: "drop_chat_v3", app_version: APP_VERSION, session_id: S.sid, end,
     started_at: S.started, ended_at: new Date().toISOString(), duration_sec: r2((now() - S.t0) / 1000),
-    answered: answeredCount(), asked: S.asked.filter(id => { const st = stepOf(id); return st && st.count !== false; }).length,
+    answered: answeredCount(),
     last_step: S.phase === "compose" ? (S.early ? "途中で投稿文へ（" + stepName(lastAsked) + "）" : "最後まで") : stepName(lastAsked),
-    early: S.early, has_photo: hasPhoto(), mood_meaning: "体験そのものの点数（10点満点。チャットの評価ではない）",
-    hint: S.hint ? { status: S.hint.status, elapsed_sec: S.hint.elapsed_sec, cached: !!S.hint.cached, what: S.hint.what || [], act: S.hint.act || "", photo_summary: S.hint.photo_summary || "", followup_q: S.hint.followup_q || "" } : { status: "" },
-    goal_views: S.goalViews || [],
+    early: S.early, has_photo: hasPhoto(),
+    text1: A.text1,
+    detected: { ...S.det, feel_labels: S.det.feels.map(id => (item("feel", id) || {}).label || id), who_label: S.det.who ? item("who", S.det.who).label : "" },
+    subject: subjectOf(),
     answers: {
-      text1: A.text1, mood: A.mood,
-      // 「した」列に「なにを」も見えるよう、label に入れる（base＝選択肢、detail＝なにを）
-      act: A.act ? [{ id: A.act.id, label: A.act.label + (A.actDetail ? `（${A.actDetail}）` : ""), base: A.act.label, detail: A.actDetail || "", detail_source: A.actDetail ? A.actDetailSrc || "" : "" }] : [],
-      ai_q: { q: (S.hint && S.hint.followup_q) || "", a: A.aiQ || "" },
-      feel: weighted(A.feel, "feel"), elem: weighted(A.elem, "elem"),
-      who: A.who ? { id: A.who.id, label: A.who.label, detail: A.whoDetail } : { id: "", label: "", detail: "" },
-      next: weighted(A.next, "next"),
-      profile: A.profile || LS.get(CONFIG.KEYS.PROFILE, null) || { id: "", label: "" }
+      who: A.who ? { id: A.who.id, label: A.who.label, detail: A.who.detail || "", pre: !!A.who.pre } : { id: "", label: "", detail: "" },
+      why: weighted(A.why, "why"), feel: weighted(A.feel, "feel"), next: weighted(A.next, "next"),
+      profile: A.profile || LS.get(CONFIG.KEYS.PROFILE, null) || { id: "", label: "" },
+      score: A.score
     },
+    valence: valenceOf(),
     skipped: S.skipped.slice(),
     hashtags: S.phase === "compose" ? activeTags() : [],
-    nodes: nodesOf().map(x => x.layer + ":" + x.label),
-    soft: soft.share, soft_raw: soft.raw, soft_total: soft.total,
-    texts: { composed: S.composed, ai: S.aiText, final: S.phase === "compose" ? finalText() : "", chosen: S.chosen, edited: !!S.edited },
+    nodes: nodesOf(), soft: soft.share, soft_raw: soft.raw, soft_total: soft.total,
+    texts: { composed: S.composed, ai: S.aiText, final: S.phase === "compose" ? finalText() : "", chosen: S.chosen, edited: isEdited() },
     coach_level: coachLevel(),
     ai: S.ai ? { status: S.ai.status, message: S.ai.message, cached: S.ai.cached, model: S.ai.model, prompt_version: S.ai.prompt_version, elapsed_sec: S.ai.elapsed_sec, result: S.ai.result } : { status: "" },
-    order: S.order, step_sec: stepSec
+    hint: { status: h.status || "", elapsed_sec: h.elapsed_sec, cached: !!h.cached, subject: h.subject || "", why_options: h.why_options || [], act: h.act || "", photo_summary: h.photo_summary || "", covered: h.covered || null },
+    example_views: S.exViews || [], preview_opens: S.previewOpens || 0,
+    order: S.order, step_sec: stepSec, big_text: document.documentElement.classList.contains("big")
   };
 }
 async function sendLog(end) {
@@ -1219,22 +1184,18 @@ async function sendLog(end) {
   if (STAFF) pushHistory(rec);
   if (!logOn()) return;
   const key = end + "|" + rec.texts.final;
-  if (S.loggedKey === key) return;   // 同じ状態は送り直さない
+  if (S.loggedKey === key) return;
   let tok = getToken(CONFIG.KEYS.LOG_TOKEN);
   if (!tok && await autoLogin()) tok = getToken(CONFIG.KEYS.LOG_TOKEN);
   if (!tok) return;
   let r = await post({ action: "log", token: tok, session: rec }, CONFIG.LOG_URL);
-  if (!r.ok && r.code === "AUTH") {
-    LS.del(CONFIG.KEYS.LOG_TOKEN);
-    if (await autoLogin()) r = await post({ action: "log", token: getToken(CONFIG.KEYS.LOG_TOKEN), session: rec }, CONFIG.LOG_URL);
-  }
-  if (r.ok) { S.logged = true; S.loggedKey = key; save(); console.info("記録しました", r); }
-  else console.warn("記録できませんでした", r);
+  if (!r.ok && r.code === "AUTH") { LS.del(CONFIG.KEYS.LOG_TOKEN); if (await autoLogin()) r = await post({ action: "log", token: getToken(CONFIG.KEYS.LOG_TOKEN), session: rec }, CONFIG.LOG_URL); }
+  if (r.ok) { S.logged = true; S.loggedKey = key; save(); } else console.warn("記録できませんでした", r);
   renderStaff();
 }
-/* 画面を閉じた・別のページに移ったとき：答えが 1 つ以上あって未記録なら「途中離脱」として送る */
+/* 画面を閉じたとき：答えが 1 つ以上あって未記録なら「途中離脱」として送る */
 window.addEventListener("pagehide", () => {
-  if (!S || S.logged || S.abandonSent || answeredCount() < 1 || !logOn()) return;
+  if (!S || S.logged || S.abandonSent || !S.ans.text1 || !logOn()) return;
   const tok = getToken(CONFIG.KEYS.LOG_TOKEN); if (!tok) return;
   try {
     const body = JSON.stringify({ action: "log", token: tok, session: buildRecord("abandon") });
@@ -1244,173 +1205,117 @@ window.addEventListener("pagehide", () => {
 
 /* ---------- スタッフ用（?staff=1） ---------- */
 function pushHistory(rec) {
-  const h = LS.get(CONFIG.KEYS.HISTORY, []);
-  const i = h.findIndex(x => x.session_id === rec.session_id);
+  const h = LS.get(CONFIG.KEYS.HISTORY, []), i = h.findIndex(x => x.session_id === rec.session_id);
   if (i >= 0) h[i] = rec; else h.push(rec);
   LS.set(CONFIG.KEYS.HISTORY, h.slice(-300));
 }
 function renderStaff() {
   const box = $("after");
   if (!STAFF || !S || S.phase !== "compose") { box.innerHTML = ""; return; }
-  const rec = buildRecord("preview"), s = rec.soft;
-  const n = LS.get(CONFIG.KEYS.HISTORY, []).length;
+  const rec = buildRecord("preview"), s = rec.soft, n = LS.get(CONFIG.KEYS.HISTORY, []).length;
   box.innerHTML = `<div class="card staff">
-    <div class="card-hd"><b>分析用の記録（スタッフ用）</b><span class="cnt">${esc(rec.coach_level)}・${rec.answered}問・${Math.round(rec.duration_sec)}秒</span></div>
+    <div class="card-hd"><b>分析用の記録（スタッフ用）</b></div>
     <table>
-      <tr><td>気分</td><td>${rec.answers.mood ?? "−"}</td></tr>
+      <tr><td>関与・時間</td><td>${esc(rec.coach_level)}・${rec.answered}問・${Math.round(rec.duration_sec)}秒</td></tr>
+      <tr><td>読み取り</td><td>${esc(JSON.stringify(rec.detected))}</td></tr>
       <tr><td>ノード</td><td>${esc(rec.nodes.join("｜") || "−")}</td></tr>
-      <tr><td>気持ちの重み</td><td>${esc(rec.answers.feel.map(f => `${f.label} ${f.w}`).join("、") || "−")}</td></tr>
+      <tr><td>気持ちの向き</td><td>${rec.valence ?? "−"}</td></tr>
       <tr><td>ソフト分類</td><td><div class="bars">${Object.keys(SOFT_LABEL).map(k => `<span>${SOFT_LABEL[k]}</span><s><u style="width:${Math.round(s[k] * 100)}%"></u></s><span>${s[k].toFixed(2)}</span>`).join("")}</div></td></tr>
-      ${rec.ai.status === "OK" && rec.ai.result ? `<tr><td>AI 判定</td><td>${esc((rec.ai.result.category || {}).label || "")}／${esc(rec.ai.result.w5h || "")}／評価 ${esc(rec.ai.result.level || "")}</td></tr>` : ""}
-      <tr><td>記録</td><td>${logOn() ? (S.logged ? "送信済み" : "コピーしたときに送信") : "LOG_URL 未設定（この端末にだけ保存）"}</td></tr>
+      ${rec.ai.status === "OK" && rec.ai.result ? `<tr><td>AI 読み取り</td><td>${esc((rec.ai.result.category || {}).label || "")}／${esc(ACT_LABEL[rec.ai.result.act] || "")}／${esc((rec.ai.result.content || []).join("・"))}／向き ${rec.ai.result.sentiment}</td></tr>` : ""}
+      <tr><td>ヒント</td><td>${esc(rec.hint.status)} ${rec.hint.elapsed_sec ?? ""}秒 ${esc(rec.hint.subject)} ${esc((rec.hint.why_options || []).join("・"))}</td></tr>
     </table>
-    <details style="margin-top:8px"><summary style="font-size:12.5px;cursor:pointer">記録 JSON</summary><pre>${esc(JSON.stringify(rec, null, 1))}</pre></details>
-    <div class="acts"><button type="button" class="btn sm ghost" id="sJson">JSON をコピー</button><button type="button" class="btn sm ghost" id="sCsv">この端末の記録を CSV で保存（${n}件）</button></div>
+    <details style="margin-top:8px"><summary style="font-size:13px;cursor:pointer">記録 JSON</summary><pre>${esc(JSON.stringify(rec, null, 1))}</pre></details>
+    <div class="row"><button type="button" class="btn sm ghost" id="sJson">JSON をコピー</button><button type="button" class="btn sm ghost" id="sCsv">この端末の記録を CSV で保存（${n}件）</button></div>
   </div>`;
   $("sJson").addEventListener("click", async () => { try { await navigator.clipboard.writeText(JSON.stringify(rec)); toast("コピーしました"); } catch (e) { toast("コピーできませんでした"); } });
   $("sCsv").addEventListener("click", downloadCsv);
 }
 function downloadCsv() {
   const h = LS.get(CONFIG.KEYS.HISTORY, []);
-  if (!h.length) { toast("まだ記録がありません（コピーすると保存されます）"); return; }
-  const cols = [
-    ["セッションID", r => r.session_id], ["開始", r => r.started_at], ["終了", r => r.end], ["所要秒", r => r.duration_sec], ["回答数", r => r.answered],
-    ["写真", r => (r.has_photo ? "あり" : "なし")], ["最初のひとこと", r => r.answers.text1], ["気分", r => r.answers.mood ?? ""],
-    ["した", r => r.answers.act.map(x => x.label).join("、")], ["よかった", r => r.answers.feel.map(x => x.label).join(" > ")],
-    ["どこが", r => r.answers.elem.map(x => x.label).join("、")], ["だれと", r => r.answers.who.label], ["どんな人", r => r.answers.who.detail],
-    ["このあと", r => r.answers.next.map(x => x.label).join("、")], ["属性", r => (r.answers.profile || {}).label || ""],
-    ["ハッシュタグ", r => r.hashtags.join(" ")], ["ノード", r => r.nodes.join("｜")],
-    ["ソフト①", r => r.soft.c1], ["ソフト②", r => r.soft.c2], ["ソフト③", r => r.soft.c3], ["ソフト愛着", r => r.soft.att],
-    ["最終文面", r => r.texts.final], ["採用", r => r.texts.chosen], ["手で編集", r => (r.texts.edited ? "あり" : "なし")], ["コーチ関与", r => r.coach_level],
-    ["AI分類", r => (r.ai.result && r.ai.result.category ? r.ai.result.category.label : "")]
-  ];
+  if (!h.length) { toast("まだ記録がありません"); return; }
+  const L = a => (a || []).map(x => x.label).join("、");
+  const cols = [["セッションID", r => r.session_id], ["開始", r => r.started_at], ["終了", r => r.end], ["所要秒", r => r.duration_sec], ["回答数", r => r.answered],
+    ["写真", r => (r.has_photo ? "あり" : "なし")], ["最初のひとこと", r => r.text1], ["話題", r => r.subject], ["だれと", r => r.answers.who.label], ["どんな人", r => r.answers.who.detail],
+    ["どこが", r => L(r.answers.why)], ["気持ち", r => L(r.answers.feel)], ["気持ちの向き", r => r.valence ?? ""], ["このあと", r => L(r.answers.next)],
+    ["属性", r => (r.answers.profile || {}).label || ""], ["ノード", r => r.nodes.join("｜")], ["ソフト①", r => r.soft.c1], ["ソフト②", r => r.soft.c2], ["ソフト③", r => r.soft.c3], ["ソフト愛着", r => r.soft.att],
+    ["最終文面", r => r.texts.final], ["採用", r => r.texts.chosen], ["手で編集", r => (r.texts.edited ? "あり" : "なし")], ["コーチ関与", r => r.coach_level]];
   const cell = v => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const csv = "﻿" + [cols.map(c => c[0]).join(","), ...h.map(r => cols.map(c => cell(c[1](r))).join(","))].join("\r\n");
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-  a.download = `drop_chat_v2_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = `drop_chat_v3_${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
 }
 
-/* ---------- 見本・メニュー ---------- */
+/* ---------- メニュー ---------- */
 async function loadSamples() {
   for (const s of CONFIG.DATA_SOURCES) {
-    try { const r = await fetch(s, { cache: "no-cache" }); if (!r.ok) throw new Error("HTTP " + r.status); return await r.json(); }
-    catch (e) { /* 次へ */ }
+    try { const r = await fetch(s, { cache: "no-cache" }); if (!r.ok) throw new Error("HTTP " + r.status); return await r.json(); } catch (e) { /* 次へ */ }
   }
-  // file:// で直接開いたときなど fetch できないときは、HTML 内の控え（#sampleFallback）を使う
   try { return JSON.parse($("sampleFallback").textContent); } catch (e) { return { records: [] }; }
 }
-/* =====================================================================
-   完成イメージ（v2.2）
-   - ひとことを書く前は開けない（最初のひとことが見本に引きずられないように）
-   - 開くと：あなたの投稿の「材料」の集まり具合（行の役割ごと）＋ 行の役割つきの見本 1 件（セッション中は同じもの）
-   - 「ほかの見本も見る」で残りも見られる。見本のラベル（①-1 など）は出さない
-   - 開いたタイミングは記録する（見本に寄った投稿かを後で確かめるため）
-===================================================================== */
-const ROLES = [
-  { role: "見たもの",         q: "ひとこと・なにを？", done: () => !!S.ans.text1, val: () => [S.ans.text1, S.ans.actDetail].filter(Boolean).join("／") },
-  { role: "誰と・きっかけ",   q: "だれと？",           done: () => !!S.ans.who, val: () => S.ans.who ? S.ans.who.label + (S.ans.whoDetail ? `（${S.ans.whoDetail}）` : "") : "" },
-  { role: "心に残ったところ", q: "どこが？",           done: () => S.ans.elem.length > 0 || !!S.ans.aiQ, val: () => S.ans.elem.map(e => e.label).concat(S.ans.aiQ ? [S.ans.aiQ] : []).join("、") },
-  { role: "気持ち",           q: "どんな気持ち？",     done: () => S.ans.feel.length > 0, val: () => S.ans.feel.map(f => f.label).join(" ") },
-  { role: "次にしたいこと",   q: "このあと？",         done: () => S.ans.next.length > 0, val: () => S.ans.next.map(n => n.label).join("、") }
-];
-function openSamples() { openGoal(); }
-function openGoal() {
-  if (!S || !S.done.includes("text1")) { toast("最初のひとことを書いたあとで見られます"); return; }
-  if (!SAMPLES.length) { toast("見本を読み込めませんでした"); return; }
-  if (!S.goalSample || !SAMPLES.some(p => p.id === S.goalSample)) S.goalSample = SAMPLES[Math.floor(Math.random() * SAMPLES.length)].id;
-  const doneRoles = new Set(ROLES.filter(r => r.done()).map(r => r.role));
-  const exHtml = p => `<div class="ex">${p.img ? `<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ""}<div class="ex-lines">${
-      p.s.split("\n").map((line, i) => { const r = (p.roles || [])[i] || ""; return `<div class="exl">${r ? `<em class="${doneRoles.has(r) ? "on" : ""}">${esc(r)}</em>` : ""}<span>${esc(line)}</span></div>`; }).join("")
-    }</div></div>`;
-  const main = SAMPLES.find(p => p.id === S.goalSample), others = SAMPLES.filter(p => p.id !== S.goalSample);
-  const nDone = doneRoles.size;
-  $("modalTitle").textContent = "完成イメージ";
-  $("sheetBody").innerHTML = `
-    <p class="lead">答えてもらった言葉で、こんな投稿をつくります。問いは、この5つの「材料」を集めるためのものです。全部そろわなくても大丈夫です。</p>
-    <div class="mat-hd">あなたの投稿の材料（${nDone} / ${ROLES.length}）</div>
-    <div class="mat">${ROLES.map(r => { const d = r.done(); return `<div class="mat-row${d ? " done" : ""}"><i>${d ? "✓" : ""}</i><b>${esc(r.role)}</b><span>${d ? esc(r.val()) : `まだ（${esc(r.q)}）`}</span></div>`; }).join("")}</div>
-    <div class="mat-hd">見本（運営が作った例・架空）</div>
-    ${exHtml(main)}
-    <p class="lead small">紫の札は、あなたの材料がそろっている役割です。言い回しはまねしなくて大丈夫です。</p>
-    <button type="button" class="lnk" id="gMore">ほかの見本も見る（${others.length}件）</button>
-    <div id="gMoreList" hidden>${others.map(exHtml).join("")}</div>
-    <div class="row center"><button type="button" class="btn" id="gBack">${S.phase === "compose" ? "投稿文にもどる" : "チャットにもどる"}</button></div>`;
-  S.goalViews = (S.goalViews || []).concat([{ step: S.phase === "compose" ? "投稿文" : stepName(S.cur), at_sec: Math.round((now() - S.t0) / 1000), shown: S.goalSample, more: false, roles_done: nDone }]);
-  save();
-  $("gMore").addEventListener("click", () => {
-    $("gMoreList").hidden = false; $("gMore").hidden = true;
-    const v = S.goalViews[S.goalViews.length - 1]; if (v) v.more = true; save();
-  });
-  $("gBack").addEventListener("click", closeModal);
-  $("modal").classList.add("show"); $("modal").setAttribute("aria-hidden", "false");
-  $("sheetBody").scrollTop = 0; $("modal").querySelector(".sheet").scrollTop = 0;
-}
-function closeModal() { $("modal").classList.remove("show"); $("modal").setAttribute("aria-hidden", "true"); }
-$("modalX").addEventListener("click", closeModal);
-$("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
-function syncMenu() { $("mLogout").hidden = !(getCreds() || hasTokensAny()); }
 const hasTokensAny = () => !!(LS.get(CONFIG.KEYS.TOKEN, null) || LS.get(CONFIG.KEYS.LOG_TOKEN, null));
+function syncMenu() { $("mLogout").hidden = !(getCreds() || hasTokensAny()); $("mBig").textContent = document.documentElement.classList.contains("big") ? "文字を標準にもどす" : "文字を大きく"; }
 $("menuBtn").addEventListener("click", () => { const m = $("menu"); m.hidden = !m.hidden; $("menuBtn").setAttribute("aria-expanded", String(!m.hidden)); syncMenu(); });
 const closeMenu = () => { $("menu").hidden = true; $("menuBtn").setAttribute("aria-expanded", "false"); };
+$("mBig").addEventListener("click", () => { const b = !document.documentElement.classList.contains("big"); document.documentElement.classList.toggle("big", b); LS.set(CONFIG.KEYS.BIG, b); syncMenu(); syncDockH(); });
+$("mExamples").addEventListener("click", () => { closeMenu(); openExamples(); });
+$("mAbout").addEventListener("click", () => {
+  closeMenu();
+  openSheet("このチャットについて", `
+    <p>DROP に投稿する文を、いくつかの問いに答えながら一緒につくるチャットです。問いはとばせますし、いつでも「ここまでで投稿文をつくる」で終われます。</p>
+    <p><b>AI について：</b>写真とあなたの答えをもとに、AI が文を読みやすく整えます。あなたが書いていない出来事や気持ちは足さないようにしています。最後に「AI が整えた文」と「自分の言葉の文」から選べます。</p>
+    <p><b>答えの使い道：</b>答えと投稿文は、CULTURE SNACK の効果を確かめる分析にだけ使います。投稿文は、あなたがコピーして DROP に投稿するまで公開されません。名前は分析画面にだけ表示されます。</p>
+    <div class="row"><button type="button" class="btn full" id="shBack">もどる</button></div>`);
+  $("shBack").addEventListener("click", closeModal);
+});
 $("mRestart").addEventListener("click", () => { closeMenu(); restart(); });
-$("mSamples").addEventListener("click", () => { closeMenu(); openSamples(); });
 $("mProfile").addEventListener("click", () => {
   closeMenu(); LS.del(CONFIG.KEYS.PROFILE); toast("次の投稿のさいごに、もう一度聞きます");
   if (S && S.phase === "ask") { S.done = S.done.filter(x => x !== "profile"); renderProgress(); }
 });
-$("mLogout").addEventListener("click", () => {
-  closeMenu(); [CONFIG.KEYS.TOKEN, CONFIG.KEYS.LOG_TOKEN, CONFIG.KEYS.PW].forEach(k => LS.del(k)); syncMenu(); toast("ログアウトしました（保存したパスワードも削除しました）");
-});
+$("mLogout").addEventListener("click", () => { closeMenu(); [CONFIG.KEYS.TOKEN, CONFIG.KEYS.LOG_TOKEN, CONFIG.KEYS.PW].forEach(k => LS.del(k)); syncMenu(); toast("ログアウトしました（保存したパスワードも削除しました）"); });
 async function restart() {
-  if (S && !S.logged && answeredCount() >= 1 && S.phase === "compose") sendLog("reset");
-  start();
+  if (S && !S.logged && S.ans.text1 && S.phase === "compose") sendLog("reset");
+  closeModal(); start();
 }
 
 /* ---------- 起動 ---------- */
+function warmLogin() { if (anyGas() && getCreds() && !hasTokens()) autoLogin().catch(() => {}); }
 async function start() {
   RT.gen++; RT.typing = false; RT.typingText = "";
-  SS.del(CONFIG.KEYS.PHOTO); PHOTO = { img: "", imgAi: "", w: 0, h: 0 };   // 写真は前のセッションのものを持ち越さない
+  SS.del(CONFIG.KEYS.PHOTO); PHOTO = { img: "", imgAi: "", w: 0, h: 0 };
   S = newSession(); RT.rendered = 0; RT.busy = true; RT.aiWait = false; RT.loginFor = null;
-  save(); renderMsgs(); renderStaff(); lockDock();
-  warmLogin();
+  save(); renderMsgs(); renderStaff(); lockDock(); warmLogin();
   const g = RT.gen;
-  if (!await bot("こんにちは！ DROP の投稿文を、チャットで一緒に作ります")) return;
-  if (!await bot("写真とひとことだけでもOK。あとはタップで答えるだけで、いつでも投稿文にできます")) return;
+  if (!await bot("こんにちは！ DROP の投稿文を、チャットで一緒につくります", { sub: "写真とひとことだけでもOK。あとはタップで答えるだけです" })) return;
   await advance(null, g);
 }
-/** 保存した名前・パスワードがあり、トークンが切れていれば裏でログインしておく（途中離脱の記録に必要） */
-function warmLogin() { if (anyGas() && getCreds() && !hasTokens()) autoLogin().catch(() => {}); }
 function restore() {
   const s = LS.get(CONFIG.KEYS.SESSION, null);
-  if (!s || s.v !== 22 || !s.sid || now() - (s.t0 || 0) > CONFIG.RESUME_HOURS * 3600e3) return false;
-  if (s.copied) return false;   // コピーまで終わったセッションは新しく始める
+  if (!s || s.v !== 30 || !s.sid || now() - (s.t0 || 0) > CONFIG.RESUME_HOURS * 3600e3 || s.copied) return false;
   S = s; S.msgs = (S.msgs || []).filter(m => m && m.who);
   const p = SS.get(CONFIG.KEYS.PHOTO, null);
   if (p && p.sid === S.sid && /^data:image\/jpeg;base64,/.test(p.img || "")) PHOTO = p;
   RT.rendered = S.msgs.length; renderMsgs(); renderStaff(); warmLogin();
-  if (S.hint && S.hint.status === "待ち") { S.hint = null; if (S.done.includes("text1") && S.phase === "ask") fireHint(); }
+  if (S.hint && S.hint.status === "待ち") { S.hint = null; if (S.ans.text1 && S.phase === "ask") fireHint(); }
   if (S.phase === "compose") {
-    if (!S.msgs.some(m => m.card === "compose")) { lockDock(); finishCompose(false); return true; }   // AI の途中で閉じた場合
+    if (!S.msgs.some(m => m.card === "compose")) { lockDock(); finishCompose(false); return true; }
     renderComposeDock(); return true;
   }
   const st = stepOf(S.cur);
   if (!st || !applicable(st)) { lockDock(); advance(S.cur ? S.cur : null); return true; }
   if (st.opts) prepareOrder(st);
-  setMultiFromAns(st);
+  setSelFromAns(st);
   RT.busy = false; renderDock();
   return true;
 }
 (async () => {
   $("staffFlag").hidden = !STAFF;
+  if (LS.get(CONFIG.KEYS.BIG, false)) document.documentElement.classList.add("big");
   syncMenu();
   const json = await loadSamples();
   SAMPLES = (Array.isArray(json) ? json : (json.records || [])).map(r => ({
-    id: r.artwork_id, n: r.account_name || "", s: String(r.sentence || "").trim(),
-    img: r.image_file_path || r.image_file_path_thumbnail || "",
-    roles: Array.isArray(r.line_roles) ? r.line_roles : []
+    id: r.artwork_id, n: r.account_name || "", s: String(r.sentence || "").trim(), img: r.image_file_path || r.image_file_path_thumbnail || ""
   })).filter(p => p.s);
   if (!restore()) start();
 })();

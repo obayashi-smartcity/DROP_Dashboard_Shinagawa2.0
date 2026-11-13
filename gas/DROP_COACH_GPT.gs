@@ -1,5 +1,5 @@
 /**
- * DROP Coach V2（チャット版）— 投稿文の仕上げ用 Google Apps Script（Web アプリ）  v8.1（2026/11/13）
+ * DROP Coach V2（チャット版）— 投稿文の仕上げ用 Google Apps Script（Web アプリ）  v9（2026/11/13・チャット画面 v3 用）
  * ------------------------------------------------------------
  * V2.0 リポジトリ（DROP_Dashboard_Shinagawa2.0）の drop_coach_with_sample.html から呼ばれる。
  * ★ V1（DROP_Dashboard_Shinagawa1.0）の GAS とは別のプロジェクトとして新しく作り、別にデプロイすること。
@@ -14,9 +14,15 @@
  *   - variant は "chat" のみ（with_sample / no_sample・posted モード・PV/いいね・目的 goal は廃止）
  *   - プロンプトは 1 ファイル（PROMPT_URL_CHAT）。共通＋種類別の分割はやめた
  *   - 出力を軽くした（改善アクション・参考投稿の傾向・問いなどを廃止）→ 応答が速くなる
- *     result = { category:{code,label}, soft:{c1,c2,c3,att}, level, w5h, rewrite, headline, photo:{match,summary}, caveats }
+ *     result = { category:{code,label}, soft:{c1,c2,c3,att}, act, content[], space[], sentiment, level, w5h, rewrite, headline, photo:{match,summary}, caveats }
  *   - soft（ソフト分類）を追加：①②③・街への愛着のサインの強さを 0〜1 で返す（2026/11/13 定例「ハード分類でなくソフト分類」）
  *   - 画像は利用者の写真（data URL）と、任意で見本投稿の写真（data URL）だけ。GAS から外部 URL の画像は取りに行かない
+ *
+ * ■ v9 の変更（2026/11/13・チャット画面 v3 用）
+ *   - hint の出力を変更：subject（話題）・why_options（「どこがよかった？」の写真からの候補）・act・photo_summary・covered（ひとことに書かれているもの）
+ *   - coach の出力に分析用の act（行動）・content（コンテンツ）・space（空間）・sentiment（感情の向き -1〜1）を追加
+ *   - プロンプトは prompt/drop_coach_chat.md・drop_coach_hint.md の v9 を使う（画面 v3・GAS v9・プロンプト v9 はそろえて更新すること）
+ *   - subject が 12 字を超えるときは空にする（問いの言い方が不自然になるため。画面の読み取りに任せる）。投稿文から # タグを除いたあとの行頭の空白も除く
  *
  * ■ v8.1 の変更（2026/11/13）ヒント（action:"hint"）を追加
  *   - 画面は「ひとこと」を送った直後に、ユーザーを待たせず裏で 1 回だけ hint を呼ぶ
@@ -29,14 +35,14 @@
  *   { "action":"coach", "token":"...", "variant":"chat",
  *     "context":{ "event":"culture-snack-2026", "sample_total":8 },
  *     "target":{ "text":"最初のひとこと", "source":"first|composed", "name":"表示名(任意)", "image_data":"data:image/jpeg;base64,..."(任意) },
- *     "answers":[{ "q":"なにしてた？", "a":"作った・体験した" }, …],
+ *     "answers":[{ "q":"そのとき、だれと一緒でしたか？", "a":"ひとりで" }, …],
  *     "working_text":"画面で組み立てた文面（ハッシュタグなし）",
  *     "references":[{ "text":"…", "name":"運営作成 ①-1 …", "image_data":"data:…"(任意) }],   … 任意
  *     "force":false }
  *     → { ok:true, cached, elapsed_ms, model, prompt_version, generated_at, images_used, images_note, result:{…} }
  *   { "action":"hint", "token":"...", "variant":"chat", "context":{…},
  *     "target":{ "text":"最初のひとこと", "image_data":"data:…"(任意) } }
- *     → { ok:true, cached, elapsed_ms, model, prompt_version, result:{ what:[…], act:"eat", photo_summary:"…", followup_q:"…", followup_ph:"例：…" } }
+ *     → { ok:true, cached, elapsed_ms, model, prompt_version, result:{ subject:"コーヒー", why_options:[…], act:"eat", photo_summary:"…", covered:{ who, why, feel, next } } }
  *   エラー → { ok:false, code:"AUTH|LOCKED|LIMIT|BUSY|BAD_REQUEST|CONFIG|AI|SERVER", message:"..." }
  *
  * ■ スクリプトプロパティ
@@ -70,7 +76,7 @@ const AZURE_MODEL = {
   api_version: '2025-04-01-preview',
   secret: 'AZURE_API_KEY_LUNA'
 };
-const SERVICE_VERSION = 8.1;
+const SERVICE_VERSION = 9;
 const RAW_GITHUB_BASE = 'https://raw.githubusercontent.com';
 const DEFAULTS = {
   REASONING_EFFORT: 'none',
@@ -90,7 +96,7 @@ const DEFAULTS = {
 };
 const CACHE_MAX_SEC = 21600;
 const FAIL_WINDOW_SEC = 900;
-const KEY = { FAIL: 'chat_auth_fail', PROMPT: 'chat_prompt_v8_', TOKEN: 'chat_tok_', RESULT: 'chat_res8_', HINT: 'chat_hint8_', QUOTA: 'chat_count_' };
+const KEY = { FAIL: 'chat_auth_fail', PROMPT: 'chat_prompt_v9_', TOKEN: 'chat_tok_', RESULT: 'chat_res9_', HINT: 'chat_hint9_', QUOTA: 'chat_count_' };
 const LIMITS = { ANSWERS: 10, Q: 100, A: 150, WORKING: 400, CAVEATS: 2, NAME: 40, CONTEXT: 60 };
 const LEVELS = ['低', '中', '高'];
 const MATCHES = ['一致', '一部一致', '不一致'];
@@ -276,7 +282,7 @@ function handleCoach_(req) {
 /* ============================== ヒント（v8.1） ============================== */
 /**
  * 写真とひとことから、チャットの問いを手伝う材料を作る。画面はユーザーを待たせずに裏で呼ぶ（失敗しても画面は止まらない）
- * result = { what:[「なにを？」の候補 最大 3], act:"eat" など（不明なら ""）, photo_summary, followup_q（この人だけに聞く問い）, followup_ph }
+ * result（v9）= { subject（話題）, why_options（「どこがよかった？」の写真からの候補 最大 3）, act（不明なら ""）, photo_summary, covered:{ who, why, feel, next } }
  */
 function handleHint_(req) {
   const t0 = Date.now();
@@ -326,16 +332,15 @@ function handleHint_(req) {
 function normalizeHint_(data, hasImage) {
   const d = data && typeof data === 'object' ? data : {};
   const one = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
-  const what = Array.isArray(d.what) ? [...new Set(d.what.map(x => one(x, 15).replace(/[#＃「」『』。、！!？?]/g, '')).filter(Boolean))].slice(0, 3) : [];
-  let q = one(d.followup_q, 45);
-  if (q && !/[？?]$/.test(q)) q += '？';
-  const ph = one(d.followup_ph, 25);
+  const clean = v => v.replace(/[#＃「」『』。、！!？?]/g, '').trim();
+  const cv = d.covered && typeof d.covered === 'object' ? d.covered : {};
+  const why = Array.isArray(d.why_options) ? [...new Set(d.why_options.map(x => clean(one(x, 12))).filter(Boolean))].slice(0, 3) : [];
   return {
-    what: what,
+    subject: (s => (s.length > 12 ? '' : s))(clean(one(d.subject, 40))),   // 長すぎる話題は問いの言い方が不自然になるので使わない（画面の読み取りに任せる）
+    why_options: why,
     act: ACTS.indexOf(d.act) >= 0 ? d.act : '',
     photo_summary: hasImage ? one(d.photo_summary, 40) : '',
-    followup_q: q,
-    followup_ph: ph ? (/^例[：:]/.test(ph) ? ph : '例：' + ph) : ''
+    covered: { who: cv.who === true, why: cv.why === true, feel: cv.feel === true, next: cv.next === true }
   };
 }
 
@@ -454,13 +459,19 @@ function normalizeResult_(data, hasTargetImage) {
     soft[k] = isFinite(n) ? Math.round(Math.min(1, Math.max(0, n)) * 100) / 100 : 0;
   });
   const cat = Object.prototype.hasOwnProperty.call(CATEGORIES, d.category) ? d.category : '';
+  const nouns = (v, max) => (Array.isArray(v) ? [...new Set(v.filter(x => typeof x === 'string').map(x => x.replace(/\s+/g, ' ').trim().slice(0, 12)).filter(Boolean))].slice(0, max) : []);
+  const sent = Number(d.sentiment);
   return {
     category: { code: cat, label: cat ? CATEGORIES[cat].label : '' },
     soft: soft,
+    act: ACTS.indexOf(d.act) >= 0 ? d.act : '',
+    content: nouns(d.content, 3),
+    space: nouns(d.space, 2),
+    sentiment: isFinite(sent) ? Math.round(Math.min(1, Math.max(-1, sent)) * 100) / 100 : 0,
     level: LEVELS.indexOf(d.level) >= 0 ? d.level : '',
     w5h: text(d.w5h),
     // ハッシュタグは画面が付けるので、AI が付けてしまった行末のタグは外す
-    rewrite: text(d.rewrite).replace(/[ \t　]*[#＃][^\s#＃]+/g, '').replace(/[ \t　]+$/gm, '').replace(/\n{2,}/g, '\n').trim(),
+    rewrite: text(d.rewrite).replace(/[ \t　]*[#＃][^\s#＃]+/g, '').replace(/^[ \t　]+|[ \t　]+$/gm, '').replace(/\n{2,}/g, '\n').trim(),
     headline: text(d.headline),
     photo: hasTargetImage
       ? { match: MATCHES.indexOf(ph.match) >= 0 ? ph.match : '', summary: text(ph.summary) }
@@ -531,10 +542,14 @@ const OUTPUT_SCHEMA = (() => {
     type: 'object',
     additionalProperties: false,
     // 出力順＝考える順（文面を整えてから、その文面で判定する）
-    required: ['rewrite', 'category', 'soft', 'w5h', 'level', 'photo', 'headline', 'caveats'],
+    required: ['rewrite', 'category', 'soft', 'act', 'content', 'space', 'sentiment', 'w5h', 'level', 'photo', 'headline', 'caveats'],
     properties: {
       rewrite: str,
       category: { type: 'string', enum: Object.keys(CATEGORIES) },
+      act: { type: 'string', enum: ACTS.concat(['']) },
+      content: { type: 'array', items: str },
+      space: { type: 'array', items: str },
+      sentiment: { type: 'number' },
       soft: {
         type: 'object', additionalProperties: false,
         required: SOFT_KEYS,
@@ -556,13 +571,17 @@ const OUTPUT_SCHEMA = (() => {
 const HINT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['photo_summary', 'what', 'act', 'followup_q', 'followup_ph'],
+  required: ['subject', 'why_options', 'act', 'photo_summary', 'covered'],
   properties: {
-    photo_summary: { type: 'string' },
-    what: { type: 'array', items: { type: 'string' } },
+    subject: { type: 'string' },
+    why_options: { type: 'array', items: { type: 'string' } },
     act: { type: 'string', enum: ACTS.concat(['']) },
-    followup_q: { type: 'string' },
-    followup_ph: { type: 'string' }
+    photo_summary: { type: 'string' },
+    covered: {
+      type: 'object', additionalProperties: false,
+      required: ['who', 'why', 'feel', 'next'],
+      properties: { who: { type: 'boolean' }, why: { type: 'boolean' }, feel: { type: 'boolean' }, next: { type: 'boolean' } }
+    }
   }
 };
 
@@ -674,7 +693,7 @@ const TEST_JPEG = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBw
 /** ヒントの経路確認（エディタから実行） */
 function testHint() {
   const login = JSON.parse(handleLogin_({ password: prop_('APP_PASSWORD') }).getContent());
-  const out = JSON.parse(handleHint_({ token: login.token, variant: 'chat', context: { event: 'test' }, target: { text: '焼き芋あったまる〜' } }).getContent());
+  const out = JSON.parse(handleHint_({ token: login.token, variant: 'chat', context: { event: 'test' }, target: { text: 'コーヒーおいしかった' } }).getContent());
   console.log(out.ok ? 'OK ' + (out.elapsed_ms / 1000) + '秒 ' + JSON.stringify(out.result) : JSON.stringify(out));
 }
 /** チャット版の経路確認（エディタから実行） */
@@ -685,13 +704,12 @@ function testChat() {
     context: { event: 'test', sample_total: 0 },
     target: { text: '豆本かわいい！', source: 'first', image_data: TEST_JPEG },
     answers: [
-      { q: 'なにしてた？', a: '買った' },
-      { q: 'どんな気持ち？', a: 'かわいい、すごい' },
-      { q: '「かわいい」のは、どこ？', a: '小ささ・細かさ' },
-      { q: 'だれと過ごした？', a: '作った人・出展者と話した（隣のビルの経理さん）' },
-      { q: 'このあと、どうしたい？', a: '自分もやってみたい' }
+      { q: 'そのとき、だれと一緒でしたか？', a: '作った人・お店の人と話した（隣のビルの経理さん）' },
+      { q: '豆本の、どこがかわいかったですか？', a: '手づくり感・技、小さな文字' },
+      { q: 'どんな気持ちになりましたか？（選んだ順）', a: 'かわいい、刺激をもらった' },
+      { q: 'このあと、どうしたいですか？', a: '自分もやってみたい' }
     ],
-    working_text: '豆本かわいい！\n作ったのは隣のビルの経理さん\nとくに小ささ！\n私もやってみたい',
+    working_text: '豆本かわいい！\n作ったのは隣のビルの経理さん\nとくに手づくり感！\n私もやってみたい',
     references: []
   }).getContent());
   console.log(out.ok ? 'OK ' + JSON.stringify(out.result) : JSON.stringify(out));
