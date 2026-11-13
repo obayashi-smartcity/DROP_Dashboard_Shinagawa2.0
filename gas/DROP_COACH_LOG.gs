@@ -1,82 +1,65 @@
 /**
- * DROP Coach — 実行ログ記録用 Google Apps Script（改善案生成用とは別プロジェクト / Web アプリ）
+ * DROP Coach V2（チャット版）— 記録用 Google Apps Script（Web アプリ）  v6（2026/11/13）
  * ------------------------------------------------------------
- * drop_coach.html から直接呼ばれ、Google スプレッドシートに 1 行追記する。
+ * V2.0 リポジトリの drop_coach_with_sample.html から直接呼ばれ、チャット 1 回分（1 セッション）を
+ * Google スプレッドシートに 1 行追記する。分析（共起ネットワーク・ソフト分類・ジャーニー・属性別）にそのまま使える列にしている。
+ * ★ V1 のログ用 GAS とは別のプロジェクトとして新しく作り、別にデプロイすること（V1 のシート coach_log_v3 には書かない）。
  *
- * ■ 呼び出し順（v2 で変更）
- *   1) フロント → 改善案生成用 GAS（GAS_COACH）… AI の推論結果を受け取る
- *   2) フロント → 本 GAS（action:"log"）       … 1) の結果を含めて記録する
- *   ※ 結果の表示はログ記録を待たない（記録はバックグラウンド）。GAS 同士は通信しない。
- *   ※ 生成が失敗した場合もステータス・エラー内容を記録する（認証切れ AUTH は再実行されるため記録しない）。
- *
- * ■ v4 の変更（投稿前チェック・視点評価）
- *   - mode（posted / draft）と、投稿前チェックの本文（target_text）を記録（draft は artwork_id が無いため本文で残す）
- *   - 推論結果の viewpoint（視点の評価・診断・読み取れた視点・問い）と photo.match（写真と本文の一致）を列に追加
- *   - 列構成が変わったため既定シート名を coach_log_v3 に変更（旧シートには追記しない）
+ * ■ 呼び出し順
+ *   1) フロント → V2 仕上げ用 GAS（DROP_COACH_GPT.gs v8）… AI を使ったときだけ
+ *   2) フロント → 本 GAS（action:"log"）… コピーしたとき／「おわる」を押したとき／途中で画面を離れたとき
+ *   ※ 同じセッションで文面を直して再コピーすると、同じ「セッションID」の行がもう 1 行増える（分析では最後の行を使う）
+ *   ※ 途中で画面を離れたときは navigator.sendBeacon で送る（「終了」列が「途中離脱」）
  *
  * ■ アクション（POST / Content-Type: text/plain / body は JSON 文字列）
  *   { "action":"login", "name":"...", "password":"..." } → { ok:true, token, expires_in }
- *   { "action":"log", "token":"...", "mode":"posted|draft",
- *     "goal":"...", "goal_note":"...", "target_id":"...", "target_text":"...（draft のみ）",
- *     "ref_ids":["<artwork_id of R1>", "<artwork_id of R2>", ...],   // R1, R2 … の順
- *     "instructions":"...",
- *     "status":"OK|AI|LIMIT|...", "error":"...",
- *     "model":"...", "prompt_version":"...", "cached":false, "elapsed_sec":12.3,
- *     "images_used":3, "images_note":"...",
- *     "result":{ headline, viewpoint, diagnosis, reference_insights, photo, improvements, rewrite, caveats } | null
- *   } → { ok:true, sheet:"記録したシート名", row:行番号 }
- *
- * ■ v5 の変更（サンプル参照版／サンプルなし版）
- *   - req.variant（"with_sample" | "no_sample"）を受け取り、「分析モード」列に
- *     「投稿前（サンプル参照）」「投稿前（サンプルなし）」として記録する（列構成は v4 と同じ。既存シートにそのまま追記）
- *   - variant が無い従来版（drop_coach_v2.html）は従来どおり「投稿済み」「投稿前」
- *
- * ■ v3 の変更（ログが記録されない不具合の修正）
- *   - 見出しが一致しない旧シートに当たった場合はエラーで止めず、列構成専用の別シート（<シート名>_xxxxxx）に記録
- *   - 新規シート（既定 26 列）に 31 列を書く前に列を追加。appendRow をやめ setValues で明示的に書く
- *   - 業務エラーも console に出力（Apps Script の「実行数」で原因を確認できる）
- *   - LOG_URL?diag=1 をブラウザで開くと記録先の状態を確認できる
+ *   { "action":"log", "token":"...", "session":{ …チャット記録（drop_chat_v2 形式。HTML の buildRecord() を参照）… } }
+ *     → { ok:true, sheet:"記録したシート名", row:行番号 }
  *
  * ■ 記録する列（シートが空なら見出し行を自動作成）
- *   タイムスタンプ / Name / 分析モード / 目的 / 目的（自由記述） / 対象投稿ID / 投稿前本文 / 参考投稿数 / 参考投稿ID（カンマ区切り） / 追加指示 /
- *   ステータス / エラー / モデル / プロンプト版 / キャッシュ / 所要秒 / 画像枚数 / 画像メモ /
- *   結論 / 視点の評価 / 視点の診断 / 読み取れた視点 / 視点を深める問い /
- *   診断 / 活かしたい点 / 伸びしろ / 参考投稿の傾向 / 共通点 / 共通点の根拠 /
- *   写真と本文の一致 / 写真の現状 / 写真の改善 / 写真の根拠 / 改善アクション / 改善後の本文 / 書き換えポイント / 注意点 / 結果JSON
- *   - 参考投稿ID は R1, R2 … の順に並ぶので、根拠列の「R2」は 2 番目の ID に対応する（T は対象投稿ID）
- *   - 旧版の「Few-shot件数」列は廃止
+ *   LOG_HEADER を参照。主な列：
+ *   - 気分（1〜10）… ユーザージャーニー（時刻×気分）用
+ *   - した／よかった／どこが／だれと／このあと … 選んだタグ（4 層：行動／最初の関心（感情）／コンテンツ要素・人・空間／愛着の関心・意向）
+ *   - ノード（共起用）… 「層:タグ」を｜区切りで並べたもの。共起ネットワークのノード・エッジにそのまま使う
+ *   - ソフト①②③・愛着 … 選んだタグから画面で計算した重み（合計 1。重みの表は HTML の CONFIG.VOCAB）
+ *   - AI ソフト … AI が仕上げた文面から読んだサインの強さ（各 0〜1）
+ *   - 表示順 … 選択肢をシャッフルして出した順（位置の偏りの検証用）
+ *   - コーチ関与 … ひとことのみ／選択あり／AI 仕上げ（コーチが入った投稿を分けて効果測定するため）
  *
  * ■ スクリプトプロパティ
- *   必須  APP_PASSWORD（改善案生成用 GAS と同じ値）
- *   任意  LOG_SHEET_ID / LOG_SHEET_NAME (coach_log_v3) / TOKEN_TTL_SEC (21600) / MAX_FAILS (30) / MAX_LOGS_PER_TOKEN (300)
- *   ※ v4 で列構成が変わったため、既定のシート名を coach_log_v3 に変更。旧シート（coach_log / coach_log_v2）にはそのまま追記しない。
- *     LOG_SHEET_NAME に旧シート名を設定している場合は、新しいシート名に変更すること。
+ *   必須  APP_PASSWORD（V2 仕上げ用 GAS と同じ値）
+ *   任意  LOG_SHEET_ID（スプレッドシート ID。未設定ならこのスクリプトが紐づくスプレッドシート）
+ *         LOG_SHEET_NAME (coach_chat_v2) / TOKEN_TTL_SEC (21600) / MAX_FAILS (30) / MAX_LOGS_PER_TOKEN (300)
  *
- * ■ デプロイ
- *   貼り替え後 setupTest() を 1 回実行（新シートの作成と書き込み確認）
- *   → デプロイを管理 → 編集 → 新バージョン（URL は変わらない。実行: 自分 / アクセス: 全員）
+ * ■ 新規作成とデプロイ（V1 とは別プロジェクト）
+ *   1) 記録先のスプレッドシートを用意（V1 と同じファイルでも可。シートは coach_chat_v2 が自動で作られる）
+ *   2) https://script.google.com →「新しいプロジェクト」→ 名前を「DROP Coach V2 log」などにする → このファイルを貼り付けて保存
+ *   3) スクリプト プロパティに APP_PASSWORD と LOG_SHEET_ID を追加
+ *   4) setupTest() を 1 回実行（初回は権限を承認。シートの作成と書き込みを確認。テスト行は「テスト」と入る）
+ *   5) デプロイ → 新しいデプロイ → 種類「ウェブアプリ」／実行「自分」／アクセス「全員」
+ *   6) 表示された /exec の URL を drop_coach_with_sample.html の CONFIG.LOG_URL に貼る
+ *   更新時：貼り替え → デプロイを管理 → 編集 → 新バージョン（URL は変わらない）
+ *   LOG_URL?diag=1 をブラウザで開くと記録先の状態を確認できる
  */
 const LOG_HEADER = [
-  'タイムスタンプ', 'Name', '分析モード', '目的', '目的（自由記述）', '対象投稿ID', '投稿前本文', '参考投稿数', '参考投稿ID', '追加指示',
-  'ステータス', 'エラー', 'モデル', 'プロンプト版', 'キャッシュ', '所要秒', '画像枚数', '画像メモ',
-  '結論', '視点の評価', '視点の診断', '読み取れた視点', '視点を深める問い',
-  '診断', '活かしたい点', '伸びしろ', '参考投稿の傾向', '共通点', '共通点の根拠',
-  '写真と本文の一致', '写真の現状', '写真の改善', '写真の根拠', '改善アクション', '改善後の本文', '書き換えポイント', '注意点', '結果JSON'
+  'タイムスタンプ', 'Name', 'セッションID', '終了', '開始', '所要秒', '回答数', '出した問い数', '最後の問い', '写真',
+  '最初のひとこと', '気分', 'した', 'よかった', 'どこが', 'だれと', 'どんな人', 'このあと', '属性',
+  'ハッシュタグ', 'ノード（共起用）', 'ソフト①挑戦', 'ソフト②属性横断', 'ソフト③心理的安全性', 'ソフト愛着',
+  '組み立て文面', 'AI文面', '最終文面', '採用', '手で編集', 'コーチ関与',
+  'AI状態', 'AI分類', 'AIソフト', 'AI 5W1H', 'AI評価', 'AIひとこと', '写真と本文', 'AI注意', 'AIモデル', 'プロンプト版', 'AI秒',
+  '表示順', '問いごとの秒', 'アプリ版', '記録JSON'
 ];
-const MODE_LABEL = { posted: '投稿済み', draft: '投稿前' };
-const VARIANT_LABEL = { with_sample: '投稿前（サンプル参照）', no_sample: '投稿前（サンプルなし）' };
-const DEFAULTS = { LOG_SHEET_NAME: 'coach_log_v3', TOKEN_TTL_SEC: 21600, MAX_FAILS: 30, MAX_LOGS_PER_TOKEN: 300 };
+const END_LABEL = { copy: 'コピー', finish: '完了', abandon: '途中離脱', reset: 'やり直し' };
+const DEFAULTS = { LOG_SHEET_NAME: 'coach_chat_v2', TOKEN_TTL_SEC: 21600, MAX_FAILS: 30, MAX_LOGS_PER_TOKEN: 300 };
 const CACHE_MAX_SEC = 21600;
 const FAIL_WINDOW_SEC = 900;
-const MAX_LEN = { NAME: 40, GOAL: 20, NOTE: 200, ID: 64, TEXT: 400, DRAFT: 1000, CODE: 20, MSG: 300, META: 80, FIELD: 1000, ITEMS: 10, REFS: 20, JSON_CELL: 45000 };
-const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
-const EVI_RE = /^(T|R\d{1,2})$/;
-const KEY = { FAIL: 'coachlog_auth_fail', TOKEN: 'coachlogtok_' };
+const MAX_LEN = { NAME: 40, ID: 64, TEXT: 400, SHORT: 120, FIELD: 1000, ITEMS: 12, MSG: 300, META: 80, JSON_CELL: 45000 };
+const KEY = { FAIL: 'chatlog_auth_fail', TOKEN: 'chatlogtok_' };
+const SERVICE_VERSION = 6;
 
 class AppError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
-
 function prop_(key) {
   const v = PropertiesService.getScriptProperties().getProperty(key);
   if (v !== null && v !== undefined && v !== '') return v;
@@ -103,7 +86,6 @@ function doPost(e) {
     }
   } catch (err) {
     if (err instanceof AppError) {
-      // 「実行数」画面で原因を追えるよう、業務エラーも記録する（AUTH は頻出なので warn）
       (err.code === 'AUTH' ? console.warn : console.error)('[' + err.code + '] ' + err.message);
       return json_({ ok: false, code: err.code, message: err.message });
     }
@@ -111,10 +93,9 @@ function doPost(e) {
     return json_({ ok: false, code: 'SERVER', message: 'ログ記録でサーバーエラーが発生しました' });
   }
 }
-
-/** ブラウザで LOG_URL を開くと疎通確認。?diag=1 で記録先の状態も返す（version が 5 でなければ新バージョン未デプロイ） */
+/** ブラウザで LOG_URL を開くと疎通確認。?diag=1 で記録先の状態も返す */
 function doGet(e) {
-  const out = { ok: true, service: 'drop-coach-log', version: 5, time: new Date().toISOString() };
+  const out = { ok: true, service: 'drop-coach-chat-log', version: SERVICE_VERSION, time: new Date().toISOString() };
   if (e && e.parameter && e.parameter.diag) {
     out.password_set = !!prop_('APP_PASSWORD');
     out.sheet_id_set = !!prop_('LOG_SHEET_ID');
@@ -130,7 +111,6 @@ function handleLogin_(req) {
   if (!expected) throw new AppError('CONFIG', 'ログ記録用 GAS の APP_PASSWORD が未設定です');
   const name = clean_(req.name, MAX_LEN.NAME).replace(/\s+/g, ' ');
   if (!name) throw new AppError('BAD_REQUEST', 'Name を入力してください');
-
   const cache = CacheService.getScriptCache();
   const fails = Number(cache.get(KEY.FAIL) || 0);
   if (fails >= numProp_('MAX_FAILS')) {
@@ -143,7 +123,6 @@ function handleLogin_(req) {
     throw new AppError('AUTH', 'パスワードが違います');
   }
   cache.remove(KEY.FAIL);
-
   const ttl = Math.min(numProp_('TOKEN_TTL_SEC'), CACHE_MAX_SEC);
   const token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
   cache.put(KEY.TOKEN + sha256_(token), JSON.stringify({ name: name, n: 0, exp: Date.now() + ttl * 1000 }), ttl);
@@ -162,66 +141,11 @@ function handleLog_(req) {
   if (session.n >= numProp_('MAX_LOGS_PER_TOKEN')) {
     throw new AppError('BAD_REQUEST', 'このログインでの記録回数が上限に達しました。再ログインしてください');
   }
+  const s = req.session && typeof req.session === 'object' ? req.session : null;
+  if (!s) throw new AppError('BAD_REQUEST', 'session（チャット記録）がありません');
 
-  const int = v => (isFinite(Number(v)) ? Math.max(0, Math.round(Number(v))) : 0);
-  const dec = v => (isFinite(Number(v)) ? Math.max(0, Math.round(Number(v) * 10) / 10) : '');
-  const refIds = sanitizeIds_(req.ref_ids);
-  const status = /^[A-Z_]{1,20}$/.test(String(req.status || '')) ? String(req.status) : 'UNKNOWN';
-  const r = status === 'OK' ? sanitizeResult_(req.result) : null;
-  const variant = Object.prototype.hasOwnProperty.call(VARIANT_LABEL, req.variant) ? req.variant : '';
-  const mode = variant || req.mode === 'draft' ? 'draft' : 'posted';
-
-  const lines = arr => arr.map(t => '・' + t).join('\n');
-  const ids = arr => arr.join(',');
-  const acts = r ? r.improvements.map((a, i) => [
-    (i + 1) + '. ' + a.title,
-    a.detail && '   内容: ' + a.detail,
-    a.example && '   例: ' + a.example,
-    '   効果:' + (a.impact || '-') + ' / 負荷:' + (a.effort || '-') + (a.evidence_ids.length ? ' / 根拠:' + ids(a.evidence_ids) : '')
-  ].filter(Boolean).join('\n')).join('\n') : '';
-  let resultJson = r ? JSON.stringify(r) : '';
-  if (resultJson.length > MAX_LEN.JSON_CELL) resultJson = '（サイズ超過のため省略）';
-
-  const written = appendRow_([
-    new Date(),
-    session.name,
-    variant ? VARIANT_LABEL[variant] : MODE_LABEL[mode],
-    clean_(req.goal, MAX_LEN.GOAL),
-    clean_(req.goal_note, MAX_LEN.NOTE),
-    mode === 'posted' && ID_RE.test(String(req.target_id || '')) ? String(req.target_id) : '',
-    mode === 'draft' ? clean_(req.target_text, MAX_LEN.DRAFT) : '',
-    refIds.length,
-    refIds.join(','),
-    clean_(req.instructions, MAX_LEN.TEXT),
-    status,
-    status === 'OK' ? '' : clean_(req.error, MAX_LEN.MSG),
-    clean_(req.model, MAX_LEN.META),
-    clean_(req.prompt_version, MAX_LEN.META),
-    req.cached === true,
-    dec(req.elapsed_sec),
-    int(req.images_used),
-    clean_(req.images_note, MAX_LEN.MSG),
-    r ? r.headline : '',
-    r ? r.viewpoint.level : '',
-    r ? r.viewpoint.summary : '',
-    r ? lines(r.viewpoint.found) : '',
-    r ? lines(r.viewpoint.questions) : '',
-    r ? r.diagnosis.summary : '',
-    r ? lines(r.diagnosis.strengths) : '',
-    r ? lines(r.diagnosis.weaknesses) : '',
-    r ? r.reference_insights.summary : '',
-    r ? lines(r.reference_insights.traits) : '',
-    r ? ids(r.reference_insights.evidence_ids) : '',
-    r ? r.photo.match : '',
-    r ? r.photo.summary : '',
-    r ? lines(r.photo.tips) : '',
-    r ? ids(r.photo.evidence_ids) : '',
-    acts,
-    r ? r.rewrite.text : '',
-    r ? lines(r.rewrite.points) : '',
-    r ? lines(r.caveats) : '',
-    resultJson
-  ]);
+  const row = buildRow_(session.name, s);
+  const written = appendRow_(row);
 
   session.n = (session.n || 0) + 1;
   const rest = Math.floor((session.exp - Date.now()) / 1000);
@@ -229,46 +153,86 @@ function handleLog_(req) {
   return json_({ ok: true, sheet: written.sheet, row: written.row });
 }
 
-/** 参考投稿 ID（artwork_id）の配列を検証。順序（R1, R2 …）は保持し、重複・不正値は除外 */
-function sanitizeIds_(raw) {
-  if (!Array.isArray(raw)) return [];
-  const out = [];
-  raw.slice(0, MAX_LEN.REFS).forEach(v => {
-    const s = String(v == null ? '' : v).trim();
-    if (ID_RE.test(s) && out.indexOf(s) < 0) out.push(s);
-  });
-  return out;
-}
-
-/** フロントから届いた推論結果を、GAS_COACH の normalizeResult_ と同じ形に整える（値は文字数で丸める） */
-function sanitizeResult_(raw) {
+/** チャット記録 → 1 行。値はすべて検証・丸めてから書く */
+function buildRow_(name, s) {
   const o = v => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
-  const t = (v, n) => clean_(typeof v === 'string' ? v : '', n || MAX_LEN.FIELD);
-  const list = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string' && x.trim()).slice(0, MAX_LEN.ITEMS).map(x => t(x)) : []);
-  const evi = v => (Array.isArray(v) ? [...new Set(v.filter(x => typeof x === 'string' && EVI_RE.test(x)))].slice(0, MAX_LEN.ITEMS) : []);
-  const lv = v => (['低', '中', '高'].indexOf(v) >= 0 ? v : '');
-  const mt = v => (['一致', '一部一致', '不一致'].indexOf(v) >= 0 ? v : '');
-  const d = o(raw), dg = o(d.diagnosis), ri = o(d.reference_insights), ph = o(d.photo), rw = o(d.rewrite), vp = o(d.viewpoint);
-  return {
-    headline: t(d.headline),
-    viewpoint: { level: lv(vp.level), summary: t(vp.summary), found: list(vp.found), questions: list(vp.questions) },
-    diagnosis: { summary: t(dg.summary), strengths: list(dg.strengths), weaknesses: list(dg.weaknesses) },
-    reference_insights: { summary: t(ri.summary), traits: list(ri.traits), evidence_ids: evi(ri.evidence_ids) },
-    photo: { match: mt(ph.match), summary: t(ph.summary), tips: list(ph.tips), evidence_ids: evi(ph.evidence_ids) },
-    improvements: (Array.isArray(d.improvements) ? d.improvements : [])
-      .filter(a => a && typeof a === 'object' && typeof a.title === 'string' && a.title.trim())
-      .slice(0, MAX_LEN.ITEMS)
-      .map(a => ({ title: t(a.title), detail: t(a.detail), example: t(a.example), impact: lv(a.impact), effort: lv(a.effort), evidence_ids: evi(a.evidence_ids) })),
-    rewrite: { text: t(rw.text, 2000), points: list(rw.points) },
-    caveats: list(d.caveats)
-  };
+  const t = (v, n) => clean_(typeof v === 'string' ? v : (typeof v === 'number' ? String(v) : ''), n || MAX_LEN.FIELD);
+  const arr = v => (Array.isArray(v) ? v : []);
+  const labels = v => arr(v).map(x => (typeof x === 'string' ? x : o(x).label)).filter(x => typeof x === 'string' && x.trim()).slice(0, MAX_LEN.ITEMS).map(x => t(x, MAX_LEN.SHORT));
+  const num = (v, min, max) => { const n = Number(v); return v === '' || v == null || !isFinite(n) ? '' : Math.min(max, Math.max(min, n)); };
+  const r2 = v => { const n = num(v, 0, 1); return n === '' ? '' : Math.round(n * 100) / 100; };
+  const date = v => { const d = new Date(String(v || '')); return isNaN(d.getTime()) ? '' : d; };
+  const yn = v => (v === true ? 'あり' : v === false ? 'なし' : '');
+
+  const a = o(s.answers), soft = o(s.soft), ai = o(s.ai), ar = o(ai.result), as = o(ar.soft), texts = o(s.texts);
+  const who = o(a.who);
+  const sid = /^[A-Za-z0-9_-]{6,64}$/.test(String(s.session_id || '')) ? String(s.session_id) : '';
+  const end = Object.prototype.hasOwnProperty.call(END_LABEL, s.end) ? END_LABEL[s.end] : t(s.end, 20);
+  const aiState = ai.status === 'OK' ? (ai.cached ? 'OK（キャッシュ）' : 'OK') : t(ai.status, 20);
+  const cat = o(ar.category);
+  const nodes = arr(s.nodes).map(n => (typeof n === 'string' ? n : (o(n).layer && o(n).label ? o(n).layer + ':' + o(n).label : '')))
+    .filter(Boolean).slice(0, 30).map(x => t(x, MAX_LEN.SHORT));
+  const order = o(s.order);
+  const orderText = Object.keys(order).slice(0, 12).map(k => t(k, 20) + '=' + arr(order[k]).slice(0, 20).map(x => t(String(x), 30)).join(',')).join(' / ');
+  const secs = o(s.step_sec);
+  const secText = Object.keys(secs).slice(0, 15).map(k => t(k, 20) + '=' + (num(secs[k], 0, 86400) === '' ? '' : Math.round(Number(secs[k]) * 10) / 10)).join(' / ');
+  const softPct = x => (x === '' ? '' : x);
+
+  let jsonCell = '';
+  try { jsonCell = JSON.stringify(s); } catch (e) { jsonCell = ''; }
+  if (jsonCell.length > MAX_LEN.JSON_CELL) jsonCell = '（サイズ超過のため省略）';
+
+  return [
+    new Date(),
+    name,
+    sid,
+    end,
+    date(s.started_at),
+    num(s.duration_sec, 0, 86400) === '' ? '' : Math.round(Number(s.duration_sec) * 10) / 10,
+    num(s.answered, 0, 99),
+    num(s.asked, 0, 99),
+    t(s.last_step, 30),
+    s.has_photo === true ? 'あり' : 'なし',
+    t(a.text1, MAX_LEN.TEXT),
+    num(a.mood, 1, 10),
+    labels(a.act).join('、'),
+    labels(a.feel).join(' > '),
+    labels(a.elem).join('、'),
+    t(who.label, MAX_LEN.SHORT),
+    t(who.detail, MAX_LEN.SHORT),
+    labels(a.next).join('、'),
+    t(o(a.profile).label || a.profile, MAX_LEN.SHORT),
+    arr(s.hashtags).filter(x => typeof x === 'string').slice(0, 10).map(x => t(x, 40)).join(' '),
+    nodes.join('｜'),
+    softPct(r2(soft.c1)), softPct(r2(soft.c2)), softPct(r2(soft.c3)), softPct(r2(soft.att)),
+    t(texts.composed, MAX_LEN.TEXT),
+    t(texts.ai, MAX_LEN.TEXT),
+    t(texts.final, MAX_LEN.TEXT),
+    t(texts.chosen, 20),
+    yn(texts.edited),
+    t(s.coach_level, 20),
+    aiState,
+    cat.code ? t(cat.code, 2) + ' ' + t(cat.label, 30) : '',
+    ai.status === 'OK' ? ['①' + r2(as.c1), '②' + r2(as.c2), '③' + r2(as.c3), '愛' + r2(as.att)].join(' ') : '',
+    t(ar.w5h, MAX_LEN.SHORT),
+    t(ar.level, 4),
+    t(ar.headline, MAX_LEN.SHORT),
+    ar.photo ? [t(o(ar.photo).match, 10), t(o(ar.photo).summary, MAX_LEN.SHORT)].filter(Boolean).join('：') : '',
+    arr(ar.caveats).filter(x => typeof x === 'string').slice(0, 3).map(x => '・' + t(x, MAX_LEN.SHORT)).join('\n'),
+    t(ai.model, MAX_LEN.META),
+    t(ai.prompt_version, MAX_LEN.META),
+    num(ai.elapsed_sec, 0, 600),
+    t(orderText, MAX_LEN.FIELD),
+    t(secText, MAX_LEN.FIELD),
+    t(s.app_version, 40),
+    jsonCell
+  ];
 }
 
 /**
- * 1 行追記する（v3：失敗しにくい書き込みに変更）
- *  - 見出しが一致しないシート（旧版 coach_log など）に当たっても止めず、列構成専用の別シートへ自動で書く
- *  - 新規シートの既定 26 列では 38 列が入らないため、書き込み前に列数を確保する
- *  - appendRow ではなく「最終行の次」を明示して setValues で書く
+ * 1 行追記する
+ *  - 見出しが一致しないシートに当たっても止めず、列構成専用の別シートへ自動で書く
+ *  - 書き込み前に列数を確保し、「最終行の次」を明示して setValues で書く
  *  戻り値：{ sheet: シート名, row: 書き込んだ行番号 }
  */
 function appendRow_(row) {
@@ -287,7 +251,6 @@ function appendRow_(row) {
     lock.releaseLock();
   }
 }
-
 function openSpreadsheet_() {
   const id = String(prop_('LOG_SHEET_ID') || '').trim();
   let ss;
@@ -300,21 +263,18 @@ function openSpreadsheet_() {
   if (!ss) throw new AppError('CONFIG', 'LOG_SHEET_ID が未設定です（スプレッドシートに紐づかないプロジェクトでは必須）');
   return ss;
 }
-
 /** 見出しが LOG_HEADER と一致するシートを返す（無ければ作る）。不一致なら列構成ごとの別シートに切り替える */
 function getSheet_() {
   const ss = openSpreadsheet_();
   const base = prop_('LOG_SHEET_NAME');
   const sh = ss.getSheetByName(base) || ss.insertSheet(base);
   if (prepareSheet_(sh)) return sh;
-  // 旧版の見出しが残っているシート：壊さずに別シートへ（列構成のハッシュで名前を固定）
   const alt = base + '_' + sha256_(LOG_HEADER.join('\t')).slice(0, 6);
   console.warn('シート「' + base + '」の見出しが列構成と一致しないため「' + alt + '」に記録します');
   const sh2 = ss.getSheetByName(alt) || ss.insertSheet(alt);
   if (prepareSheet_(sh2)) return sh2;
   throw new AppError('CONFIG', 'シート「' + alt + '」の見出しが列構成と一致しません。LOG_SHEET_NAME を新しいシート名に変更してください');
 }
-
 /** 空なら見出しを作る。見出しが一致すれば true */
 function prepareSheet_(sh) {
   if (sh.getLastRow() === 0) {
@@ -322,6 +282,7 @@ function prepareSheet_(sh) {
     sh.getRange(1, 1, 1, LOG_HEADER.length).setValues([LOG_HEADER]).setFontWeight('bold');
     sh.setFrozenRows(1);
     sh.getRange('A:A').setNumberFormat('yyyy/mm/dd hh:mm:ss');
+    sh.getRange('E:E').setNumberFormat('yyyy/mm/dd hh:mm:ss');
     sh.getRange(1, 1, sh.getMaxRows(), LOG_HEADER.length).setVerticalAlignment('top');
     return true;
   }
@@ -329,22 +290,18 @@ function prepareSheet_(sh) {
   const head = sh.getRange(1, 1, 1, LOG_HEADER.length).getDisplayValues()[0].map(v => String(v).trim());
   return head.join('\t') === LOG_HEADER.join('\t');
 }
-
-/** 行・列が足りなければ追加する（insertSheet の既定は 1000 行 × 26 列） */
 function ensureSize_(sh, rows, cols) {
-  const mc = sh.getMaxColumns();
-  if (mc < cols) sh.insertColumnsAfter(mc, cols - mc);
-  const mr = sh.getMaxRows();
-  if (mr < rows) sh.insertRowsAfter(mr, Math.max(rows - mr, 100));
+  if (sh.getMaxColumns() < cols) sh.insertColumnsAfter(sh.getMaxColumns(), cols - sh.getMaxColumns());
+  if (sh.getMaxRows() < rows) sh.insertRowsAfter(sh.getMaxRows(), Math.max(rows - sh.getMaxRows(), 100));
 }
 
 /* ============================== 共通 ============================== */
-function clean_(v, n) {
+function clean_(v, max) {
   return String(v == null ? '' : v)
     .replace(/\r\n?/g, '\n')
     .replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g, ' ')
     .trim()
-    .slice(0, n);
+    .slice(0, max);
 }
 function sha256_(s) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, s, Utilities.Charset.UTF_8)
@@ -359,24 +316,19 @@ function safeEqual_(a, b) {
 function json_(obj) { return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
 
 /* ============================ 動作確認用 ============================ */
+/** 新しいシートの作成と書き込みを確認（エディタから 1 回実行）。テスト行の Name は「テスト」 */
 function setupTest() {
   console.log('APP_PASSWORD: ' + (prop_('APP_PASSWORD') ? '設定済み' : '★未設定'));
-  const sh = getSheet_();
-  console.log('記録先: ' + sh.getParent().getName() + ' / シート ' + sh.getName());
-  const login = JSON.parse(handleLogin_({ name: 'setupTest', password: prop_('APP_PASSWORD') }).getContent());
-  const out = JSON.parse(handleLog_({
-    token: login.token, mode: 'posted', goal: 'PVを上げる', target_id: 'setup-test-target',
-    ref_ids: ['setup-test-r1', 'setup-test-r2'], instructions: '（書き込み確認）',
-    status: 'OK', model: 'test', prompt_version: 'test', cached: false, elapsed_sec: 0, images_used: 0,
-    result: {
-      headline: '（書き込み確認）',
-      viewpoint: { level: '中', summary: 'test', found: ['f'], questions: ['q'] },
-      diagnosis: { summary: 'test', strengths: ['a'], weaknesses: ['b'] },
-      reference_insights: { summary: 'test', traits: ['c'], evidence_ids: ['R1'] },
-      photo: { match: '', summary: '', tips: [], evidence_ids: [] },
-      improvements: [{ title: 'テストする', detail: 'd', example: 'e', impact: '高', effort: '低', evidence_ids: ['T', 'R2'] }],
-      rewrite: { text: 'テスト本文', points: ['p'] }, caveats: ['サンプルが少なく参考値']
-    }
-  }).getContent());
-  console.log('結果: ' + JSON.stringify(out) + ' / 最終行 ' + sh.getLastRow());
+  console.log('LOG_SHEET_ID: ' + (prop_('LOG_SHEET_ID') ? '設定済み' : '未設定（このスクリプトが紐づくスプレッドシートを使用）'));
+  const w = appendRow_(buildRow_('テスト', {
+    session_id: 'test_' + Date.now(), end: 'finish', started_at: new Date().toISOString(), duration_sec: 42,
+    answered: 4, asked: 6, last_step: 'next', has_photo: false,
+    answers: { text1: 'テスト投稿', mood: 7, act: [{ label: '見た・聴いた' }], feel: [{ label: 'かわいい' }],
+      elem: [], who: { label: 'ひとりで', detail: '' }, next: [{ label: 'また来たい' }], profile: { label: '品川で働いている' } },
+    hashtags: ['#かわいい'], nodes: ['行動:見た・聴いた', '感情:かわいい', '意向:また来たい'],
+    soft: { c1: 0, c2: 0, c3: 0, att: 1 },
+    texts: { composed: 'テスト投稿\nまた来たい！', ai: '', final: 'テスト投稿\nまた来たい！', chosen: '組み立て', edited: false },
+    coach_level: '選択あり', ai: { status: '' }, order: { feel: ['kawaii', 'oishii'] }, step_sec: { text1: 5.2 }, app_version: 'test'
+  }));
+  console.log('書き込み OK: シート「' + w.sheet + '」 ' + w.row + ' 行目');
 }
