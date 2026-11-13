@@ -1,5 +1,5 @@
 /**
- * DROP Coach V2（チャット版）— 記録用 Google Apps Script（Web アプリ）  v6（2026/11/13）
+ * DROP Coach V2（チャット版）— 記録用 Google Apps Script（Web アプリ）  v6.2（2026/11/13）
  * ------------------------------------------------------------
  * V2.0 リポジトリの drop_coach_with_sample.html から直接呼ばれ、チャット 1 回分（1 セッション）を
  * Google スプレッドシートに 1 行追記する。分析（共起ネットワーク・ソフト分類・ジャーニー・属性別）にそのまま使える列にしている。
@@ -16,6 +16,9 @@
  *   { "action":"log", "token":"...", "session":{ …チャット記録（drop_chat_v2 形式。HTML の buildRecord() を参照）… } }
  *     → { ok:true, sheet:"記録したシート名", row:行番号 }
  *
+ * ■ v6.2 の変更：末尾に 6 列を追加（AIの問い／AIの問いへの答え／なにをの候補（AI）／なにをの答え方／完成イメージを見た／ヒント状態）
+ *   既存シート（v6.1 の 46 列の見出し）はそのまま使い、足りない見出しを右に書き足す（データはずれない）
+ *
  * ■ 記録する列（シートが空なら見出し行を自動作成）
  *   LOG_HEADER を参照。主な列：
  *   - 気分（1〜10）… ユーザージャーニー（時刻×気分）用
@@ -28,8 +31,10 @@
  *
  * ■ スクリプトプロパティ
  *   必須  APP_PASSWORD（V2 仕上げ用 GAS と同じ値）
- *   任意  LOG_SHEET_ID（スプレッドシート ID。未設定ならこのスクリプトが紐づくスプレッドシート）
- *         LOG_SHEET_NAME (coach_chat_v2) / TOKEN_TTL_SEC (21600) / MAX_FAILS (30) / MAX_LOGS_PER_TOKEN (300)
+ *         LOG_SHEET_ID（記録先スプレッドシートの ID。スプレッドシートに紐づかない（単独の）スクリプトでは必須）
+ *           ★ V1 のプロジェクトをコピーして作った場合、V1 のスプレッドシートの ID が残っていないか必ず確認すること
+ *   任意  LOG_SHEET_NAME (coach_chat_v2) / TOKEN_TTL_SEC (21600) / MAX_FAILS (30) / MAX_LOGS_PER_TOKEN (300)
+ *         ※ 見出し行だけ残したシート（V1 の見出し）を指定した場合は、初回の書き込みで V2 の見出しに置き換える（v6.1）
  *
  * ■ 新規作成とデプロイ（V1 とは別プロジェクト）
  *   1) 記録先のスプレッドシートを用意（V1 と同じファイルでも可。シートは coach_chat_v2 が自動で作られる）
@@ -47,7 +52,9 @@ const LOG_HEADER = [
   'ハッシュタグ', 'ノード（共起用）', 'ソフト①挑戦', 'ソフト②属性横断', 'ソフト③心理的安全性', 'ソフト愛着',
   '組み立て文面', 'AI文面', '最終文面', '採用', '手で編集', 'コーチ関与',
   'AI状態', 'AI分類', 'AIソフト', 'AI 5W1H', 'AI評価', 'AIひとこと', '写真と本文', 'AI注意', 'AIモデル', 'プロンプト版', 'AI秒',
-  '表示順', '問いごとの秒', 'アプリ版', '記録JSON'
+  '表示順', '問いごとの秒', 'アプリ版', '記録JSON',
+  // v6.2 で追加（既存シートとの互換のため末尾に追加）
+  'AIの問い', 'AIの問いへの答え', 'なにをの候補（AI）', 'なにをの答え方', '完成イメージを見た', 'ヒント状態'
 ];
 const END_LABEL = { copy: 'コピー', finish: '完了', abandon: '途中離脱', reset: 'やり直し' };
 const DEFAULTS = { LOG_SHEET_NAME: 'coach_chat_v2', TOKEN_TTL_SEC: 21600, MAX_FAILS: 30, MAX_LOGS_PER_TOKEN: 300 };
@@ -55,7 +62,7 @@ const CACHE_MAX_SEC = 21600;
 const FAIL_WINDOW_SEC = 900;
 const MAX_LEN = { NAME: 40, ID: 64, TEXT: 400, SHORT: 120, FIELD: 1000, ITEMS: 12, MSG: 300, META: 80, JSON_CELL: 45000 };
 const KEY = { FAIL: 'chatlog_auth_fail', TOKEN: 'chatlogtok_' };
-const SERVICE_VERSION = 6;
+const SERVICE_VERSION = 6.2;
 
 class AppError extends Error {
   constructor(code, message) { super(message); this.code = code; }
@@ -165,6 +172,8 @@ function buildRow_(name, s) {
   const yn = v => (v === true ? 'あり' : v === false ? 'なし' : '');
 
   const a = o(s.answers), soft = o(s.soft), ai = o(s.ai), ar = o(ai.result), as = o(ar.soft), texts = o(s.texts);
+  const hint = o(s.hint), aq = o(a.ai_q), act0 = o(arr(a.act)[0]);
+  const views = arr(s.goal_views).slice(0, 20).map(v => { const x = o(v); return t(x.step, 20) + '（' + (num(x.at_sec, 0, 86400) === '' ? '' : Math.round(Number(x.at_sec))) + '秒' + (x.more ? '・ほかも見た' : '') + '）'; });
   const who = o(a.who);
   const sid = /^[A-Za-z0-9_-]{6,64}$/.test(String(s.session_id || '')) ? String(s.session_id) : '';
   const end = Object.prototype.hasOwnProperty.call(END_LABEL, s.end) ? END_LABEL[s.end] : t(s.end, 20);
@@ -225,7 +234,13 @@ function buildRow_(name, s) {
     t(orderText, MAX_LEN.FIELD),
     t(secText, MAX_LEN.FIELD),
     t(s.app_version, 40),
-    jsonCell
+    jsonCell,
+    t(aq.q, MAX_LEN.SHORT),
+    t(aq.a, MAX_LEN.SHORT),
+    arr(hint.what).filter(x => typeof x === 'string').slice(0, 5).map(x => t(x, 30)).join('、'),
+    t(act0.detail_source, 20),
+    views.length ? views.length + '回：' + views.join('、') : '',
+    hint.status ? t(hint.status, 20) + (num(hint.elapsed_sec, 0, 600) === '' ? '' : '（' + hint.elapsed_sec + '秒）') : ''
   ];
 }
 
@@ -275,20 +290,39 @@ function getSheet_() {
   if (prepareSheet_(sh2)) return sh2;
   throw new AppError('CONFIG', 'シート「' + alt + '」の見出しが列構成と一致しません。LOG_SHEET_NAME を新しいシート名に変更してください');
 }
-/** 空なら見出しを作る。見出しが一致すれば true */
+/**
+ * 空なら見出しを作る。見出しが一致すれば true
+ * v6.1：見出し行だけでデータが無いシート（V1 の記録シートをコピーして 1 行目だけ残した場合など）は、
+ *       V2 の見出しに書き換えて使う（データ行があるシートは書き換えない）
+ */
 function prepareSheet_(sh) {
-  if (sh.getLastRow() === 0) {
+  if (sh.getLastRow() === 0) { writeHeader_(sh); return true; }
+  const width = sh.getMaxColumns();
+  const head = sh.getRange(1, 1, 1, width).getDisplayValues()[0].map(v => String(v).trim());
+  if (width >= LOG_HEADER.length && head.slice(0, LOG_HEADER.length).join('\t') === LOG_HEADER.join('\t')) return true;
+  // v6.2：古い版の見出し（LOG_HEADER の先頭部分）だけのシートは、足りない見出しを右に書き足して使う
+  let k = head.length; while (k > 0 && !head[k - 1]) k--;
+  if (k > 0 && k < LOG_HEADER.length && head.slice(0, k).join('\t') === LOG_HEADER.slice(0, k).join('\t')) {
+    console.warn('シート「' + sh.getName() + '」の見出しに ' + (LOG_HEADER.length - k) + ' 列を書き足します');
     ensureSize_(sh, 1, LOG_HEADER.length);
-    sh.getRange(1, 1, 1, LOG_HEADER.length).setValues([LOG_HEADER]).setFontWeight('bold');
-    sh.setFrozenRows(1);
-    sh.getRange('A:A').setNumberFormat('yyyy/mm/dd hh:mm:ss');
-    sh.getRange('E:E').setNumberFormat('yyyy/mm/dd hh:mm:ss');
-    sh.getRange(1, 1, sh.getMaxRows(), LOG_HEADER.length).setVerticalAlignment('top');
+    sh.getRange(1, k + 1, 1, LOG_HEADER.length - k).setValues([LOG_HEADER.slice(k)]).setFontWeight('bold');
     return true;
   }
-  if (sh.getMaxColumns() < LOG_HEADER.length) return false;
-  const head = sh.getRange(1, 1, 1, LOG_HEADER.length).getDisplayValues()[0].map(v => String(v).trim());
-  return head.join('\t') === LOG_HEADER.join('\t');
+  if (sh.getLastRow() === 1) {
+    console.warn('シート「' + sh.getName() + '」は見出し行だけなので、V2 の見出しに書き換えます');
+    sh.getRange(1, 1, 1, sh.getMaxColumns()).clearContent();
+    writeHeader_(sh);
+    return true;
+  }
+  return false;
+}
+function writeHeader_(sh) {
+  ensureSize_(sh, 1, LOG_HEADER.length);
+  sh.getRange(1, 1, 1, LOG_HEADER.length).setValues([LOG_HEADER]).setFontWeight('bold');
+  sh.setFrozenRows(1);
+  sh.getRange('A:A').setNumberFormat('yyyy/mm/dd hh:mm:ss');
+  sh.getRange('E:E').setNumberFormat('yyyy/mm/dd hh:mm:ss');
+  sh.getRange(1, 1, sh.getMaxRows(), LOG_HEADER.length).setVerticalAlignment('top');
 }
 function ensureSize_(sh, rows, cols) {
   if (sh.getMaxColumns() < cols) sh.insertColumnsAfter(sh.getMaxColumns(), cols - sh.getMaxColumns());

@@ -1,5 +1,5 @@
 /**
- * DROP Coach V2（チャット版）— 投稿文の仕上げ用 Google Apps Script（Web アプリ）  v8（2026/11/13）
+ * DROP Coach V2（チャット版）— 投稿文の仕上げ用 Google Apps Script（Web アプリ）  v8.1（2026/11/13）
  * ------------------------------------------------------------
  * V2.0 リポジトリ（DROP_Dashboard_Shinagawa2.0）の drop_coach_with_sample.html から呼ばれる。
  * ★ V1（DROP_Dashboard_Shinagawa1.0）の GAS とは別のプロジェクトとして新しく作り、別にデプロイすること。
@@ -18,6 +18,12 @@
  *   - soft（ソフト分類）を追加：①②③・街への愛着のサインの強さを 0〜1 で返す（2026/11/13 定例「ハード分類でなくソフト分類」）
  *   - 画像は利用者の写真（data URL）と、任意で見本投稿の写真（data URL）だけ。GAS から外部 URL の画像は取りに行かない
  *
+ * ■ v8.1 の変更（2026/11/13）ヒント（action:"hint"）を追加
+ *   - 画面は「ひとこと」を送った直後に、ユーザーを待たせず裏で 1 回だけ hint を呼ぶ
+ *   - 写真とひとことから「なにを？」の候補（what）・近い行動（act）・写真の要約・この人だけに聞く問い（followup_q）を返す
+ *   - プロンプトは prompt/drop_coach_hint.md（PROMPT_URL_CHAT と同じフォルダから自動で読む。別の場所なら PROMPT_URL_HINT）
+ *   - AI の呼び出しは 1 セッション 2 回（hint 1 回＋投稿文 1 回）が基本。DAILY_LIMIT の既定値を 200 → 400 に変更
+ *
  * ■ アクション（POST / Content-Type: text/plain / body は JSON 文字列）
  *   { "action":"login", "name":"...", "password":"..." } → { ok:true, token, expires_in }
  *   { "action":"coach", "token":"...", "variant":"chat",
@@ -28,17 +34,21 @@
  *     "references":[{ "text":"…", "name":"運営作成 ①-1 …", "image_data":"data:…"(任意) }],   … 任意
  *     "force":false }
  *     → { ok:true, cached, elapsed_ms, model, prompt_version, generated_at, images_used, images_note, result:{…} }
+ *   { "action":"hint", "token":"...", "variant":"chat", "context":{…},
+ *     "target":{ "text":"最初のひとこと", "image_data":"data:…"(任意) } }
+ *     → { ok:true, cached, elapsed_ms, model, prompt_version, result:{ what:[…], act:"eat", photo_summary:"…", followup_q:"…", followup_ph:"例：…" } }
  *   エラー → { ok:false, code:"AUTH|LOCKED|LIMIT|BUSY|BAD_REQUEST|CONFIG|AI|SERVER", message:"..." }
  *
  * ■ スクリプトプロパティ
  *   必須  APP_PASSWORD        … 画面で入力するパスワード（V2 ログ用 GAS と同じ値にする）
  *         AZURE_API_KEY_LUNA  … Azure OpenAI の API キー（※リポジトリには絶対に書かない）
- *         PROMPT_URL_CHAT     … V2 リポジトリの prompt/drop_coach_chat.md の URL
+ *         PROMPT_URL_CHAT     … V2 リポジトリの prompt/drop_coach_chat.md の URL（同じフォルダの drop_coach_hint.md もヒント用に読む）
  *                               例 https://github.com/obayashi-smartcity/DROP_Dashboard_Shinagawa2.0/blob/main/prompt/drop_coach_chat.md
  *                               （github.com の blob URL は raw URL に自動変換。リポジトリが非公開なら raw の取得に失敗するので注意）
  *   任意（括弧内は既定値）
  *     REASONING_EFFORT (none) / MAX_OUTPUT_TOKENS (2000) / TOKEN_TTL_SEC (21600) / RESULT_CACHE_SEC (21600)
- *     PROMPT_CACHE_SEC (300) / DAILY_LIMIT (200) / MAX_FAILS (30) / MAX_REFS (10) / MAX_TEXT (300)
+ *     PROMPT_CACHE_SEC (300) / DAILY_LIMIT (400) / MAX_FAILS (30) / MAX_REFS (10) / MAX_TEXT (300)
+ *     PROMPT_URL_HINT（未設定なら PROMPT_URL_CHAT と同じフォルダの drop_coach_hint.md）/ HINT_MAX_OUTPUT_TOKENS (800)
  *     ENABLE_IMAGES (true) / MAX_IMAGES (9) / MAX_IMAGE_BYTES (1500000) / IMAGE_DETAIL (low)
  *
  * ■ 新規作成とデプロイ（V1 とは別プロジェクト）
@@ -60,7 +70,7 @@ const AZURE_MODEL = {
   api_version: '2025-04-01-preview',
   secret: 'AZURE_API_KEY_LUNA'
 };
-const SERVICE_VERSION = 8;
+const SERVICE_VERSION = 8.1;
 const RAW_GITHUB_BASE = 'https://raw.githubusercontent.com';
 const DEFAULTS = {
   REASONING_EFFORT: 'none',
@@ -68,7 +78,8 @@ const DEFAULTS = {
   TOKEN_TTL_SEC: 21600,
   RESULT_CACHE_SEC: 21600,
   PROMPT_CACHE_SEC: 300,
-  DAILY_LIMIT: 200,
+  DAILY_LIMIT: 400,
+  HINT_MAX_OUTPUT_TOKENS: 800,
   MAX_FAILS: 30,
   MAX_REFS: 10,
   MAX_TEXT: 300,
@@ -79,7 +90,7 @@ const DEFAULTS = {
 };
 const CACHE_MAX_SEC = 21600;
 const FAIL_WINDOW_SEC = 900;
-const KEY = { FAIL: 'chat_auth_fail', PROMPT: 'chat_prompt_v8', TOKEN: 'chat_tok_', RESULT: 'chat_res8_', QUOTA: 'chat_count_' };
+const KEY = { FAIL: 'chat_auth_fail', PROMPT: 'chat_prompt_v8_', TOKEN: 'chat_tok_', RESULT: 'chat_res8_', HINT: 'chat_hint8_', QUOTA: 'chat_count_' };
 const LIMITS = { ANSWERS: 10, Q: 100, A: 150, WORKING: 400, CAVEATS: 2, NAME: 40, CONTEXT: 60 };
 const LEVELS = ['低', '中', '高'];
 const MATCHES = ['一致', '一部一致', '不一致'];
@@ -91,6 +102,8 @@ const CATEGORIES = {
   D: { label: '該当なし' }
 };
 const SOFT_KEYS = ['c1', 'c2', 'c3', 'att'];
+/* ヒントの行動（画面の「なにをしていましたか？」の選択肢 id と同じ） */
+const ACTS = ['watch', 'eat', 'make', 'buy', 'talk', 'host', 'stroll'];
 const DATA_URL_RE = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
 
 class AppError extends Error {
@@ -125,6 +138,7 @@ function doPost(e) {
     switch (req && req.action) {
       case 'login': return handleLogin_(req);
       case 'coach': return handleCoach_(req);
+      case 'hint':  return handleHint_(req);
       default:      throw new AppError('BAD_REQUEST', '不明な action です');
     }
   } catch (err) {
@@ -135,7 +149,7 @@ function doPost(e) {
 }
 /** ブラウザで GAS_URL を開くと疎通確認（version が 8 でなければ新しいバージョンが未デプロイ） */
 function doGet() {
-  return json_({ ok: true, service: 'drop-coach-chat', version: SERVICE_VERSION, variants: ['chat'], images: boolProp_('ENABLE_IMAGES'), time: new Date().toISOString() });
+  return json_({ ok: true, service: 'drop-coach-chat', version: SERVICE_VERSION, variants: ['chat'], actions: ['login', 'coach', 'hint'], images: boolProp_('ENABLE_IMAGES'), time: new Date().toISOString() });
 }
 
 /* ============================ ログイン ============================ */
@@ -184,7 +198,7 @@ function handleCoach_(req) {
   const context = sanitizeContext_(req.context);
 
   const images = pickImages_([target].concat(references));
-  const prompt = loadPrompt_();
+  const prompt = loadPrompt_('chat');
   const model = AZURE_MODEL.name;
 
   const cache = CacheService.getScriptCache();
@@ -222,19 +236,19 @@ function handleCoach_(req) {
   try {
     if (withImages) {
       try {
-        data = callAzureOpenAI_(apiKey, withImages);
+        data = callAzureOpenAI_(apiKey, withImages, OUTPUT_SCHEMA, 'drop_coach_chat', numProp_('MAX_OUTPUT_TOKENS'));
       } catch (err) {
         if (err instanceof AppError && err.code === 'AI' && /image|vision|content.*type|HTTP 400/i.test(err.message)) {
           console.warn('画像付きリクエストが拒否されたためテキストのみで再送します: ' + err.message);
           notes.push('AI が画像を受け付けなかったため、文面のみで仕上げました');
           imagesUsed = 0;
-          data = callAzureOpenAI_(apiKey, textOnly);
+          data = callAzureOpenAI_(apiKey, textOnly, OUTPUT_SCHEMA, 'drop_coach_chat', numProp_('MAX_OUTPUT_TOKENS'));
         } else {
           throw err;
         }
       }
     } else {
-      data = callAzureOpenAI_(apiKey, textOnly);
+      data = callAzureOpenAI_(apiKey, textOnly, OUTPUT_SCHEMA, 'drop_coach_chat', numProp_('MAX_OUTPUT_TOKENS'));
     }
   } catch (err) {
     adjustDailyQuota_(-1);
@@ -257,6 +271,72 @@ function handleCoach_(req) {
   } catch (e) { /* 100KB 超などは無視 */ }
   payload.elapsed_ms = Date.now() - t0;
   return json_(payload);
+}
+
+/* ============================== ヒント（v8.1） ============================== */
+/**
+ * 写真とひとことから、チャットの問いを手伝う材料を作る。画面はユーザーを待たせずに裏で呼ぶ（失敗しても画面は止まらない）
+ * result = { what:[「なにを？」の候補 最大 3], act:"eat" など（不明なら ""）, photo_summary, followup_q（この人だけに聞く問い）, followup_ph }
+ */
+function handleHint_(req) {
+  const t0 = Date.now();
+  if (!checkToken_(req.token)) throw new AppError('AUTH', 'ログインの有効期限が切れました。パスワードを再入力してください');
+  const apiKey = prop_(AZURE_MODEL.secret);
+  if (!apiKey) throw new AppError('CONFIG', 'スクリプトプロパティ ' + AZURE_MODEL.secret + ' が未設定です');
+  const target = sanitizeTarget_(req.target);
+  if (!target) throw new AppError('BAD_REQUEST', 'ひとことが空です');
+  delete target._rejected;
+  delete target.source;
+  const context = sanitizeContext_(req.context);
+  const images = pickImages_([target]);
+  const prompt = loadPrompt_('hint');
+  const cache = CacheService.getScriptCache();
+  const cacheKey = KEY.HINT + sha256_(JSON.stringify([AZURE_MODEL.name, prompt.version, context, target, images.map(x => sha256_(x.dataUrl).slice(0, 16)), prop_('IMAGE_DETAIL')]));
+  const hit = cache.get(cacheKey);
+  if (hit) { const saved = JSON.parse(hit); saved.cached = true; saved.elapsed_ms = Date.now() - t0; return json_(saved); }
+  if (!adjustDailyQuota_(+1)) throw new AppError('LIMIT', '本日の AI 回数の上限に達しました');
+  const userText = fillTemplate_(prompt.user, {
+    CONTEXT: JSON.stringify(context), TARGET: JSON.stringify(target),
+    IMAGE_IDS: images.length ? images.map(x => x.id).join(', ') : '（なし：写真はありません）'
+  });
+  const maxTok = numProp_('HINT_MAX_OUTPUT_TOKENS');
+  let data, imagesUsed = images.length;
+  try {
+    if (images.length) {
+      try {
+        data = callAzureOpenAI_(apiKey, [{ role: 'system', content: prompt.system }, { role: 'user', content: buildUserContent_(userText, images) }], HINT_SCHEMA, 'drop_coach_hint', maxTok);
+      } catch (err) {
+        if (!(err instanceof AppError && err.code === 'AI' && /image|vision|content.*type|HTTP 400/i.test(err.message))) throw err;
+        imagesUsed = 0;
+        data = callAzureOpenAI_(apiKey, [{ role: 'system', content: prompt.system }, { role: 'user', content: userText }], HINT_SCHEMA, 'drop_coach_hint', maxTok);
+      }
+    } else {
+      data = callAzureOpenAI_(apiKey, [{ role: 'system', content: prompt.system }, { role: 'user', content: userText }], HINT_SCHEMA, 'drop_coach_hint', maxTok);
+    }
+  } catch (err) {
+    adjustDailyQuota_(-1);
+    throw err;
+  }
+  const payload = { ok: true, cached: false, model: AZURE_MODEL.name, prompt_version: prompt.version, generated_at: new Date().toISOString(),
+    images_used: imagesUsed, result: normalizeHint_(data, imagesUsed > 0) };
+  try { cache.put(cacheKey, JSON.stringify(payload), Math.min(numProp_('RESULT_CACHE_SEC'), CACHE_MAX_SEC)); } catch (e) { /* 無視 */ }
+  payload.elapsed_ms = Date.now() - t0;
+  return json_(payload);
+}
+function normalizeHint_(data, hasImage) {
+  const d = data && typeof data === 'object' ? data : {};
+  const one = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
+  const what = Array.isArray(d.what) ? [...new Set(d.what.map(x => one(x, 15).replace(/[#＃「」『』。、！!？?]/g, '')).filter(Boolean))].slice(0, 3) : [];
+  let q = one(d.followup_q, 45);
+  if (q && !/[？?]$/.test(q)) q += '？';
+  const ph = one(d.followup_ph, 25);
+  return {
+    what: what,
+    act: ACTS.indexOf(d.act) >= 0 ? d.act : '',
+    photo_summary: hasImage ? one(d.photo_summary, 40) : '',
+    followup_q: q,
+    followup_ph: ph ? (/^例[：:]/.test(ph) ? ph : '例：' + ph) : ''
+  };
 }
 
 /* ---------- 入力整形 ---------- */
@@ -390,13 +470,17 @@ function normalizeResult_(data, hasTargetImage) {
 }
 
 /* ============================ プロンプト ============================ */
-function loadPrompt_() {
+/** kind：'chat'（投稿文）／'hint'（ヒント）。hint は PROMPT_URL_HINT、未設定なら PROMPT_URL_CHAT と同じフォルダの drop_coach_hint.md */
+function loadPrompt_(kind) {
+  kind = kind === 'hint' ? 'hint' : 'chat';
   const cache = CacheService.getScriptCache();
-  const hit = cache.get(KEY.PROMPT);
+  const hit = cache.get(KEY.PROMPT + kind);
   if (hit) return JSON.parse(hit);
-  const url = normalizePromptUrl_(prop_('PROMPT_URL_CHAT'));
+  const chatUrl = normalizePromptUrl_(prop_('PROMPT_URL_CHAT'));
+  const url = kind === 'chat' ? chatUrl
+    : (prop_('PROMPT_URL_HINT') ? normalizePromptUrl_(prop_('PROMPT_URL_HINT')) : chatUrl.replace(/[^/]*$/, 'drop_coach_hint.md'));
   const prompt = parsePrompt_(fetchPromptText_(url));
-  cache.put(KEY.PROMPT, JSON.stringify(prompt), Math.min(numProp_('PROMPT_CACHE_SEC'), CACHE_MAX_SEC));
+  cache.put(KEY.PROMPT + kind, JSON.stringify(prompt), Math.min(numProp_('PROMPT_CACHE_SEC'), CACHE_MAX_SEC));
   return prompt;
 }
 function fetchPromptText_(url) {
@@ -405,12 +489,12 @@ function fetchPromptText_(url) {
     res = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true });
   } catch (e) {
     console.error('prompt fetch failed: ' + url, e);
-    throw new AppError('CONFIG', 'プロンプトファイルに接続できません。管理者は PROMPT_URL_CHAT を確認してください');
+    throw new AppError('CONFIG', 'プロンプトファイルに接続できません（' + url + '）。管理者は PROMPT_URL_CHAT を確認してください');
   }
   const code = res.getResponseCode();
   if (code !== 200) {
     console.error('prompt fetch HTTP ' + code + ': ' + url);
-    throw new AppError('CONFIG', 'プロンプトファイルを取得できません（HTTP ' + code + '）。管理者は PROMPT_URL_CHAT を確認してください');
+    throw new AppError('CONFIG', 'プロンプトファイルを取得できません（HTTP ' + code + '：' + url.replace(/^.*\//, '') + '）。GitHub に push 済みか、PROMPT_URL_CHAT を確認してください');
   }
   return res.getContentText('UTF-8');
 }
@@ -436,7 +520,7 @@ function fillTemplate_(tpl, vars) {
   });
 }
 function clearPromptCache() {
-  CacheService.getScriptCache().remove(KEY.PROMPT);
+  CacheService.getScriptCache().removeAll([KEY.PROMPT + 'chat', KEY.PROMPT + 'hint']);
   console.log('プロンプトのキャッシュを削除しました');
 }
 
@@ -469,11 +553,24 @@ const OUTPUT_SCHEMA = (() => {
   };
 })();
 
-function callAzureOpenAI_(apiKey, messages) {
+const HINT_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['photo_summary', 'what', 'act', 'followup_q', 'followup_ph'],
+  properties: {
+    photo_summary: { type: 'string' },
+    what: { type: 'array', items: { type: 'string' } },
+    act: { type: 'string', enum: ACTS.concat(['']) },
+    followup_q: { type: 'string' },
+    followup_ph: { type: 'string' }
+  }
+};
+
+function callAzureOpenAI_(apiKey, messages, schema, name, maxTokens) {
   const body = {
     messages: messages,
-    max_completion_tokens: numProp_('MAX_OUTPUT_TOKENS'),
-    response_format: { type: 'json_schema', json_schema: { name: 'drop_coach_chat', strict: true, schema: OUTPUT_SCHEMA } }
+    max_completion_tokens: maxTokens || numProp_('MAX_OUTPUT_TOKENS'),
+    response_format: { type: 'json_schema', json_schema: { name: name || 'drop_coach_chat', strict: true, schema: schema || OUTPUT_SCHEMA } }
   };
   const effort = prop_('REASONING_EFFORT');
   if (effort) body.reasoning_effort = effort;
@@ -565,13 +662,21 @@ function checkSetup() {
   console.log('MODEL: ' + AZURE_MODEL.name + ' / URL: ' + url);
   console.log('画像: ' + (boolProp_('ENABLE_IMAGES') ? 'ON' : 'OFF') + ' / 最大 ' + numProp_('MAX_IMAGES') + ' 枚 / detail=' + prop_('IMAGE_DETAIL') + ' / 1 日の上限 ' + numProp_('DAILY_LIMIT') + ' 回');
   clearPromptCache();
-  const p = loadPrompt_();
-  console.log('プロンプト version=' + p.version + ' system=' + p.system.length + '字 user=' + p.user.length + '字' +
+  const p = loadPrompt_('chat');
+  console.log('プロンプト（投稿文）version=' + p.version + ' system=' + p.system.length + '字 user=' + p.user.length + '字' +
     (/\{\{\s*(TARGET|ANSWERS|WORKING)\s*\}\}/.test(p.user) ? '' : ' ★{{TARGET}}/{{ANSWERS}}/{{WORKING}} が見つかりません'));
+  const h = loadPrompt_('hint');
+  console.log('プロンプト（ヒント）version=' + h.version + ' system=' + h.system.length + '字 user=' + h.user.length + '字');
 }
 // 8x8 灰色の JPEG（モデル疎通用。内容の解析結果には意味がない）
 const TEST_JPEG = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCAAIAAgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDuqKKKAP/Z';
 
+/** ヒントの経路確認（エディタから実行） */
+function testHint() {
+  const login = JSON.parse(handleLogin_({ password: prop_('APP_PASSWORD') }).getContent());
+  const out = JSON.parse(handleHint_({ token: login.token, variant: 'chat', context: { event: 'test' }, target: { text: '焼き芋あったまる〜' } }).getContent());
+  console.log(out.ok ? 'OK ' + (out.elapsed_ms / 1000) + '秒 ' + JSON.stringify(out.result) : JSON.stringify(out));
+}
 /** チャット版の経路確認（エディタから実行） */
 function testChat() {
   const login = JSON.parse(handleLogin_({ password: prop_('APP_PASSWORD') }).getContent());

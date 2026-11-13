@@ -139,6 +139,15 @@
   .spin{width:18px;height:18px;border:2.5px solid var(--rich-soft);border-top-color:var(--rich);border-radius:50%;animation:rot .8s linear infinite}
   @keyframes rot{to{transform:rotate(360deg)}}
   .hint{font-size:12px;color:var(--dim);margin-top:6px}
+  .dock-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-2px 0 10px;font-size:12px;color:var(--dim);font-weight:700}
+  .goal-btn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--rich-2);background:var(--rich-soft);color:var(--rich-ink);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800}
+  .goal-btn svg{width:14px;height:14px}
+  .suggest{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;min-height:0}
+  .suggest:empty{display:none}
+  .sg-lab{font-size:12px;color:var(--dim);font-weight:700}
+  .sg-wait{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
+  .spin.sm{width:12px;height:12px;border-width:2px}
+  .chip.sg{min-height:34px;padding:5px 12px;font-size:13.5px;border-style:dashed;border-color:var(--rich-2);color:var(--rich-ink)}
 
   /* ---------- Toast / Modal ---------- */
   .toast{position:fixed;left:50%;top:76px;transform:translateX(-50%) translateY(-10px);background:var(--text);color:#fff;padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:700;opacity:0;pointer-events:none;transition:.2s;z-index:60}
@@ -150,6 +159,22 @@
   .sheet-hd b{font-size:16px}
   .sheet-hd .icon-btn{margin-left:auto}
   .sheet p.lead{margin:0 0 12px;font-size:13px;color:var(--muted);line-height:1.6}
+  .sheet p.lead.small{font-size:12px;margin:8px 0 4px}
+  .mat-hd{font-size:12px;font-weight:800;color:var(--rich-ink);margin:14px 0 6px;letter-spacing:.3px}
+  .mat{border:1px solid var(--stroke-soft);border-radius:14px;overflow:hidden}
+  .mat-row{display:grid;grid-template-columns:22px 118px 1fr;gap:6px;align-items:start;padding:9px 12px;border-top:1px solid var(--stroke-soft);font-size:13px}
+  .mat-row:first-child{border-top:none}
+  .mat-row i{font-style:normal;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--stroke);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff}
+  .mat-row.done i{background:var(--rich);border-color:var(--rich)}
+  .mat-row b{font-size:13px}
+  .mat-row span{color:var(--dim);word-break:break-word}
+  .mat-row.done span{color:var(--text)}
+  .ex{display:flex;gap:12px;border:1px solid var(--stroke-soft);border-radius:14px;padding:10px;background:#fff;margin-top:8px}
+  .ex img{width:84px;height:84px;object-fit:cover;border-radius:10px;flex:none;background:var(--bg-b)}
+  .ex-lines{display:grid;gap:4px;min-width:0}
+  .exl{display:flex;gap:6px;align-items:baseline;font-size:13.5px;line-height:1.5}
+  .exl em{font-style:normal;flex:none;font-size:10.5px;font-weight:800;color:var(--muted);background:var(--bg-b);border-radius:4px;padding:1px 6px;white-space:nowrap}
+  .exl em.on{background:var(--rich);color:#fff}
   .samples{display:grid;grid-template-columns:1fr;gap:10px}
   .sample{display:flex;gap:12px;border:1px solid var(--stroke-soft);border-radius:14px;padding:10px;background:#fff}
   .sample img{width:84px;height:84px;object-fit:cover;border-radius:10px;flex:none;background:var(--bg-b)}
@@ -168,7 +193,7 @@
   </div>
   <nav class="menu" id="menu" hidden>
     <button type="button" id="mRestart">最初からやり直す</button>
-    <button type="button" id="mSamples">見本の投稿を見る</button>
+    <button type="button" id="mSamples">完成イメージ（見本）</button>
     <button type="button" id="mProfile">「あなたについて」を答え直す</button>
     <button type="button" id="mLogout" hidden>ログアウト</button>
   </nav>
@@ -185,15 +210,14 @@
 
 <div class="modal" id="modal" aria-hidden="true">
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="sheet-hd"><b id="modalTitle">見本の投稿（運営作成・架空）</b><button type="button" class="icon-btn" id="modalX" aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <p class="lead">書き方の参考です。言い回しはまねせず、あなたの言葉で大丈夫です。</p>
-    <div class="samples" id="sampleList"></div>
+    <div class="sheet-hd"><b id="modalTitle">完成イメージ</b><button type="button" class="icon-btn" id="modalX" aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div id="sheetBody"></div>
   </div>
 </div>
 
 <!-- 見本投稿の控え：json/sample_drop.json を読めないとき（file:// で直接開いたときなど）に使う。
      json/sample_drop.json を更新したら、ここも同じ内容に更新すること -->
-<script type="application/json" id="sampleFallback">{"mart":"sample_drop","source":"CULTURE_SNACK_DROP_投稿例集_v4（2026/11/12）","note":"運営作成の模範投稿（架空）。DROP.Coach（サンプル参照版）の比較材料。写真は json/sample_img/","record_count":8,"records":[{"artwork_id":"model-v4-1-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-1.jpg","image_file_path":"json/sample_img/1-1.jpg","sentence":"隣のビルの経理さん、週末は豆本作家！\nこんな人がいたなんて\n毎日通う品川を身近に感じる\n同僚にも教えたい！\n来年は私も出展してみたい","account_id":"","account_name":"運営作成 ①-1 豆本（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-1-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-2.jpg","image_file_path":"json/sample_img/1-2.jpg","sentence":"会社員バンド、ボーカルは平日SE！\n働きながらここまでやれるんだ\n刺激もらった〜\n押し入れのギター、また弾きたくなる\n帰ったら弦を張り替えよう","account_id":"","account_name":"運営作成 ①-2 会社員バンド（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-2-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-1.jpg","image_file_path":"json/sample_img/2-1.jpg","sentence":"平日は銀行員、今日はカレー屋さん！\n並んでくれた人と辛さの話で盛り上がる\n同じビルなのに初めて話した\n来週ランチ行く約束\nまた屋台出したくなる","account_id":"","account_name":"運営作成 ②-1 カレー屋台（出展した社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-2-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-2.jpg","image_file_path":"json/sample_img/2-2.jpg","sentence":"ランタンづくり、隣は近所の大学生\n不器用な私に教えてくれた\nひと回り下なのに意外と話が合う\n通勤中に会ったら声かけようかな\n品川に知り合いが増えた","account_id":"","account_name":"運営作成 ②-2 ランタンづくり（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-3-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-1.jpg","image_file_path":"json/sample_img/3-1.jpg","sentence":"部長がコーヒー淹れてた！\n「何が好き？」って聞かれた\n会社じゃ話したことなかった\n仕事以外の話、していいんだと思えた\nチームメンバーにも聞いてみたい","account_id":"","account_name":"運営作成 ③-1 部長のコーヒー（出展企業の社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-3-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-2.jpg","image_file_path":"json/sample_img/3-2.jpg","sentence":"企業ブースの社員さん、週末は落語家\n上司っぽい人が一番前で笑ってた\n趣味を応援しあえる職場っていいな\n私も社内で話してみたい\nまずは自分の趣味から","account_id":"","account_name":"運営作成 ③-2 社員の落語（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-p1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p1.jpg","image_file_path":"json/sample_img/p1.jpg","sentence":"すぐ帰るつもりの仕事帰り\n焼き芋につられて会場をひと回り\nベンチで隣の人と「寒いですね」\n聞けば同じ会社の人だった\n品川の夜、ちょっと好きになる","account_id":"","account_name":"運営作成 ＋1 焼き芋（仕事帰りにふらっと）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"},{"artwork_id":"model-v4-p2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p2.jpg","image_file_path":"json/sample_img/p2.jpg","sentence":"子どもが手品に釘づけ！\nスタンプ集めそっちのけ\n演じてたのは近所の会社の人\n私にはとても無理だけど\n来年も家族で応援しに来たい","account_id":"","account_name":"運営作成 ＋2 手品（家族でスタンプラリー）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"}]}</script>
+<script type="application/json" id="sampleFallback">{"mart":"sample_drop","source":"CULTURE_SNACK_DROP_投稿例集_v4（2026/11/12）","note":"運営作成の模範投稿（架空）。DROP.Coach（サンプル参照版）の比較材料。写真は json/sample_img/。line_roles は各行の役割（V2 チャット版の「完成イメージ」で表示。見たもの／誰と・きっかけ／心に残ったところ／気持ち／次にしたいこと）","record_count":8,"records":[{"artwork_id":"model-v4-1-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-1.jpg","image_file_path":"json/sample_img/1-1.jpg","sentence":"隣のビルの経理さん、週末は豆本作家！\nこんな人がいたなんて\n毎日通う品川を身近に感じる\n同僚にも教えたい！\n来年は私も出展してみたい","account_id":"","account_name":"運営作成 ①-1 豆本（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","心に残ったところ","気持ち","次にしたいこと","次にしたいこと"]},{"artwork_id":"model-v4-1-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/1-2.jpg","image_file_path":"json/sample_img/1-2.jpg","sentence":"会社員バンド、ボーカルは平日SE！\n働きながらここまでやれるんだ\n刺激もらった〜\n押し入れのギター、また弾きたくなる\n帰ったら弦を張り替えよう","account_id":"","account_name":"運営作成 ①-2 会社員バンド（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","心に残ったところ","気持ち","気持ち","次にしたいこと"]},{"artwork_id":"model-v4-2-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-1.jpg","image_file_path":"json/sample_img/2-1.jpg","sentence":"平日は銀行員、今日はカレー屋さん！\n並んでくれた人と辛さの話で盛り上がる\n同じビルなのに初めて話した\n来週ランチ行く約束\nまた屋台出したくなる","account_id":"","account_name":"運営作成 ②-1 カレー屋台（出展した社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","誰と・きっかけ","心に残ったところ","次にしたいこと","気持ち"]},{"artwork_id":"model-v4-2-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/2-2.jpg","image_file_path":"json/sample_img/2-2.jpg","sentence":"ランタンづくり、隣は近所の大学生\n不器用な私に教えてくれた\nひと回り下なのに意外と話が合う\n通勤中に会ったら声かけようかな\n品川に知り合いが増えた","account_id":"","account_name":"運営作成 ②-2 ランタンづくり（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","誰と・きっかけ","心に残ったところ","次にしたいこと","気持ち"]},{"artwork_id":"model-v4-3-1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-1.jpg","image_file_path":"json/sample_img/3-1.jpg","sentence":"部長がコーヒー淹れてた！\n「何が好き？」って聞かれた\n会社じゃ話したことなかった\n仕事以外の話、していいんだと思えた\nチームメンバーにも聞いてみたい","account_id":"","account_name":"運営作成 ③-1 部長のコーヒー（出展企業の社員）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","誰と・きっかけ","心に残ったところ","気持ち","次にしたいこと"]},{"artwork_id":"model-v4-3-2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/3-2.jpg","image_file_path":"json/sample_img/3-2.jpg","sentence":"企業ブースの社員さん、週末は落語家\n上司っぽい人が一番前で笑ってた\n趣味を応援しあえる職場っていいな\n私も社内で話してみたい\nまずは自分の趣味から","account_id":"","account_name":"運営作成 ③-2 社員の落語（来場者）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","見たもの","気持ち","次にしたいこと","次にしたいこと"]},{"artwork_id":"model-v4-p1","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p1.jpg","image_file_path":"json/sample_img/p1.jpg","sentence":"すぐ帰るつもりの仕事帰り\n焼き芋につられて会場をひと回り\nベンチで隣の人と「寒いですね」\n聞けば同じ会社の人だった\n品川の夜、ちょっと好きになる","account_id":"","account_name":"運営作成 ＋1 焼き芋（仕事帰りにふらっと）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["誰と・きっかけ","見たもの","誰と・きっかけ","心に残ったところ","気持ち"]},{"artwork_id":"model-v4-p2","post_collab_event_name":"culture-snack-2026","post_dated_at":"","post_date":"","image_file_path_thumbnail":"json/sample_img/p2.jpg","image_file_path":"json/sample_img/p2.jpg","sentence":"子どもが手品に釘づけ！\nスタンプ集めそっちのけ\n演じてたのは近所の会社の人\n私にはとても無理だけど\n来年も家族で応援しに来たい","account_id":"","account_name":"運営作成 ＋2 手品（家族でスタンプラリー）","gender":"","age_group":"","age_group_half":"","is_operation_member":true,"sample_note":"CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）","line_roles":["見たもの","見たもの","誰と・きっかけ","気持ち","次にしたいこと"]}]}</script>
 <script>
 "use strict";
 /* =====================================================================
@@ -204,6 +228,9 @@
    - v2.1（2026/11/13 テスト後）：ログイン必須（全員分を記録）／ひとことは「写真について」に変えて必須／
      「なにしてた？」のあとに「なにを？」を聞く／気持ち・どこが・このあとに自由記述欄／
      体験の点数（10 点満点）は体験を答えたあとに聞く／投稿文は AI が自動で作る（失敗時は画面で組み立て）
+   - v2.2：ひとことを送った直後に、裏で AI のヒントを 1 回だけ呼ぶ（待たせない）。「なにを？」に写真からの候補を出し、
+     途中で 1 回だけ「この人だけの問い」を聞く／体験の点数は「チャットの評価ではない」と明記／
+     見本は「完成イメージ」として、ひとことを書いたあとに自分で開けるようにした（材料の集まり具合と、行の役割つきの見本 1 件）
    - 2 問答えたら「ここで投稿文にする」でいつでも抜けられる
    - 気持ちはハッシュタグで複数選択（選んだ順に重み＝ソフト分類）。「どこが？」で要素も選ぶ
    - 文面は画面内ですぐ組み立てる（AI 待ちなし）。AI での仕上げは任意で 1 回だけ
@@ -216,7 +243,7 @@
    ※ V1 の GAS とは別。V1 の URL を入れないこと（V1 の GAS は variant "chat" を受け付けない）
    - URL に ?staff=1 を付けると、分析用の記録（タグ・重み・JSON）と、この端末の記録の CSV 保存が出る
 ===================================================================== */
-const APP_VERSION = "chat-v2.1 (2026-11-13)";
+const APP_VERSION = "chat-v2.2 (2026-11-13)";
 const CONFIG = {
   GAS_URL: "https://script.google.com/macros/s/AKfycbw4Z6_8PsnpD-rsyWM4j0spAWosP5wwALRy3reD6r8iShnCt0_Zioef3NEVkBx6ln457Q/exec",   // V2 仕上げ用 GAS（00_GAS/DROP_COACH2.0/DROP_COACH_GPT）
   LOG_URL: "https://script.google.com/macros/s/AKfycbyTHPDVzPHB76Xt8GmZaiW3q_i4x9H2fishpnrWn1TbMGFCGzYIgPqLAzOetsrNMVokEA/exec",   // V2 記録用 GAS（00_GAS/DROP_COACH2.0/DROP_COACH_LOG）
@@ -225,7 +252,8 @@ const CONFIG = {
   LOGIN_AT_START: true,       // GAS 設定済み・未ログインなら最初に 1 回だけ Name とパスワードを聞く
   ALLOW_NO_LOGIN: false,      // true にすると「ログインせずに使う（AI・記録なし）」を出す（全員分を記録する方針のため false）
   AUTO_AI: true,              // 投稿文の段階に入ったら自動で AI が投稿文を作る（失敗したら画面で組み立てた文面を使う）
-  AI_MAX: 2,                  // 1 セッションで AI を使う上限（つづきを答えたあとの作り直し分を含む）
+  AI_MAX: 2,                  // 1 セッションで投稿文を AI で作る上限（つづきを答えたあとの作り直し分を含む）
+  HINT_ON: true,              // ひとことを送った直後に、裏で AI のヒントを 1 回呼ぶ（「なにを？」の候補・この人だけの問い）
   EXIT_AFTER: 2,              // 何問答えたら「ここで投稿文にする」を出すか（ひとこと・選択の問いを数える。写真・気分・あなたについては数えない）
   ASK_MOOD: true,             // 体験の点数（10 点満点）を聞く（体験を答えたあとに聞く。記録の「気分」列に入る）
   ASK_PROFILE: true,          // 「あなたについて」を聞く（この端末で 1 回だけ。投稿者属性の分析用）
@@ -364,6 +392,7 @@ const ICON = {
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>',
   spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 12.5h8M8 16h5"/></svg>',
   open: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>'
 };
 
@@ -375,9 +404,10 @@ const RT = { busy: false, typing: false, rendered: 0, multi: [], free: null, fre
 
 function newSession() {
   return {
-    v: 21, sid: uid(), started: new Date().toISOString(), t0: now(),
+    v: 22, sid: uid(), started: new Date().toISOString(), t0: now(),
     msgs: [], cur: null, phase: "ask",
-    ans: { text1: "", mood: null, act: null, actDetail: "", feel: [], elem: [], who: null, whoDetail: "", next: [], profile: null },
+    ans: { text1: "", mood: null, act: null, actDetail: "", actDetailSrc: "", feel: [], elem: [], who: null, whoDetail: "", aiQ: "", next: [], profile: null },
+    hint: null, goalViews: [], goalSample: null,
     asked: [], done: [], skipped: [], order: {}, times: {}, early: false, noLogin: false,
     composed: "", final: "", base: "", chosen: "組み立て", edited: false, tagsOn: CONFIG.HASHTAGS_ON, tagOff: [],
     ai: null, aiText: "", aiUsed: false, aiCount: 0, aiOk: null, aiStale: false, aiError: "",
@@ -415,7 +445,13 @@ const STEPS = [
   { id: "who", kind: "single", opts: "who", q: () => "だれと過ごしましたか？" },
   { id: "whoDetail", kind: "text", max: CONFIG.MAX_DETAIL, when: () => !!(whoItem() && whoItem().detail),
     q: () => whoItem().detail.q, ph: () => whoItem().detail.ph },
-  { id: "mood", kind: "scale", count: false, when: () => CONFIG.ASK_MOOD, q: () => "ここまで答えてくれた体験は、10点満点で何点ですか？" },
+  // 写真とひとことから AI が作った「この人だけの問い」（ヒントが届いていて、ここまで来たときだけ）
+  { id: "aiQ", kind: "text", max: 40, when: () => !!(S.hint && S.hint.followup_q),
+    q: () => (hasPhoto() ? "写真を見て、ひとつだけ聞かせてください。" : "ひとつだけ聞かせてください。") + S.hint.followup_q,
+    ph: () => S.hint.followup_ph || "思ったままの言葉で" },
+  { id: "mood", kind: "scale", count: false, when: () => CONFIG.ASK_MOOD,
+    q: () => (S.ans.actDetail ? `「${S.ans.actDetail}」の体験そのものは` : "今日のその体験そのものは") + "、10点満点で何点ですか？",
+    sub: () => "※このチャットの点数ではありません" },
   { id: "next", kind: "multi", opts: "next", max: 2, freePh: "ほかにあれば自由に（例：友だちを誘って来る）",
     q: () => "このあと、どうしたいですか？（2つまで・自由に書いてもOK）" },
   { id: "profile", kind: "single", opts: "profile", count: false,
@@ -423,6 +459,10 @@ const STEPS = [
     q: () => "さいごに、あなたについて教えてください（この端末では1回だけ聞きます）" }
 ];
 const stepOf = id => STEPS.find(s => s.id === id);
+/* 記録に残す問いの名前（id → 日本語） */
+const STEP_LABEL = { login: "ログイン", photo: "写真", text1: "ひとこと", act: "なにしてた", actDetail: "なにを", feel: "気持ち", elem: "どこが",
+  who: "だれと", whoDetail: "どんな人", aiQ: "AIの問い", mood: "点数", next: "このあと", profile: "あなたについて" };
+const stepName = id => STEP_LABEL[id] || id || "";
 const applicable = st => !st.when || st.when();
 function nextStepAfter(id) {
   const i = id ? STEPS.findIndex(s => s.id === id) : -1;
@@ -488,7 +528,7 @@ async function ask(st) {
   if (st.opts) prepareOrder(st);
   setMultiFromAns(st);
   RT.free = null;
-  await bot(st.q());
+  await bot(st.q(), st.sub ? { sub: st.sub() } : {});
   if (g !== RT.gen) return;
   RT.busy = false;
   renderDock(); save();
@@ -544,6 +584,9 @@ function renderDock() {
   if (!st) { dock(""); return; }
   const exitOk = st.kind !== "login" && answeredCount() >= CONFIG.EXIT_AFTER && remainingSteps().length > 0;
   const exitHtml = exitOk ? `<div class="exit"><button type="button" class="lnk strong" id="dExit">ここで投稿文にする →</button></div>` : "";
+  // ひとことを書いたあとから「完成イメージ」を開ける（最初のひとことは見本に引きずられないよう、見せる前に聞く）
+  const topHtml = st.kind !== "login" && S.done.includes("text1")
+    ? `<div class="dock-top"><span>あと${remainingSteps().length}問</span><button type="button" class="goal-btn" id="dGoal">${ICON.eye}完成イメージを見る</button></div>` : "";
   const skipHtml = `<button type="button" class="lnk" id="dSkip">とばす</button>`;
   let html = "";
   if (st.kind === "login") {
@@ -552,7 +595,7 @@ function renderDock() {
     html = `<div class="row center"><button type="button" class="btn wide" id="dPhoto">${ICON.camera}写真をえらぶ</button><button type="button" class="btn ghost" id="dNoPhoto">写真なしで進む</button></div><div class="err" id="dErr"></div>`;
   } else if (st.kind === "text") {
     const max = st.max || 100;
-    html = `<div class="inrow"><textarea class="input" id="dIn" rows="1" maxlength="${max}" placeholder="${esc(st.ph ? st.ph() : "")}" enterkeyhint="send"></textarea><button type="button" class="send" id="dSend" aria-label="送る" disabled>${ICON.send}</button></div>
+    html = `${st.id === "actDetail" ? `<div class="suggest" id="dSuggest"></div>` : ""}<div class="inrow"><textarea class="input" id="dIn" rows="1" maxlength="${max}" placeholder="${esc(st.ph ? st.ph() : "")}" enterkeyhint="send"></textarea><button type="button" class="send" id="dSend" aria-label="送る" disabled>${ICON.send}</button></div>
       <div class="row">${st.required ? `<span class="hint" style="margin:0">ここは必ず書いてください（短くて大丈夫です）</span>` : skipHtml}<span class="cnt-sm" id="dCnt">0 / ${max}</span></div>${exitHtml}`;
   } else if (st.kind === "scale") {
     html = `<div class="scale">${Array.from({ length: 10 }, (_, i) => `<button type="button" data-v="${i + 1}" aria-label="${i + 1}">${i + 1}</button>`).join("")}</div>
@@ -570,7 +613,7 @@ function renderDock() {
       <div class="inrow" style="margin-top:10px"><input class="input" id="dFreeM" maxlength="${CONFIG.MAX_FREE}" placeholder="${esc(st.freePh || "ほかにあれば自由に")}（${CONFIG.MAX_FREE}字まで）" value="${esc(fv)}" enterkeyhint="done" /></div>
       <div class="row between">${skipHtml}<span class="hint" id="dMax">${st.max ? `選ぶのは${st.max}つまで` : ""}</span><button type="button" class="btn sm" id="dOk" ${n ? "" : "disabled"}>これでOK${n ? `（${n}）` : ""}</button></div>${exitHtml}`;
   }
-  dock(html);
+  dock(topHtml + html);
   bindDock(st);
 }
 function freeHtml() {
@@ -589,6 +632,7 @@ function bindDock(st) {
   const on = (id, fn) => { const el = $(id); if (el) el.addEventListener("click", fn); };
   on("dSkip", () => skipStep(st));
   on("dExit", exitEarly);
+  on("dGoal", openGoal);
   if (st.kind === "login") {
     bindLogin(async () => { markDone(st); me("ログインしました", { muted: true }); lockDock(); await advance(st.id); });
     on("dNoLogin", async () => { if (RT.busy || !CONFIG.ALLOW_NO_LOGIN) return; S.noLogin = true; markDone(st); me("ログインせずに使う", { muted: true }); lockDock(); await advance(st.id); });
@@ -607,11 +651,14 @@ function bindDock(st) {
       const v = st.multiline ? ta.value.replace(/\r\n?/g, "\n").replace(/\n{2,}/g, "\n").trim() : oneLine(ta.value);
       if (!v) return;
       if (st.id === "text1") S.ans.text1 = v.slice(0, st.max);
-      if (st.id === "actDetail") S.ans.actDetail = v.slice(0, st.max);
+      if (st.id === "actDetail") { S.ans.actDetail = v.slice(0, st.max); S.ans.actDetailSrc = ((S.hint && S.hint.what) || []).includes(S.ans.actDetail) ? "AI候補" : "自分で"; }
+      if (st.id === "aiQ") S.ans.aiQ = v.slice(0, st.max);
+      if (st.id === "text1") fireHint();   // 裏で AI のヒントを呼ぶ（待たない）
       if (st.id === "whoDetail") S.ans.whoDetail = v.slice(0, st.max);
       await answered(st, v);
     });
     if (st.id === "text1" && S.ans.text1) { ta.value = S.ans.text1; sync(); }
+    if (st.id === "actDetail") renderSuggest();
     if (!matchMedia("(pointer:coarse)").matches) ta.focus();
   }
   if (st.kind === "scale") {
@@ -685,6 +732,47 @@ async function pickSingle(st, o, label) {
   }
   if (st.id === "profile") { S.ans.profile = v; LS.set(CONFIG.KEYS.PROFILE, v); }
   await answered(st, label);
+}
+
+/* =====================================================================
+   ヒント（v2.2）：ひとことを送った直後に裏で 1 回だけ AI を呼ぶ。ユーザーは待たない
+   - what：「なにを？」の答えの候補（届いていれば、その問いでタップできる候補として出す）
+   - followup_q：この人だけの問い（届いていれば「どんな人？」のあとに 1 回だけ聞く。間に合わなければ聞かない）
+===================================================================== */
+async function fireHint() {
+  if (!CONFIG.HINT_ON || !gasOn() || !S || (S.hint && S.hint.status !== "待ち") || RT.hintBusy) return;
+  const g = RT.gen, sid = S.sid, t0 = now();
+  RT.hintBusy = true;
+  S.hint = { status: "待ち", what: [], act: "", photo_summary: "", followup_q: "", followup_ph: "" }; save();
+  try {
+    if (!getToken(CONFIG.KEYS.TOKEN) && !await autoLogin()) { S.hint.status = "ログインなし"; save(); return; }
+    const body = { action: "hint", variant: "chat", token: getToken(CONFIG.KEYS.TOKEN),
+      context: { event: CONFIG.EVENT, sample_total: SAMPLES.length }, target: { text: S.ans.text1 } };
+    if (PHOTO.imgAi) body.target.image_data = PHOTO.imgAi;
+    const res = await post(body, CONFIG.GAS_URL);
+    if (g !== RT.gen || !S || S.sid !== sid) return;
+    const sec = Math.round((now() - t0) / 100) / 10;
+    S.hint = res.ok && res.result
+      ? { status: "OK", cached: !!res.cached, elapsed_sec: sec, ...res.result }
+      : { status: res.code || "ERROR", message: res.message || "", elapsed_sec: sec, what: [], act: "", photo_summary: "", followup_q: "", followup_ph: "" };
+    save();
+    if (S.phase === "ask" && S.cur === "actDetail") renderSuggest();
+    if (S.phase === "ask") renderProgress();
+  } finally { RT.hintBusy = false; }
+}
+/** 「なにを？」の問いに、ヒントの候補を出す（入力欄の上。タップで入力欄に入り、書き直せる） */
+function renderSuggest() {
+  const box = $("dSuggest"); if (!box) return;
+  const h = S.hint;
+  if (h && h.status === "待ち") { box.innerHTML = `<span class="sg-wait"><span class="spin sm"></span>${hasPhoto() ? "写真から" : ""}候補をさがしています（待たずに書いてOK）</span>`; syncDockH(); return; }
+  const what = (h && h.what) || [];
+  if (!what.length) { box.innerHTML = ""; syncDockH(); return; }
+  box.innerHTML = `<span class="sg-lab">${hasPhoto() ? "写真から" : "ひとことから"}：</span>${what.map(w => `<button type="button" class="chip sg" data-v="${esc(w)}">${esc(w)}</button>`).join("")}`;
+  box.querySelectorAll("[data-v]").forEach(b => b.addEventListener("click", () => {
+    const ta = $("dIn"); if (!ta) return;
+    ta.value = b.dataset.v; ta.dispatchEvent(new Event("input")); ta.focus();
+  }));
+  syncDockH();
 }
 
 /* ---------- 写真 ---------- */
@@ -766,6 +854,7 @@ function composeText() {
     if (ePhrase) lines.push(t1Has ? `とくに${ePhrase}！` : fill(tf.withE, ePhrase));
     else if (!t1Has) lines.push(fill(tf.ex, ""));
   }
+  if (A.aiQ) lines.push(A.aiQ.replace(/[。．]+$/g, ""));   // AI の問いへの答え（本人の言葉）
   A.next.forEach(n => { const it = item("next", n.id); if (!it || it.neutral) return; const s = it.free ? n.label : it.say; if (s) lines.push(s.replace("{v}", n.label)); });
   return uniq(lines.map(s => s.trim()).filter(Boolean)).slice(0, 6).join("\n");
 }
@@ -882,7 +971,7 @@ function renderComposeDock() {
     </div>
     <div class="row center">
       ${S.early && rest.length ? `<button type="button" class="lnk" id="dResume">つづきを答える（あと${rest.length}問）</button>` : ""}
-      <button type="button" class="lnk" id="dSamples">見本を見る</button>
+      <button type="button" class="lnk" id="dSamples">完成イメージ（見本）</button>
       <button type="button" class="lnk" id="dRestart">${S.copied ? "次の投稿を作る" : "最初から"}</button>
     </div>`);
   $("dCopy").addEventListener("click", copyFinal);
@@ -992,6 +1081,7 @@ function qaList() {
   if (ok("feel") && A.feel.length) out.push({ q: "どんな気持ちになりましたか？（選んだ順）", a: A.feel.map(f => plainLabel(f.label)).join("、") });
   if (ok("elem") && A.elem.length && topFeel()) out.push({ q: q("elem"), a: A.elem.map(e => e.label).join("、") });
   if (ok("who") && A.who) out.push({ q: q("who"), a: A.who.label + (A.whoDetail ? `（${A.whoDetail}）` : "") });
+  if (ok("aiQ") && A.aiQ && S.hint && S.hint.followup_q) out.push({ q: S.hint.followup_q, a: A.aiQ });
   if (ok("mood") && A.mood) out.push({ q: "この体験は10点満点で何点？（文面には書かない）", a: A.mood + "点" });
   if (ok("next") && A.next.length) out.push({ q: q("next"), a: A.next.map(n => n.label).join("、") });
   return out;
@@ -1099,12 +1189,15 @@ function buildRecord(end) {
     schema: "drop_chat_v2", app_version: APP_VERSION, session_id: S.sid, end,
     started_at: S.started, ended_at: new Date().toISOString(), duration_sec: r2((now() - S.t0) / 1000),
     answered: answeredCount(), asked: S.asked.filter(id => { const st = stepOf(id); return st && st.count !== false; }).length,
-    last_step: S.phase === "compose" ? (S.early ? "途中で投稿文へ（" + lastAsked + "）" : "最後まで") : lastAsked,
-    early: S.early, has_photo: hasPhoto(), mood_meaning: "体験の点数（10点満点）",
+    last_step: S.phase === "compose" ? (S.early ? "途中で投稿文へ（" + stepName(lastAsked) + "）" : "最後まで") : stepName(lastAsked),
+    early: S.early, has_photo: hasPhoto(), mood_meaning: "体験そのものの点数（10点満点。チャットの評価ではない）",
+    hint: S.hint ? { status: S.hint.status, elapsed_sec: S.hint.elapsed_sec, cached: !!S.hint.cached, what: S.hint.what || [], act: S.hint.act || "", photo_summary: S.hint.photo_summary || "", followup_q: S.hint.followup_q || "" } : { status: "" },
+    goal_views: S.goalViews || [],
     answers: {
       text1: A.text1, mood: A.mood,
       // 「した」列に「なにを」も見えるよう、label に入れる（base＝選択肢、detail＝なにを）
-      act: A.act ? [{ id: A.act.id, label: A.act.label + (A.actDetail ? `（${A.actDetail}）` : ""), base: A.act.label, detail: A.actDetail || "" }] : [],
+      act: A.act ? [{ id: A.act.id, label: A.act.label + (A.actDetail ? `（${A.actDetail}）` : ""), base: A.act.label, detail: A.actDetail || "", detail_source: A.actDetail ? A.actDetailSrc || "" : "" }] : [],
+      ai_q: { q: (S.hint && S.hint.followup_q) || "", a: A.aiQ || "" },
       feel: weighted(A.feel, "feel"), elem: weighted(A.elem, "elem"),
       who: A.who ? { id: A.who.id, label: A.who.label, detail: A.whoDetail } : { id: "", label: "", detail: "" },
       next: weighted(A.next, "next"),
@@ -1208,9 +1301,51 @@ async function loadSamples() {
   // file:// で直接開いたときなど fetch できないときは、HTML 内の控え（#sampleFallback）を使う
   try { return JSON.parse($("sampleFallback").textContent); } catch (e) { return { records: [] }; }
 }
-function openSamples() {
-  $("sampleList").innerHTML = SAMPLES.length ? SAMPLES.map(p => `<div class="sample">${p.img ? `<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : ""}<div><b>${esc(p.n.replace(/^運営作成\s*/, ""))}</b><p>${esc(p.s)}</p></div></div>`).join("") : '<p class="lead">見本を読み込めませんでした</p>';
+/* =====================================================================
+   完成イメージ（v2.2）
+   - ひとことを書く前は開けない（最初のひとことが見本に引きずられないように）
+   - 開くと：あなたの投稿の「材料」の集まり具合（行の役割ごと）＋ 行の役割つきの見本 1 件（セッション中は同じもの）
+   - 「ほかの見本も見る」で残りも見られる。見本のラベル（①-1 など）は出さない
+   - 開いたタイミングは記録する（見本に寄った投稿かを後で確かめるため）
+===================================================================== */
+const ROLES = [
+  { role: "見たもの",         q: "ひとこと・なにを？", done: () => !!S.ans.text1, val: () => [S.ans.text1, S.ans.actDetail].filter(Boolean).join("／") },
+  { role: "誰と・きっかけ",   q: "だれと？",           done: () => !!S.ans.who, val: () => S.ans.who ? S.ans.who.label + (S.ans.whoDetail ? `（${S.ans.whoDetail}）` : "") : "" },
+  { role: "心に残ったところ", q: "どこが？",           done: () => S.ans.elem.length > 0 || !!S.ans.aiQ, val: () => S.ans.elem.map(e => e.label).concat(S.ans.aiQ ? [S.ans.aiQ] : []).join("、") },
+  { role: "気持ち",           q: "どんな気持ち？",     done: () => S.ans.feel.length > 0, val: () => S.ans.feel.map(f => f.label).join(" ") },
+  { role: "次にしたいこと",   q: "このあと？",         done: () => S.ans.next.length > 0, val: () => S.ans.next.map(n => n.label).join("、") }
+];
+function openSamples() { openGoal(); }
+function openGoal() {
+  if (!S || !S.done.includes("text1")) { toast("最初のひとことを書いたあとで見られます"); return; }
+  if (!SAMPLES.length) { toast("見本を読み込めませんでした"); return; }
+  if (!S.goalSample || !SAMPLES.some(p => p.id === S.goalSample)) S.goalSample = SAMPLES[Math.floor(Math.random() * SAMPLES.length)].id;
+  const doneRoles = new Set(ROLES.filter(r => r.done()).map(r => r.role));
+  const exHtml = p => `<div class="ex">${p.img ? `<img src="${esc(p.img)}" alt="" loading="lazy" onerror="this.style.display='none'">` : ""}<div class="ex-lines">${
+      p.s.split("\n").map((line, i) => { const r = (p.roles || [])[i] || ""; return `<div class="exl">${r ? `<em class="${doneRoles.has(r) ? "on" : ""}">${esc(r)}</em>` : ""}<span>${esc(line)}</span></div>`; }).join("")
+    }</div></div>`;
+  const main = SAMPLES.find(p => p.id === S.goalSample), others = SAMPLES.filter(p => p.id !== S.goalSample);
+  const nDone = doneRoles.size;
+  $("modalTitle").textContent = "完成イメージ";
+  $("sheetBody").innerHTML = `
+    <p class="lead">答えてもらった言葉で、こんな投稿をつくります。問いは、この5つの「材料」を集めるためのものです。全部そろわなくても大丈夫です。</p>
+    <div class="mat-hd">あなたの投稿の材料（${nDone} / ${ROLES.length}）</div>
+    <div class="mat">${ROLES.map(r => { const d = r.done(); return `<div class="mat-row${d ? " done" : ""}"><i>${d ? "✓" : ""}</i><b>${esc(r.role)}</b><span>${d ? esc(r.val()) : `まだ（${esc(r.q)}）`}</span></div>`; }).join("")}</div>
+    <div class="mat-hd">見本（運営が作った例・架空）</div>
+    ${exHtml(main)}
+    <p class="lead small">紫の札は、あなたの材料がそろっている役割です。言い回しはまねしなくて大丈夫です。</p>
+    <button type="button" class="lnk" id="gMore">ほかの見本も見る（${others.length}件）</button>
+    <div id="gMoreList" hidden>${others.map(exHtml).join("")}</div>
+    <div class="row center"><button type="button" class="btn" id="gBack">${S.phase === "compose" ? "投稿文にもどる" : "チャットにもどる"}</button></div>`;
+  S.goalViews = (S.goalViews || []).concat([{ step: S.phase === "compose" ? "投稿文" : stepName(S.cur), at_sec: Math.round((now() - S.t0) / 1000), shown: S.goalSample, more: false, roles_done: nDone }]);
+  save();
+  $("gMore").addEventListener("click", () => {
+    $("gMoreList").hidden = false; $("gMore").hidden = true;
+    const v = S.goalViews[S.goalViews.length - 1]; if (v) v.more = true; save();
+  });
+  $("gBack").addEventListener("click", closeModal);
   $("modal").classList.add("show"); $("modal").setAttribute("aria-hidden", "false");
+  $("sheetBody").scrollTop = 0; $("modal").querySelector(".sheet").scrollTop = 0;
 }
 function closeModal() { $("modal").classList.remove("show"); $("modal").setAttribute("aria-hidden", "true"); }
 $("modalX").addEventListener("click", closeModal);
@@ -1250,12 +1385,13 @@ async function start() {
 function warmLogin() { if (anyGas() && getCreds() && !hasTokens()) autoLogin().catch(() => {}); }
 function restore() {
   const s = LS.get(CONFIG.KEYS.SESSION, null);
-  if (!s || s.v !== 21 || !s.sid || now() - (s.t0 || 0) > CONFIG.RESUME_HOURS * 3600e3) return false;
+  if (!s || s.v !== 22 || !s.sid || now() - (s.t0 || 0) > CONFIG.RESUME_HOURS * 3600e3) return false;
   if (s.copied) return false;   // コピーまで終わったセッションは新しく始める
   S = s; S.msgs = (S.msgs || []).filter(m => m && m.who);
   const p = SS.get(CONFIG.KEYS.PHOTO, null);
   if (p && p.sid === S.sid && /^data:image\/jpeg;base64,/.test(p.img || "")) PHOTO = p;
   RT.rendered = S.msgs.length; renderMsgs(); renderStaff(); warmLogin();
+  if (S.hint && S.hint.status === "待ち") { S.hint = null; if (S.done.includes("text1") && S.phase === "ask") fireHint(); }
   if (S.phase === "compose") {
     if (!S.msgs.some(m => m.card === "compose")) { lockDock(); finishCompose(false); return true; }   // AI の途中で閉じた場合
     renderComposeDock(); return true;
@@ -1273,7 +1409,8 @@ function restore() {
   const json = await loadSamples();
   SAMPLES = (Array.isArray(json) ? json : (json.records || [])).map(r => ({
     id: r.artwork_id, n: r.account_name || "", s: String(r.sentence || "").trim(),
-    img: r.image_file_path || r.image_file_path_thumbnail || ""
+    img: r.image_file_path || r.image_file_path_thumbnail || "",
+    roles: Array.isArray(r.line_roles) ? r.line_roles : []
   })).filter(p => p.s);
   if (!restore()) start();
 })();

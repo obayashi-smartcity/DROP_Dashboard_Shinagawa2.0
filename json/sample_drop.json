@@ -1,7 +1,7 @@
 {
  "mart": "sample_drop",
  "source": "CULTURE_SNACK_DROP_投稿例集_v4（2026/11/12）",
- "note": "運営作成の模範投稿（架空）。DROP.Coach（サンプル参照版）の比較材料。写真は json/sample_img/",
+ "note": "運営作成の模範投稿（架空）。DROP.Coach（サンプル参照版）の比較材料。写真は json/sample_img/。line_roles は各行の役割（V2 チャット版の「完成イメージ」で表示。見たもの／誰と・きっかけ／心に残ったところ／気持ち／次にしたいこと）",
  "record_count": 8,
  "records": [
   {
@@ -18,7 +18,14 @@
    "age_group": "",
    "age_group_half": "",
    "is_operation_member": true,
-   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"
+   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）",
+   "line_roles": [
+    "見たもの",
+    "心に残ったところ",
+    "気持ち",
+    "次にしたいこと",
+    "次にしたいこと"
+   ]
   },
   {
    "artwork_id": "model-v4-1-2",
@@ -34,7 +41,14 @@
    "age_group": "",
    "age_group_half": "",
    "is_operation_member": true,
-   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"
+   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）",
+   "line_roles": [
+    "見たもの",
+    "心に残ったところ",
+    "気持ち",
+    "気持ち",
+    "次にしたいこと"
+   ]
   },
   {
    "artwork_id": "model-v4-2-1",
@@ -50,7 +64,14 @@
    "age_group": "",
    "age_group_half": "",
    "is_operation_member": true,
-   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"
+   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）",
+   "line_roles": [
+    "見たもの",
+    "誰と・きっかけ",
+    "心に残ったところ",
+    "次にしたいこと",
+    "気持ち"
+   ]
   },
   {
    "artwork_id": "model-v4-2-2",
@@ -66,7 +87,14 @@
    "age_group": "",
    "age_group_half": "",
    "is_operation_member": true,
-   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"
+   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）",
+   "line_roles": [
+    "見たもの",
+    "誰と・きっかけ",
+    "心に残ったところ",
+    "次にしたいこと",
+    "気持ち"
+   ]
   },
   {
    "artwork_id": "model-v4-3-1",
@@ -82,7 +110,14 @@
    "age_group": "",
    "age_group_half": "",
    "is_operation_member": true,
-   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"
+   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）",
+   "line_roles": [
+    "見たもの",
+    "誰と・きっかけ",
+    "心に残ったところ",
+    "気持ち",
+    "次にしたいこと"
+   ]
   },
   {
    "artwork_id": "model-v4-3-2",
@@ -98,7 +133,14 @@
    "age_group": "",
    "age_group_half": "",
    "is_operation_member": true,
-   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"
+   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）",
+   "line_roles": [
+    "見たもの",
+    "見たもの",
+    "気持ち",
+    "次にしたいこと",
+    "次にしたいこと"
+   ]
   },
   {
    "artwork_id": "model-v4-p1",
@@ -114,7 +156,14 @@
    "age_group": "",
    "age_group_half": "",
    "is_operation_member": true,
-   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"
+   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）",
+   "line_roles": [
+    "誰と・きっかけ",
+    "見たもの",
+    "誰と・きっかけ",
+    "心に残ったところ",
+    "気持ち"
+   ]
   },
   {
    "artwork_id": "model-v4-p2",
@@ -130,7 +179,14 @@
    "age_group": "",
    "age_group_half": "",
    "is_operation_member": true,
-   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）"
+   "sample_note": "CULTURE SNACK×みんまちDROP 投稿例集 v4 の模範投稿（架空・運営作成）",
+   "line_roles": [
+    "見たもの",
+    "見たもの",
+    "誰と・きっかけ",
+    "気持ち",
+    "次にしたいこと"
+   ]
   }
  ]
 }
