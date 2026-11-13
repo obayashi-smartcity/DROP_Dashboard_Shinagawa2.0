@@ -1,5 +1,5 @@
 /**
- * DROP Coach V2（チャット版）— 投稿文の仕上げ用 Google Apps Script（Web アプリ）  v9（2026/11/13・チャット画面 v3 用）
+ * DROP Coach V2（チャット版）— 投稿文の仕上げ用 Google Apps Script（Web アプリ）  v9.1（2026/11/13・チャット画面 v3.2 用）
  * ------------------------------------------------------------
  * V2.0 リポジトリ（DROP_Dashboard_Shinagawa2.0）の drop_coach_chat.html（チャット）から呼ばれる。
  * ★ V1（DROP_Dashboard_Shinagawa1.0）の GAS とは別のプロジェクトとして新しく作り、別にデプロイすること。
@@ -14,12 +14,15 @@
  *   - variant は "chat" のみ（with_sample / no_sample・posted モード・PV/いいね・目的 goal は廃止）
  *   - プロンプトは 1 ファイル（PROMPT_URL_CHAT）。共通＋種類別の分割はやめた
  *   - 出力を軽くした（改善アクション・参考投稿の傾向・問いなどを廃止）→ 応答が速くなる
- *     result = { category:{code,label}, soft:{c1,c2,c3,att}, act, content[], space[], sentiment, level, w5h, rewrite, headline, photo:{match,summary}, caveats }
+ *     result = { category:{code,label}, soft:{c1,c2,c3,att}, act, content[], space[], sentiment, elements:{what,who,why,change,next}, level, rewrite, headline, photo:{match,summary}, caveats }
  *   - soft（ソフト分類）を追加：①②③・街への愛着のサインの強さを 0〜1 で返す（2026/11/13 定例「ハード分類でなくソフト分類」）
  *   - 画像は利用者の写真（data URL）と、任意で見本投稿の写真（data URL）だけ。GAS から外部 URL の画像は取りに行かない
  *
  * ■ v9 の変更（2026/11/13・チャット画面 v3 用）
- *   - hint の出力を変更：subject（話題）・why_options（「どこがよかった？」の写真からの候補）・act・photo_summary・covered（ひとことに書かれているもの）
+ *   - hint の出力を変更：subject（話題）・why_options（「どこが」の問いに出す写真からの候補）
+ * ■ v9.1 の変更（2026/11/13）hint の出力を subject・why_options の 2 つだけに（act・photo_summary・covered は coach と重複していたので削除）。
+ *   coach の w5h（文字列）を elements（何を・誰の立場・なぜ・変化・次の一歩 を 0〜2 で）に置きかえ（分析に使える投稿かを数で見るため）。
+ *   プロンプトは drop_coach_hint.md v10・drop_coach_chat.md v10.1 を使う
  *   - coach の出力に分析用の act（行動）・content（コンテンツ）・space（空間）・sentiment（感情の向き -1〜1）を追加
  *   - プロンプトは prompt/drop_coach_chat.md・drop_coach_hint.md の v9 を使う（画面 v3・GAS v9・プロンプト v9 はそろえて更新すること）
  *   - subject が 12 字を超えるときは空にする（問いの言い方が不自然になるため。画面の読み取りに任せる）。投稿文から # タグを除いたあとの行頭の空白も除く
@@ -42,7 +45,7 @@
  *     → { ok:true, cached, elapsed_ms, model, prompt_version, generated_at, images_used, images_note, result:{…} }
  *   { "action":"hint", "token":"...", "variant":"chat", "context":{…},
  *     "target":{ "text":"最初のひとこと", "image_data":"data:…"(任意) } }
- *     → { ok:true, cached, elapsed_ms, model, prompt_version, result:{ subject:"コーヒー", why_options:[…], act:"eat", photo_summary:"…", covered:{ who, why, feel, next } } }
+ *     → { ok:true, cached, elapsed_ms, model, prompt_version, result:{ subject:"コーヒー", why_options:[…] } }
  *   エラー → { ok:false, code:"AUTH|LOCKED|LIMIT|BUSY|BAD_REQUEST|CONFIG|AI|SERVER", message:"..." }
  *
  * ■ スクリプトプロパティ
@@ -76,7 +79,7 @@ const AZURE_MODEL = {
   api_version: '2025-04-01-preview',
   secret: 'AZURE_API_KEY_LUNA'
 };
-const SERVICE_VERSION = 9;
+const SERVICE_VERSION = 9.1;
 const RAW_GITHUB_BASE = 'https://raw.githubusercontent.com';
 const DEFAULTS = {
   REASONING_EFFORT: 'none',
@@ -96,7 +99,7 @@ const DEFAULTS = {
 };
 const CACHE_MAX_SEC = 21600;
 const FAIL_WINDOW_SEC = 900;
-const KEY = { FAIL: 'chat_auth_fail', PROMPT: 'chat_prompt_v9_', TOKEN: 'chat_tok_', RESULT: 'chat_res9_', HINT: 'chat_hint9_', QUOTA: 'chat_count_' };
+const KEY = { FAIL: 'chat_auth_fail', PROMPT: 'chat_prompt_v9_', TOKEN: 'chat_tok_', RESULT: 'chat_res91_', HINT: 'chat_hint91_', QUOTA: 'chat_count_' };
 const LIMITS = { ANSWERS: 10, Q: 100, A: 150, WORKING: 400, CAVEATS: 2, NAME: 40, CONTEXT: 60 };
 const LEVELS = ['低', '中', '高'];
 const MATCHES = ['一致', '一部一致', '不一致'];
@@ -110,6 +113,7 @@ const CATEGORIES = {
 const SOFT_KEYS = ['c1', 'c2', 'c3', 'att'];
 /* ヒントの行動（画面の「なにをしていましたか？」の選択肢 id と同じ） */
 const ACTS = ['watch', 'eat', 'make', 'buy', 'talk', 'host', 'stroll'];
+const ELEMENT_KEYS = ['what', 'who', 'why', 'change', 'next'];   // 何を・誰の立場・なぜ・変化・次の一歩
 const DATA_URL_RE = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/;
 
 class AppError extends Error {
@@ -282,7 +286,7 @@ function handleCoach_(req) {
 /* ============================== ヒント（v8.1） ============================== */
 /**
  * 写真とひとことから、チャットの問いを手伝う材料を作る。画面はユーザーを待たせずに裏で呼ぶ（失敗しても画面は止まらない）
- * result（v9）= { subject（話題）, why_options（「どこがよかった？」の写真からの候補 最大 3）, act（不明なら ""）, photo_summary, covered:{ who, why, feel, next } }
+ * result（v9.1）= { subject（話題）, why_options（「どこが」の問いに「写真から」として出す候補 最大 3） }
  */
 function handleHint_(req) {
   const t0 = Date.now();
@@ -329,18 +333,14 @@ function handleHint_(req) {
   payload.elapsed_ms = Date.now() - t0;
   return json_(payload);
 }
-function normalizeHint_(data, hasImage) {
+function normalizeHint_(data) {
   const d = data && typeof data === 'object' ? data : {};
   const one = (v, n) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, n) : '');
   const clean = v => v.replace(/[#＃「」『』。、！!？?]/g, '').trim();
-  const cv = d.covered && typeof d.covered === 'object' ? d.covered : {};
   const why = Array.isArray(d.why_options) ? [...new Set(d.why_options.map(x => clean(one(x, 12))).filter(Boolean))].slice(0, 3) : [];
   return {
     subject: (s => (s.length > 12 ? '' : s))(clean(one(d.subject, 40))),   // 長すぎる話題は問いの言い方が不自然になるので使わない（画面の読み取りに任せる）
-    why_options: why,
-    act: ACTS.indexOf(d.act) >= 0 ? d.act : '',
-    photo_summary: hasImage ? one(d.photo_summary, 40) : '',
-    covered: { who: cv.who === true, why: cv.why === true, feel: cv.feel === true, next: cv.next === true }
+    why_options: why
   };
 }
 
@@ -469,7 +469,7 @@ function normalizeResult_(data, hasTargetImage) {
     space: nouns(d.space, 2),
     sentiment: isFinite(sent) ? Math.round(Math.min(1, Math.max(-1, sent)) * 100) / 100 : 0,
     level: LEVELS.indexOf(d.level) >= 0 ? d.level : '',
-    w5h: text(d.w5h),
+    elements: ELEMENT_KEYS.reduce((o, k) => { const v = Number(d.elements && d.elements[k]); o[k] = v === 1 || v === 2 ? v : 0; return o; }, {}),
     // ハッシュタグは画面が付けるので、AI が付けてしまった行末のタグは外す
     rewrite: text(d.rewrite).replace(/[ \t　]*[#＃][^\s#＃]+/g, '').replace(/^[ \t　]+|[ \t　]+$/gm, '').replace(/\n{2,}/g, '\n').trim(),
     headline: text(d.headline),
@@ -542,7 +542,7 @@ const OUTPUT_SCHEMA = (() => {
     type: 'object',
     additionalProperties: false,
     // 出力順＝考える順（文面を整えてから、その文面で判定する）
-    required: ['rewrite', 'category', 'soft', 'act', 'content', 'space', 'sentiment', 'w5h', 'level', 'photo', 'headline', 'caveats'],
+    required: ['rewrite', 'category', 'soft', 'act', 'content', 'space', 'sentiment', 'elements', 'level', 'photo', 'headline', 'caveats'],
     properties: {
       rewrite: str,
       category: { type: 'string', enum: Object.keys(CATEGORIES) },
@@ -555,7 +555,12 @@ const OUTPUT_SCHEMA = (() => {
         required: SOFT_KEYS,
         properties: { c1: { type: 'number' }, c2: { type: 'number' }, c3: { type: 'number' }, att: { type: 'number' } }
       },
-      w5h: str,
+      // 分析に使える投稿か：5 つの要素がどこまで具体的に書けているか（0＝無い／1＝あいまい／2＝具体的）
+      elements: {
+        type: 'object', additionalProperties: false,
+        required: ELEMENT_KEYS,
+        properties: ELEMENT_KEYS.reduce((o, k) => { o[k] = { type: 'integer', enum: [0, 1, 2] }; return o; }, {})
+      },
       level: { type: 'string', enum: LEVELS },
       photo: {
         type: 'object', additionalProperties: false,
@@ -568,20 +573,14 @@ const OUTPUT_SCHEMA = (() => {
   };
 })();
 
+// v9.1：画面が使う 2 つだけにした（行動・写真の要約・ひとことに書かれたものは、投稿文の読み取り（coach）で取るので重複していた）。出力が短くなり、ヒントが早く届く
 const HINT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['subject', 'why_options', 'act', 'photo_summary', 'covered'],
+  required: ['subject', 'why_options'],
   properties: {
     subject: { type: 'string' },
-    why_options: { type: 'array', items: { type: 'string' } },
-    act: { type: 'string', enum: ACTS.concat(['']) },
-    photo_summary: { type: 'string' },
-    covered: {
-      type: 'object', additionalProperties: false,
-      required: ['who', 'why', 'feel', 'next'],
-      properties: { who: { type: 'boolean' }, why: { type: 'boolean' }, feel: { type: 'boolean' }, next: { type: 'boolean' } }
-    }
+    why_options: { type: 'array', items: { type: 'string' } }
   }
 };
 

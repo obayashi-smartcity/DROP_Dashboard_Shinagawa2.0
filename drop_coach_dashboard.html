@@ -298,16 +298,23 @@
       <div class="card c4"><h2>話題（ひとことから）</h2><p class="why">ひとことの話題（AI のヒント → 画面の読み取り）。</p><div id="subjects"></div></div>
       <div class="card c4"><h2>投稿の材料の数</h2><p class="why">投稿文に入った材料（ひとこと＋だれと・どこが・気持ち・このあと）の数。</p><div id="richness"></div></div>
       <div class="card c4"><h2>属性</h2><p class="why">「あなたについて」の答え（端末ごとに 1 回）。</p><div id="profile"></div></div>
+      <div class="card c6"><h2>今日の発見（任意）</h2><p class="why">最低限の問いのあとに聞く任意の問い。投稿の「気づき」の行になる（例：こんな人がいたなんて）。</p><div id="finds"></div></div>
+      <div class="card c6"><h2>その人のふだん（任意）</h2><p class="why">作った人・話した人がふだん何をしている人か。「平日は〇〇、今日は〇〇」のギャップ（B 面）の手がかり。</p><div id="faces"></div></div>
+
+      <div class="sec">2'. チャットの使いごこち（コピーのあとに任意で 5 段階）</div>
+      <div class="card c5"><h2>使いごこち（5 段階）</h2><p class="why">このチャット（投稿づくり）について。イベントの満足度ではありません。</p><div id="rating"></div></div>
+      <div class="card c7"><h2>運営へのコメント</h2><p class="why">使いごこちを答えた人が、任意で書いたひとこと（新しい順）。</p><div id="comments"></div></div>
 
       <div class="sec">3. つながり（共起ネットワーク）</div>
       <div class="card c12">
         <h2>いっしょに選ばれたもの</h2>
-        <p class="why">同じ投稿でいっしょに出てきたもの同士を線でつないでいます（人 → コンテンツ → 空間 → 感情 → 意向）。丸を押すと、そのノードとよくいっしょに出るものを右に出します。「出やすさ」は偶然に比べて何倍いっしょに出るか（1 より大きいほど結びつきが強い）。</p>
+        <p class="why">同じ投稿でいっしょに出てきたもの同士を線でつないでいます（人 → コンテンツ → 空間 → 感情 → 発見 → 意向）。丸を押すと、そのノードとよくいっしょに出るものを右に出します。「出やすさ」は偶然に比べて何倍いっしょに出るか（1 より大きいほど結びつきが強い）。</p>
         <div class="net-tools"><label>線を出す最小の回数 <input type="range" id="netMin" min="1" max="10" value="2" /> <b id="netMinV">2</b> 回</label><span id="netInfo"></span><button class="btn" id="netCsv" type="button">線の一覧を CSV で保存</button></div>
         <div class="net-wrap"><div class="net-scroll" id="net"></div><div class="net-side" id="netSide"></div></div>
       </div>
 
       <div class="sec">4. KPI（ソフト分類）と効果の見方</div>
+      <div class="card c12"><h2>分析に使える投稿か（5 つの要素）</h2><p class="why">AI が投稿文から読み取った「何を・誰の立場・なぜ・変化・次の一歩」の具体さ（0＝無い／1＝あいまい／2＝具体的）。「分析に使える」＝何を・なぜが具体的、誰の立場が書けていて、変化か次の一歩がある投稿。</p><div id="elements"></div></div>
       <div class="card c6"><h2>KPI のソフト分類（平均）</h2><p class="why">本人の答えから計算した分類と、AI が投稿文から読み取った分類の比較。</p><div id="soft"></div></div>
       <div class="card c6"><h2>本人の答えと AI の読み取りの一致</h2><p class="why">いちばん大きい KPI が、AI の分類と同じだったか。ずれが多い KPI は、選択肢の重みか AI の指示を見直します。</p><div id="agree"></div></div>
       <div class="card c6"><h2>コーチの関与で比べる</h2><p class="why">効果測定では関与の段階を分けて見ます（AI が整えた文だけで結論を出さない）。</p><div id="levels"></div></div>
@@ -323,11 +330,11 @@
     </div>
   </main>
   <section id="setPane" hidden></section>
-  <footer>DROP. Coach dashboard v1.1（2026-11-13）— 記録用 GAS（DROP_COACH_LOG v8）の chat_v3 シートの列名で読み込みます。同じセッション ID の行は、いちばん新しい行を使います（コピーした・投稿文まで行ったかは全行から判定）。</footer>
+  <footer>DROP. Coach dashboard v1.2（2026-11-13）— 記録用 GAS（DROP_COACH_LOG v8）の chat_v3 シートの列名で読み込みます。同じセッション ID の行は、いちばん新しい行を使います（コピーした・投稿文まで行ったかは全行から判定）。</footer>
 </div>
 <div id="tip" role="status"></div>
 <!-- チャットの選択肢と重みの初期値（json/coach_settings_default.json と同じ。チャットの HTML にも同じものが入っている） -->
-<script type="application/json" id="defaultSettings">{"schema":"drop_coach_settings_v1","note":"初期値。運営は分析画面（drop_coach_dashboard.html）の「チャットの設定」で変更・保存する。保存した設定は記録用 GAS に入り、全員のチャットに反映される","rank":{"feel":[1,0.6,0.45,0.35],"why":[1,0.75,0.5,0.25],"next":[1,0.8]},"why_q_default":"{話題}の、とくに印象に残ったのは、どこですか？","feel":[{"id":"oishii","label":"おいしい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"{話題}の、どこがおいしかったですか？","targets":[{"label":"味","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"香り","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"見た目","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"作った人のこだわり","layer":"人","w":{"c1":0.2,"c2":0.3,"c3":0,"att":0}},{"label":"食べた場所の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"tanoshii","label":"たのしい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"なにがたのしかったですか？","targets":[{"label":"体験・ワークショップ","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"音楽・演奏","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"いっしょに行った人","layer":"人","w":{"c1":0,"c2":0,"c3":0.3,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"kawaii","label":"かわいい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがかわいかったですか？","targets":[{"label":"商品","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"ショッパー（袋）","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"お店の飾りつけ","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"お店の人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}}]},{"id":"sugoi","label":"すごい","val":1,"w":{"c1":0.3,"c2":0,"c3":0,"att":0},"q":"{話題}の、どこがすごかったですか？","targets":[{"label":"技・うまさ","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"細かさ・作りこみ","layer":"コンテンツ","w":{"c1":0.2,"c2":0,"c3":0,"att":0}},{"label":"作った人・演じた人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"平日とのギャップ","layer":"人","w":{"c1":0.2,"c2":0,"c3":0.2,"att":0}}]},{"id":"kirei","label":"きれい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがきれいでしたか？","targets":[{"label":"色","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"形・デザイン","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"飾りつけ・照明","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"品川の景色","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}]},{"id":"hokkori","label":"ほっこり","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0.2},"q":"なにに、ほっこりしましたか？","targets":[{"label":"お店の人とのやりとり","layer":"人","w":{"c1":0,"c2":0.3,"c3":0.2,"att":0}},{"label":"子ども・家族づれ","layer":"人","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"味・あたたかさ","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"igai","label":"意外","val":0.3,"w":{"c1":0,"c2":0.2,"c3":0.2,"att":0},"q":"なにが意外でしたか？","targets":[{"label":"作った人の本業","layer":"人","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"label":"出会った人","layer":"人","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"label":"品物・作品","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"品川にこんな場所","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}]},{"id":"shigeki","label":"刺激をもらった","val":0.8,"w":{"c1":0.5,"c2":0,"c3":0,"att":0},"q":"なにに刺激をもらいましたか？","targets":[{"label":"挑戦している姿","layer":"人","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"作った人の生き方","layer":"人","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"技・発想","layer":"コンテンツ","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}}]},{"id":"futsuu","label":"ふつう","val":0,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"","targets":[]},{"id":"zannen","label":"いまいち","val":-1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがいまいちでしたか？","targets":[{"label":"待ち時間・混雑","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"案内のわかりにくさ","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"値段","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"品ぞろえ","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}}]}],"why_default":[{"label":"味・香り","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"見た目・色・形","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"手づくり感・技","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"作った人・演じた人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"平日とのギャップ","layer":"人","w":{"c1":0.2,"c2":0,"c3":0.2,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}},{"label":"品川の景色・街","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}],"who":[{"id":"maker","label":"作った人・お店の人と話した","w":{"c1":0.3,"c2":0.5,"c3":0,"att":0}},{"id":"work","label":"職場の人（上司・同僚）と","w":{"c1":0,"c2":0.3,"c3":0.7,"att":0}},{"id":"otherco","label":"ちがう会社の人と話した","w":{"c1":0,"c2":1,"c3":0,"att":0}},{"id":"local","label":"近所の人・学生と話した","w":{"c1":0,"c2":1,"c3":0,"att":0.3}},{"id":"family","label":"家族・友だちと","w":{"c1":0,"c2":0,"c3":0,"att":0.3}},{"id":"alone","label":"ひとりで","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"id":"other","label":"その他","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"next":[{"id":"try","label":"自分もやってみたい","w":{"c1":1,"c2":0,"c3":0,"att":0}},{"id":"again","label":"あの人とまた話したい","w":{"c1":0,"c2":1,"c3":0,"att":0}},{"id":"work","label":"職場でも話してみたい","w":{"c1":0,"c2":0,"c3":1,"att":0}},{"id":"tell","label":"誰かに教えたい","w":{"c1":0,"c2":0,"c3":0,"att":0.7}},{"id":"revisit","label":"また来たい","w":{"c1":0,"c2":0,"c3":0,"att":1}},{"id":"walk","label":"品川をもっと歩きたい","w":{"c1":0,"c2":0,"c3":0,"att":1}},{"id":"wish","label":"運営に伝えたいことがある","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"id":"none","label":"とくにない","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"profile":[{"id":"worker","label":"品川で働いている"},{"id":"resident","label":"品川の近くに住んでいる"},{"id":"exhibitor","label":"出展・出演している"},{"id":"staff","label":"運営・スタッフ"},{"id":"student","label":"学生"},{"id":"visitor","label":"遊びに来た（品川以外から）"},{"id":"other","label":"その他"}]}</script>
+<script type="application/json" id="defaultSettings">{"schema":"drop_coach_settings_v1","note":"初期値。運営は分析画面（drop_coach_dashboard.html）の「チャットの設定」で変更・保存する。保存した設定は記録用 GAS に入り、全員のチャットに反映される","rank":{"feel":[1,0.6,0.45,0.35],"why":[1,0.75,0.5,0.25],"next":[1,0.8],"find":[1,0.8]},"why_q_default":"{話題}の、とくに印象に残ったのは、どこですか？","feel":[{"id":"oishii","label":"おいしい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"{話題}の、どこがおいしかったですか？","targets":[{"label":"味","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"香り","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"見た目","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"作った人のこだわり","layer":"人","w":{"c1":0.2,"c2":0.3,"c3":0,"att":0}},{"label":"食べた場所の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"tanoshii","label":"たのしい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"なにがたのしかったですか？","targets":[{"label":"体験・ワークショップ","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"音楽・演奏","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"いっしょに行った人","layer":"人","w":{"c1":0,"c2":0,"c3":0.3,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"kawaii","label":"かわいい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがかわいかったですか？","targets":[{"label":"商品","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"ショッパー（袋）","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"お店の飾りつけ","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"お店の人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}}]},{"id":"sugoi","label":"すごい","val":1,"w":{"c1":0.3,"c2":0,"c3":0,"att":0},"q":"{話題}の、どこがすごかったですか？","targets":[{"label":"技・うまさ","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"細かさ・作りこみ","layer":"コンテンツ","w":{"c1":0.2,"c2":0,"c3":0,"att":0}},{"label":"作った人・演じた人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"平日とのギャップ","layer":"人","w":{"c1":0.2,"c2":0,"c3":0.2,"att":0}}]},{"id":"kirei","label":"きれい","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがきれいでしたか？","targets":[{"label":"色","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"形・デザイン","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"飾りつけ・照明","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"品川の景色","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}]},{"id":"hokkori","label":"ほっこり","val":1,"w":{"c1":0,"c2":0,"c3":0,"att":0.2},"q":"なにに、ほっこりしましたか？","targets":[{"label":"お店の人とのやりとり","layer":"人","w":{"c1":0,"c2":0.3,"c3":0.2,"att":0}},{"label":"子ども・家族づれ","layer":"人","w":{"c1":0,"c2":0,"c3":0,"att":0.2}},{"label":"味・あたたかさ","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}}]},{"id":"igai","label":"意外","val":0.3,"w":{"c1":0,"c2":0.2,"c3":0.2,"att":0},"q":"なにが意外でしたか？","targets":[{"label":"作った人の本業","layer":"人","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"label":"出会った人","layer":"人","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"label":"品物・作品","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"品川にこんな場所","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}]},{"id":"shigeki","label":"刺激をもらった","val":0.8,"w":{"c1":0.5,"c2":0,"c3":0,"att":0},"q":"なにに刺激をもらいましたか？","targets":[{"label":"挑戦している姿","layer":"人","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"作った人の生き方","layer":"人","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"技・発想","layer":"コンテンツ","w":{"c1":0.5,"c2":0,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}}]},{"id":"futsuu","label":"ふつう","val":0,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"","targets":[]},{"id":"zannen","label":"いまいち","val":-1,"w":{"c1":0,"c2":0,"c3":0,"att":0},"q":"どこがいまいちでしたか？","targets":[{"label":"待ち時間・混雑","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"案内のわかりにくさ","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"値段","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"品ぞろえ","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}}]}],"why_default":[{"label":"味・香り","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"見た目・色・形","layer":"コンテンツ","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"label":"手づくり感・技","layer":"コンテンツ","w":{"c1":0.3,"c2":0,"c3":0,"att":0}},{"label":"作った人・演じた人","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"話したこと","layer":"人","w":{"c1":0,"c2":0.3,"c3":0,"att":0}},{"label":"平日とのギャップ","layer":"人","w":{"c1":0.2,"c2":0,"c3":0.2,"att":0}},{"label":"その場の雰囲気","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.3}},{"label":"品川の景色・街","layer":"空間","w":{"c1":0,"c2":0,"c3":0,"att":0.5}}],"who":[{"id":"maker","label":"作った人・お店の人と話した","w":{"c1":0.3,"c2":0.5,"c3":0,"att":0}},{"id":"work","label":"職場の人（上司・同僚）と","w":{"c1":0,"c2":0.3,"c3":0.7,"att":0}},{"id":"otherco","label":"ちがう会社の人と話した","w":{"c1":0,"c2":1,"c3":0,"att":0}},{"id":"local","label":"近所の人・学生と話した","w":{"c1":0,"c2":1,"c3":0,"att":0.3}},{"id":"family","label":"家族・友だちと","w":{"c1":0,"c2":0,"c3":0,"att":0.3}},{"id":"alone","label":"ひとりで","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"id":"other","label":"その他","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"next":[{"id":"try","label":"自分もやってみたい","w":{"c1":1,"c2":0,"c3":0,"att":0}},{"id":"again","label":"あの人とまた話したい","w":{"c1":0,"c2":1,"c3":0,"att":0}},{"id":"work","label":"職場でも話してみたい","w":{"c1":0,"c2":0,"c3":1,"att":0}},{"id":"tell","label":"誰かに教えたい","w":{"c1":0,"c2":0,"c3":0,"att":0.7}},{"id":"revisit","label":"また来たい","w":{"c1":0,"c2":0,"c3":0,"att":1}},{"id":"walk","label":"品川をもっと歩きたい","w":{"c1":0,"c2":0,"c3":0,"att":1}},{"id":"none","label":"とくにない","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"find":[{"id":"unexpected","label":"作った人・演じた人の意外な一面","w":{"c1":0.3,"c2":0.5,"c3":0,"att":0}},{"id":"newpeople","label":"ふだん話さない人と話せた","w":{"c1":0,"c2":1,"c3":0,"att":0}},{"id":"coworker","label":"職場の人の知らない一面","w":{"c1":0,"c2":0,"c3":1,"att":0}},{"id":"newlike","label":"新しい「好き」が見つかった","w":{"c1":0.7,"c2":0,"c3":0,"att":0}},{"id":"town","label":"品川がちょっと身近になった","w":{"c1":0,"c2":0,"c3":0,"att":1}},{"id":"none","label":"とくにない","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"face":[{"id":"worker","label":"品川で働く会社員","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"id":"shop","label":"近所のお店の人","w":{"c1":0,"c2":0.3,"c3":0,"att":0.3}},{"id":"student","label":"学生","w":{"c1":0,"c2":0.5,"c3":0,"att":0}},{"id":"pro","label":"作家・アーティストが本業","w":{"c1":0,"c2":0,"c3":0,"att":0}},{"id":"unknown","label":"わからない","w":{"c1":0,"c2":0,"c3":0,"att":0}}],"profile":[{"id":"worker","label":"品川で働いている"},{"id":"resident","label":"品川の近くに住んでいる"},{"id":"exhibitor","label":"出展・出演している"},{"id":"staff","label":"運営・スタッフ"},{"id":"student","label":"学生"},{"id":"visitor","label":"遊びに来た（品川以外から）"},{"id":"other","label":"その他"}]}</script>
 
 <script>
 "use strict";
@@ -344,7 +351,8 @@ const mean = a => { const b = a.filter(x => typeof x === "number" && isFinite(x)
 const num = v => { if (v === "" || v == null) return null; const n = Number(v); return isFinite(n) ? n : null; };
 const split = (v, sep) => String(v || "").split(sep).map(s => s.trim()).filter(Boolean);
 const countBy = (arr) => { const m = new Map(); arr.forEach(k => m.set(k, (m.get(k) || 0) + 1)); return [...m.entries()].sort((a, b) => b[1] - a[1]); };
-const STEP_ORDER = ["ひとこと", "気持ち", "どこが", "だれと", "任意の問いの前", "このあと", "あなたについて"];
+const ELEMENTS = [["what", "何を"], ["who", "誰の立場"], ["why", "なぜ"], ["change", "変化"], ["next", "次の一歩"]];
+const STEP_ORDER = ["ひとこと", "気持ち", "どこが", "だれと", "今日の発見", "その人のふだん", "このあと", "あなたについて"];
 /** 「どこがの重み」（例「商品 1 / ショッパー（袋） 0.75」）→ [{label, w}]。列が無い古い記録は、どこがの順に 1・0.75・0.5・0.25 */
 function parseRanks(cell, labels) {
   const t = String(cell || "").trim();
@@ -352,8 +360,8 @@ function parseRanks(cell, labels) {
   const d = [1, .75, .5, .25];
   return (labels || []).map((l, i) => ({ label: l, w: d[i] ?? .25 }));
 }
-const STEP_KEY = { text1: "ひとこと", who: "だれと", why: "どこが", feel: "気持ち", next: "このあと", profile: "あなたについて", score: "点数" };
-const LAYERS = ["人", "コンテンツ", "空間", "感情", "意向"];
+const STEP_KEY = { text1: "ひとこと", who: "だれと", why: "どこが", feel: "気持ち", find: "今日の発見", face: "その人のふだん", next: "このあと", profile: "あなたについて", score: "点数" };
+const LAYERS = ["人", "コンテンツ", "空間", "感情", "発見", "意向"];
 const SOFT = [["c1", "①挑戦"], ["c2", "②属性横断"], ["c3", "③心理的安全性"], ["att", "街への愛着"]];
 /* 気持ちの向き（チャットの V.feel の val と同じ）。記号と色は評価の信号色 */
 const FEEL_VAL = { "おいしい": 1, "たのしい": 1, "かわいい": 1, "すごい": 1, "きれい": 1, "ほっこり": 1, "意外": .3, "刺激をもらった": .8, "ふつう": 0, "いまいち": -1 };
@@ -516,7 +524,9 @@ function useData(header, rows, meta) {
       exViews: num(String(g("ほかの人の例を見た")).split("回")[0]) || 0, exText: String(g("ほかの人の例を見た")), previewOpens: num(g("投稿イメージを開いた")) || 0,
       secs, aiSec: num(g("AI秒")), model: String(g("AIモデル")), promptVer: String(g("プロンプト版")), app: String(g("アプリ版")),
       whyFor: String(g("どこがの気持ち")), whyRanks: parseRanks(g("どこがの重み"), split(g("どこが"), "、")), setVer: String(g("設定版")),
-      extra: String(g("任意の問い")), postNo: num(g("この端末で何本目"))
+      extra: String(g("任意の問い")), postNo: num(g("この端末で何本目")),
+      finds: split(g("今日の発見"), "、"), face: String(g("その人のふだん")), rating: num(g("チャットの評価")), comment: String(g("運営へのコメント")),
+      el: ELEMENTS.reduce((o, [k, l]) => { o[k] = num(g("AI " + l)); return o; }, {}), analyzable: g("分析に使える") === "はい" ? true : g("分析に使える") === "いいえ" ? false : null
     };
   });
   META = meta;
@@ -539,7 +549,7 @@ function applyWeightMode(F) {
   const now = $("fWeight").value === "now" && CURSET;
   F.forEach(s => {
     if (now) {
-      const c = calcKpi(CURSET, { feel: s.feels, why: s.whyRanks.map(x => x.label), whyFor: s.whyFor, who: s.who, next: s.next });
+      const c = calcKpi(CURSET, { feel: s.feels, why: s.whyRanks.map(x => x.label), whyFor: s.whyFor, who: s.who, next: s.next, find: s.finds, face: s.face });
       s.softU = c.total ? c.share : { c1: null, c2: null, c3: null, att: null }; s.valU = c.valence == null ? null : Math.round(c.valence * 100) / 100;
     } else { s.softU = s.soft; s.valU = s.valence; }
     s.topU = Object.values(s.softU).some(v => v) ? SOFT.map(x => [x[0], s.softU[x[0]] || 0]).sort((a, b) => b[1] - a[1])[0][0] : "";
@@ -600,8 +610,8 @@ function render() {
   applyWeightMode(F);
   $("fCount").textContent = `${F.length} / ${SESS.length} 件のチャット`;
   renderTiles(F); renderFunnel(F); renderAnswerRate(F); renderStepSec(F); renderDropAt(F); renderHours(F);
-  renderFeels(F); renderValence(F); renderTargets(F); renderWho(F); renderWhy(F); renderNext(F); renderSubjects(F); renderRichness(F); renderProfile(F);
-  renderNet(F); renderSoft(F); renderAgree(F); renderLevels(F); renderExamples(F); renderPosts(F);
+  renderFeels(F); renderValence(F); renderTargets(F); renderWho(F); renderWhy(F); renderNext(F); renderSubjects(F); renderRichness(F); renderProfile(F); renderFinds(F); renderRating(F);
+  renderNet(F); renderElements(F); renderSoft(F); renderAgree(F); renderLevels(F); renderExamples(F); renderPosts(F);
 }
 function renderTiles(F) {
   const R = F.filter(s => s.reached), C = F.filter(s => s.copied);
@@ -621,7 +631,9 @@ function renderTiles(F) {
     t("ヒントが間に合った", fmtP(F.filter(s => s.hintOk).length, F.filter(s => s.hintState).length), "裏で呼ぶ AI ヒントの成功率") +
     t("「ほかの人の例」を見た", fmtP(F.filter(s => s.exViews > 0).length, F.length), `投稿イメージを開いた ${fmtP(F.filter(s => s.previewOpens > 0).length, F.length)}`) +
     t("2本以上コピーした人", (() => { const m = countBy(C.map(s => s.name).filter(Boolean)); return fmtP(m.filter(x => x[1] >= 2).length, m.length); })(), "コピーした人のうち（名前ごと）") +
-    t("任意の問いにも答えた", fmtP(R.filter(s => s.extra === "答えた").length, R.filter(s => s.extra).length), "最低限の問いのあと「もう1つ答える」");
+    t("任意の問いにも答えた", fmtP(R.filter(s => s.extra === "答えた").length, R.filter(s => s.extra).length), "最低限の問いまで答えた人のうち") +
+    t("分析に使える投稿", fmtP(F.filter(s => s.analyzable).length, F.filter(s => s.analyzable != null).length), "何を・誰の立場・なぜ・変化/次の一歩（AI の読み取り）") +
+    t("チャットの使いごこち", mean(F.map(s => s.rating)) == null ? "−" : mean(F.map(s => s.rating)).toFixed(1) + " / 5", `${F.filter(s => s.rating != null).length} 人が回答（任意）`);
 }
 function renderFunnel(F) {
   const n = F.length, r = F.filter(s => s.reached).length, c = F.filter(s => s.copied).length;
@@ -633,16 +645,16 @@ function renderFunnel(F) {
 }
 function renderAnswerRate(F) {
   const R = F.filter(s => s.reached);
-  const q = [["気持ち", s => s.feels.length > 0], ["どこが", s => s.why.length > 0], ["だれと", s => !!s.who], ["このあと（任意）", s => s.next.length > 0]];
+  const q = [["気持ち", s => s.feels.length > 0], ["どこが", s => s.why.length > 0], ["だれと", s => !!s.who], ["今日の発見（任意）", s => s.finds.length > 0], ["このあと（任意）", s => s.next.length > 0]];
   const vals = q.map(([k, f]) => pct(R.filter(f).length, R.length));
   const e = R.length ? argmin(vals) : -1;
   const early = R.filter(s => s.early).length;
   $("answerRate").innerHTML = hbars(q.map(([k, f], i) => ({ label: k, v: vals[i], vText: `${vals[i].toFixed(0)}%`, tv: `${vals[i].toFixed(0)}%`, tl: `${k}：${R.filter(f).length} / ${R.length} 人が回答` })),
     { emph: e, max: 100, cap: R.length ? `いちばん答えられていない問い：${q[e][0]}` : "", tcols: ["問い", "回答率（%）"] }) +
-    `<p class="note">「ここまでで投稿文をつくる」で途中から投稿文へ進んだ人：${early} 件（${fmtP(early, R.length)}）。最低限の問いのあと「もう1つ答える」を選んだ人：${R.filter(s => s.extra === "答えた").length} 件／「投稿文をつくる」を選んだ人：${R.filter(s => s.extra === "投稿文へ").length} 件</p>`;
+    `<p class="note">「ここまでで投稿文をつくる」で途中から投稿文へ進んだ人：${early} 件（${fmtP(early, R.length)}）。任意の問いに答えた人：${R.filter(s => s.extra === "答えた").length} 件／任意の問いの最初で「ここで投稿文をつくる」を選んだ人：${R.filter(s => s.extra === "投稿文へ").length} 件</p>`;
 }
 function renderStepSec(F) {
-  const steps = ["ひとこと", "気持ち", "どこが", "だれと", "このあと"];
+  const steps = ["ひとこと", "気持ち", "どこが", "だれと", "今日の発見", "その人のふだん", "このあと"];
   const vals = steps.map(k => median(F.map(s => s.secs[k])));
   const ok = vals.map(v => v ?? 0), e = vals.some(v => v != null) ? argmax(ok) : -1;
   $("stepSec").innerHTML = hbars(steps.map((k, i) => ({ label: k, v: ok[i], vText: vals[i] == null ? "−" : vals[i].toFixed(1) + "秒", tv: vals[i] == null ? "−" : vals[i].toFixed(1) + "秒", tl: `${k}（中央値・${F.filter(s => s.secs[k] != null).length} 人）` })),
@@ -728,6 +740,25 @@ function renderRichness(F) {
   $("richness").innerHTML = hbars(cnt.map((v, i) => ({ label: bins[i][0], v, color: shades[i], vText: `${v}件`, tv: `${v}件（${fmtP(v, R.length)}）`, tl: `材料 ${bins[i][0]}` })), { emph: -1, tcols: ["材料の数", "件数"] }) +
     `<p class="note">投稿文の文字数（中央値）：AI の文 ${lenAI ?? "−"} 字／自分の言葉の文 ${lenOwn ?? "−"} 字</p>`;
 }
+function renderFinds(F) {
+  const R = F.filter(s => s.reached), A = R.filter(s => s.extra);
+  const P = countBy(F.flatMap(s => s.finds));
+  $("finds").innerHTML = hbars(rankItems(P, 7, F.length, "回"), { emph: P.length && P[0][0] !== "とくにない" ? 0 : -1, cap: P.length ? "いちばん多い発見" : "", tcols: ["今日の発見", "回数"] }) +
+    `<p class="note">任意の問いに進んだ人 ${R.filter(s => s.extra === "答えた").length} 人／「ここで投稿文をつくる」を選んだ人 ${R.filter(s => s.extra === "投稿文へ").length} 人（最低限の問いまで答えた ${A.length} 人のうち）</p>`;
+  const Q = countBy(F.map(s => s.face).filter(Boolean));
+  $("faces").innerHTML = hbars(rankItems(Q, 7, F.length, "人"), { emph: Q.length && Q[0][0] !== "わからない" ? 0 : -1, cap: Q.length ? "いちばん多い答え" : "", tcols: ["その人のふだん", "人数"] }) +
+    `<p class="note">人と関わった答え（作った人・ちがう会社・近所の人と話した、または「意外な一面」）があり、「どんな人」を書いていない人だけに聞いています。</p>`;
+}
+const RATE_STYLE = { 5: ["◎", "var(--good)", "とてもつかいやすい"], 4: ["○", "var(--good2)", "つかいやすい"], 3: ["△", "var(--mid)", "ふつう"], 2: ["×", "var(--bad)", "ややつかいにくい"], 1: ["×", "var(--bad)", "つかいにくい"] };
+function renderRating(F) {
+  const V = F.filter(s => s.rating != null), n = V.length;
+  const items = [5, 4, 3, 2, 1].map(v => { const c = V.filter(s => s.rating === v).length, st = RATE_STYLE[v]; return { label: `${v} ${st[2]}`, sym: st[0], color: st[1], v: c, vText: `${c}人`, tv: `${c}人（${fmtP(c, n)}）`, tl: `${v}：${st[2]}` }; });
+  const avg = mean(V.map(s => s.rating));
+  $("rating").innerHTML = n ? `<p style="margin:0 0 8px">平均 <b style="font-size:22px">${avg.toFixed(2)}</b> ／ 5（${n} 人が回答・コピーした人の ${fmtP(n, F.filter(s => s.copied).length)}）</p>` + hbars(items, { emph: -1, max: Math.max(1, ...items.map(x => x.v)), tcols: ["使いごこち", "人数"] }) +
+    `<p class="note">◎○△× と色は評価（青＝つかいやすい〜赤＝つかいにくい）。</p>` : '<p class="note">まだ回答がありません（チャット v3.2 から、コピーのあとに聞いています）</p>';
+  const C = F.filter(s => s.comment).sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 60);
+  $("comments").innerHTML = C.length ? `<div class="posts" style="max-height:360px"><table><thead><tr><th>評価</th><th>コメント</th><th>名前</th><th>日時</th></tr></thead><tbody>${C.map(s => { const st = RATE_STYLE[s.rating] || ["・", "var(--none)", ""]; return `<tr><td style="white-space:nowrap"><span class="vsym" style="color:${st[1] === "var(--good2)" ? "#2A78D6" : st[1] === "var(--mid)" ? "#8a6400" : st[1]}">${st[0]}</span> ${s.rating ?? "−"}</td><td>${esc(s.comment)}</td><td>${esc(s.name)}</td><td style="white-space:nowrap">${s.ts && !isNaN(s.ts) ? esc(ymd(s.ts).slice(5) + " " + String(s.ts.getHours()).padStart(2, "0") + ":" + String(s.ts.getMinutes()).padStart(2, "0")) : ""}</td></tr>`; }).join("")}</tbody></table></div>` : '<p class="note">まだコメントはありません</p>';
+}
 function renderProfile(F) {
   const P = countBy(F.map(s => s.profile));
   $("profile").innerHTML = hbars(rankItems(P, 7, F.length, "人"), { emph: 0, cap: "いちばん多い属性", tcols: ["属性", "人数（割合）"] });
@@ -753,7 +784,7 @@ function renderNet(F) {
   if (!NET.userMin) { let m = 1; while (G.edges.filter(e => e.c >= m).length > 70 && m < 10) m++; $("netMin").value = m; }
   const min = Number($("netMin").value); $("netMinV").textContent = min;
   if (NET.sel && !G.cnt.has(NET.sel)) NET.sel = null;
-  const W = 1000, colX = LAYERS.map((_, i) => 60 + i * 192), rowH = 46, H = Math.max(...G.cols.map(c => c.length)) * rowH + 70;
+  const W = 1000, colX = LAYERS.map((_, i) => 50 + i * 158), rowH = 46, H = Math.max(...G.cols.map(c => c.length)) * rowH + 70;
   const pos = new Map(); G.cols.forEach((c, i) => c.forEach(([n], j) => pos.set(n, { x: colX[i], y: 62 + j * rowH })));
   const maxC = Math.max(...[...G.cnt.values()]);
   const E = G.edges.filter(e => e.c >= min && pos.has(e.a) && pos.has(e.b));
@@ -809,6 +840,27 @@ $("netCsv").addEventListener("click", () => {
 });
 
 /* ---------- KPI ---------- */
+/** 5 つの要素：段階（無い／あいまい／具体的）を紫の濃淡の分割バーで。分析に使える割合を、任意の問い・関与で比べる */
+function renderElements(F) {
+  const A = F.filter(s => s.el && s.el.what != null);
+  if (!A.length) { $("elements").innerHTML = '<p class="note">AI の読み取り（要素）がある記録がまだありません（チャット v3.2・GAS v9.1 から）</p>'; return; }
+  const LV = [[2, "具体的", "var(--o4)", "#fff"], [1, "あいまい", "var(--o2)", "#fff"], [0, "無い", "var(--none)", "var(--ink)"]];
+  const rows = ELEMENTS.map(([k, l]) => {
+    const c = LV.map(([v]) => A.filter(s => s.el[k] === v).length);
+    return `<div class="lab" style="text-align:right">${l}</div><div class="seg" role="img" aria-label="${l}：具体的 ${c[0]}・あいまい ${c[1]}・無い ${c[2]}">${LV.map(([v, t, bg, ink], i) => c[i] ? `<div style="width:${pct(c[i], A.length)}%;background:${bg};color:${ink}" data-tv="${c[i]}件（${fmtP(c[i], A.length)}）" data-tl="${l}：${t}">${pct(c[i], A.length) >= 12 ? `${t} ${fmtP(c[i], A.length)}` : ""}</div>` : "").join("")}</div>`;
+  }).join("");
+  const ok = A.filter(s => s.analyzable).length;
+  const by = (name, list) => list.map(([lab, f]) => { const g = A.filter(f); const k = g.filter(s => s.analyzable).length; return `<tr><td>${esc(name)}：${esc(lab)}</td><td class="n">${g.length}</td><td class="n">${g.length ? fmtP(k, g.length) : "−"}</td></tr>`; }).join("");
+  $("elements").innerHTML = `<div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:18px" class="el-grid">
+    <div><div class="keys">${LV.map(([, t, bg]) => `<span><i class="sw" style="background:${bg}"></i>${t}</span>`).join("")}</div>
+      <div class="hb" style="grid-template-columns:72px 1fr;gap:8px 10px">${rows}</div></div>
+    <div><p style="margin:0 0 6px">分析に使える投稿 <b style="font-size:26px">${fmtP(ok, A.length)}</b>（${ok} / ${A.length} 件）</p>
+      <table><thead><tr><th>比べる</th><th class="n">件数</th><th class="n">分析に使える</th></tr></thead><tbody>
+      ${by("任意の問い", [["答えた", s => s.extra === "答えた"], ["投稿文へ（答えなかった）", s => s.extra === "投稿文へ"]])}
+      ${by("関与", [["AI仕上げ", s => s.level === "AI仕上げ"], ["選択あり", s => s.level === "選択あり"], ["ひとことのみ", s => s.level === "ひとことのみ"]])}
+      </tbody></table><p class="note">任意の問い（今日の発見・その人のふだん・このあと）が、変化・誰の立場・次の一歩の具体さにつながっているかを見ます。</p></div></div>` +
+    tableHtml(["要素", "具体的", "あいまい", "無い"], ELEMENTS.map(([k, l]) => [l, ...LV.map(([v]) => A.filter(s => s.el[k] === v).length)]));
+}
 function renderSoft(F) {
   const R = F.filter(s => Object.values(s.softU).some(v => v != null));
   const A = F.filter(s => Object.keys(s.aiSoft).length);
@@ -884,7 +936,7 @@ function renderPosts(F) {
       const s = show[Number(tr.dataset.i)], d = document.createElement("tr"); d.className = "d";
       const kv = [["どこが", s.why.join("、") + (s.whySrc ? `（${s.whySrc}）` : "")], ["このあと", s.next.join("、")], ["話題", s.subject], ["ひとことから読み取れたもの", s.detected], ["属性", s.profile],
         ["自分の言葉の文", s.composed], ["AI の文", s.aiText], ["採用・手直し", `${s.chosen || "−"}・${s.edited ? "手で直した" : "直していない"}`],
-        ["AI の読み取り", [s.aiCat, s.aiAct, s.aiContent.join("・"), s.aiSpace.join("・"), s.aiSent == null ? "" : "向き " + s.aiSent].filter(Boolean).join("／")], ["AI 5W1H・評価", `${s.w5h} ${s.aiLevel}`], ["AI ひとこと", s.headline], ["写真と本文", s.photoMatch], ["AI 注意", s.caveats],
+        ["AI の読み取り", [s.aiCat, s.aiAct, s.aiContent.join("・"), s.aiSpace.join("・"), s.aiSent == null ? "" : "向き " + s.aiSent].filter(Boolean).join("／")], ["5 つの要素・評価", `${ELEMENTS.map(([k, l]) => `${l} ${s.el[k] ?? "−"}`).join("／")}${s.analyzable == null ? "" : s.analyzable ? "（分析に使える）" : ""}　自分の言葉 ${s.aiLevel}`], ["AI ひとこと", s.headline], ["写真と本文", s.photoMatch], ["AI 注意", s.caveats],
         ["ノード", s.nodes.join("｜")], ["ほかの人の例", s.exText || "見ていない"], ["問いごとの秒", Object.entries(s.secs).map(([k, v]) => `${k} ${v}`).join("・")], ["ヒント", s.hintState], ["AI 秒・モデル", `${s.aiSec ?? "−"}秒・${s.model} ${s.promptVer}`], ["終了の記録", s.ends.join(" → ")], ["セッション ID・版", `${s.sid}・${s.app}`]];
       const td = document.createElement("td"); td.colSpan = 9;
       const tbl = document.createElement("table");
@@ -918,7 +970,7 @@ function makeDemo() {
   let seed = 20261113; const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const pick = (a, w) => { if (!w) return a[Math.floor(rnd() * a.length)]; const s = w.reduce((x, y) => x + y, 0); let r = rnd() * s; for (let i = 0; i < a.length; i++) { r -= w[i]; if (r <= 0) return a[i]; } return a[a.length - 1]; };
   const some = (a, n) => { const b = a.slice(), o = []; while (o.length < n && b.length) o.push(b.splice(Math.floor(rnd() * b.length), 1)[0]); return o; };
-  const H = ["タイムスタンプ", "Name", "セッションID", "終了", "開始", "所要秒", "回答数", "最後の問い", "写真", "最初のひとこと", "ひとことから読み取れたもの", "話題", "だれと", "どんな人", "どこが", "どこがの選び方", "気持ち（選んだ順）", "気持ちの向き", "このあと", "属性", "体験の点数", "ノード（共起用）", "ソフト①挑戦", "ソフト②属性横断", "ソフト③心理的安全性", "ソフト愛着", "組み立て文面", "AI文面", "最終文面", "採用", "手で編集", "コーチ関与", "ハッシュタグ", "AI分類", "AIソフト", "AI感情の向き", "AI行動", "AIコンテンツ", "AI空間", "AI 5W1H", "AI評価", "AIひとこと", "写真と本文", "AI注意", "ヒント状態", "ほかの人の例を見た", "投稿イメージを開いた", "表示順", "問いごとの秒", "AIモデル", "プロンプト版", "AI秒", "アプリ版", "どこがの気持ち", "どこがの重み", "設定版", "任意の問い", "この端末で何本目"];
+  const H = ["タイムスタンプ", "Name", "セッションID", "終了", "開始", "所要秒", "回答数", "最後の問い", "写真", "最初のひとこと", "ひとことから読み取れたもの", "話題", "だれと", "どんな人", "どこが", "どこがの選び方", "気持ち（選んだ順）", "気持ちの向き", "このあと", "属性", "体験の点数", "ノード（共起用）", "ソフト①挑戦", "ソフト②属性横断", "ソフト③心理的安全性", "ソフト愛着", "組み立て文面", "AI文面", "最終文面", "採用", "手で編集", "コーチ関与", "ハッシュタグ", "AI分類", "AIソフト", "AI感情の向き", "AI行動", "AIコンテンツ", "AI空間", "AI 5W1H", "AI評価", "AIひとこと", "写真と本文", "AI注意", "ヒント状態", "ほかの人の例を見た", "投稿イメージを開いた", "表示順", "問いごとの秒", "AIモデル", "プロンプト版", "AI秒", "アプリ版", "どこがの気持ち", "どこがの重み", "設定版", "任意の問い", "この端末で何本目", "今日の発見", "その人のふだん", "チャットの評価", "運営へのコメント", "AI 何を", "AI 誰の立場", "AI なぜ", "AI 変化", "AI 次の一歩", "分析に使える"];
   const topics = [["コーヒー", "おいしかった", "おいしい", "eat"], ["カレー", "おいしい！", "おいしい", "eat"], ["豆本", "かわいい", "かわいい", "buy"], ["焼き芋", "あったまる〜", "ほっこり", "eat"], ["会社員バンド", "すごかった", "すごい", "watch"], ["陶芸体験", "たのしい！", "たのしい", "make"], ["古本市", "意外な本があった", "意外", "buy"], ["クラフトビール", "うまい", "おいしい", "eat"], ["似顔絵", "うれしい", "", "make"], ["夕方の品川", "きれい", "きれい", "stroll"], ["ワークショップ", "刺激をもらった", "刺激をもらった", "make"], ["行列", "長くて残念", "いまいち", "stroll"]];
   const tw = [14, 10, 9, 9, 8, 7, 6, 6, 4, 6, 5, 4];
   const WHO = [["職場の人（上司・同僚）と", { c3: .7, c2: .3 }, 26], ["作った人・お店の人と話した", { c2: .5, c1: .3 }, 18], ["ちがう会社の人と話した", { c2: 1 }, 9], ["近所の人・学生と話した", { c2: 1, att: .3 }, 6], ["家族・友だちと", { att: .3 }, 14], ["ひとりで", {}, 20]];
@@ -949,6 +1001,11 @@ function makeDemo() {
     if (aiWhy) why.unshift(aiWhy);
     const layerOf = l => (tlist.find(x => x.label === l) || {}).layer || "コンテンツ";
     const next = ans("このあと") ? some(NEXT, 1 + (rnd() < .35 ? 1 : 0)).map(x => x[0]) : [];
+    const FIND = ["作った人・演じた人の意外な一面", "ふだん話さない人と話せた", "職場の人の知らない一面", "新しい「好き」が見つかった", "品川がちょっと身近になった", "とくにない"];
+    const finds = !declined && !drop && !early && rnd() > .1 ? some(FIND, 1 + (rnd() < .3 ? 1 : 0)) : [];
+    const face = finds.includes(FIND[0]) || (who && /作った人|ちがう会社|近所/.test(who[0])) ? (!declined && !drop && !early && rnd() < .8 ? pick(["品川で働く会社員", "近所のお店の人", "学生", "作家・アーティストが本業", "わからない"], [5, 2, 1, 1, 1]) : "") : "";
+    const rating = !drop && rnd() < .55 ? pick([5, 4, 3, 2, 1], [30, 40, 18, 8, 4]) : "";
+    const comment = rating && rnd() < .3 ? pick(["写真の候補が便利でした", "問いが少し多いと感じた", "AIの文がいい感じ", "自分の言葉の文のほうがしっくりきた", "文字が大きくて読みやすい", "もっと選択肢がほしい"]) : "";
     const answered = [who, why.length, feels.length, next.length].filter(Boolean).length;
     const vmap = { おいしい: 1, たのしい: 1, かわいい: 1, すごい: 1, きれい: 1, ほっこり: 1, 意外: .3, 刺激をもらった: .8, ふつう: 0, いまいち: -1 }, ow = [1, .6, .45, .35];
     let vs = 0, vw = 0; feels.forEach((f, k) => { vs += vmap[f] * ow[k]; vw += ow[k]; });
@@ -968,7 +1025,7 @@ function makeDemo() {
     const sec = { text1: 8 + rnd() * 30, who: 3 + rnd() * 9, why: 5 + rnd() * 14, feel: 3 + rnd() * 8, next: 3 + rnd() * 9 };
     const secTxt = Object.keys(sec).filter(k => ({ text1: 1, who: who ? 1 : 0, why: why.length ? 1 : 0, feel: feels.length ? 1 : 0, next: next.length ? 1 : 0 }[k])).map(k => `${k}=${sec[k].toFixed(1)}`).join(" / ");
     const dur = Object.values(sec).reduce((a, b) => a + b, 0) + (aiOk ? 12 : 0);
-    const nodes = [`コンテンツ:${tp[0]}`, who ? "人:" + who[0] : "", ...why.map(w => layerOf(w) + ":" + w), ...feels.map(f => "感情:" + f), ...next.map(n => "意向:" + n)].filter(Boolean);
+    const nodes = [`コンテンツ:${tp[0]}`, who ? "人:" + who[0] : "", ...why.map(w => layerOf(w) + ":" + w), ...feels.map(f => "感情:" + f), ...finds.filter(f => f !== "とくにない").map(f => "発見:" + f), face && face !== "わからない" ? "人:" + face : "", ...next.map(n => "意向:" + n)].filter(Boolean);
     const ex = rnd() < .3 ? `1回：${pick(["どこが", "気持ち", "投稿文"])}（${Math.round(20 + rnd() * 60)}秒）` : "";
     const hint = rnd() < .9 ? `OK（${(2 + rnd() * 6).toFixed(1)}秒）` : "TIMEOUT（90秒）";
     const base = { "タイムスタンプ": "", "Name": `参加者${String(1 + Math.floor(i * .85)).padStart(3, "0")}`, "セッションID": "demo" + String(i).padStart(4, "0"), "開始": t0.toISOString(), "所要秒": Math.round(dur * 10) / 10, "回答数": answered,
@@ -978,11 +1035,15 @@ function makeDemo() {
       "組み立て文面": drop ? "" : composed, "AI文面": aiText, "最終文面": final, "採用": drop ? "" : chosen, "手で編集": drop ? "" : edited ? "あり" : "なし", "コーチ関与": level, "ハッシュタグ": "",
       "AI分類": aiOk ? `${code} ${label}` : "", "AIソフト": aiOk ? `①${(raw.c1 / (tot || 1)).toFixed(2)} ②${(raw.c2 / (tot || 1)).toFixed(2)} ③${(raw.c3 / (tot || 1)).toFixed(2)} 愛${((raw.att + .2) / (tot || 1)).toFixed(2)}` : "",
       "AI感情の向き": aiOk && valence !== "" ? Math.max(-1, Math.min(1, Math.round((valence + (rnd() - .5) * .6) * 100) / 100)) : "", "AI行動": aiOk ? ACTL[tp[3]] : "", "AIコンテンツ": aiOk ? tp[0] : "", "AI空間": aiOk && rnd() < .5 ? pick(["屋台", "広場", "品川駅前"]) : "",
-      "AI 5W1H": aiOk ? "何○ なぜ○ 誰○ どう○ いつ− どこ−" : "", "AI評価": aiOk ? pick(["高", "中", "中", "低"]) : "", "AIひとこと": aiOk ? "様子が伝わる投稿です" : "", "写真と本文": aiOk && photo ? "一致：写真の内容" : "", "AI注意": "",
-      "ヒント状態": hint, "ほかの人の例を見た": ex, "投稿イメージを開いた": rnd() < .35 ? 1 : 0, "表示順": "", "問いごとの秒": secTxt, "AIモデル": aiOk ? "gpt-6-luna" : "", "プロンプト版": aiOk ? "demo" : "", "AI秒": aiOk ? Math.round((9 + rnd() * 10) * 10) / 10 : "", "アプリ版": "chat-v3.1（デモ）",
+      "AI評価": aiOk ? pick(["高", "中", "中", "低"]) : "", "AIひとこと": aiOk ? "様子が伝わる投稿です" : "", "写真と本文": aiOk && photo ? "一致：写真の内容" : "", "AI注意": "",
+      "ヒント状態": hint, "ほかの人の例を見た": ex, "投稿イメージを開いた": rnd() < .35 ? 1 : 0, "表示順": "", "問いごとの秒": secTxt, "AIモデル": aiOk ? "gpt-6-luna" : "", "プロンプト版": aiOk ? "demo" : "", "AI秒": aiOk ? Math.round((9 + rnd() * 10) * 10) / 10 : "", "アプリ版": "chat-v3.2（デモ）",
       "どこがの気持ち": why.length ? whyFor : "", "どこがの重み": why.map((l, i) => `${l} ${[1, .75, .5, .25][i] ?? .25}`).join(" / "), "設定版": "初期値",
-      "任意の問い": drop || early ? "" : declined ? "投稿文へ" : "答えた", "この端末で何本目": 1 + (i % 7 === 0 ? 1 : 0) + (i % 19 === 0 ? 1 : 0) };
-    const ends = drop ? ["途中離脱"] : rnd() < .8 ? ["完了", "コピー"] : ["完了"];
+      "任意の問い": drop || early ? "" : declined ? "投稿文へ" : "答えた", "この端末で何本目": 1 + (i % 7 === 0 ? 1 : 0) + (i % 19 === 0 ? 1 : 0),
+      "今日の発見": finds.join("、"), "その人のふだん": face, "チャットの評価": rating, "運営へのコメント": comment,
+      ...(() => { if (!aiOk) return {}; const e = { what: rnd() < .8 ? 2 : 1, who: face || (who && who[0] !== "ひとりで" && rnd() < .5) ? 2 : who && who[0] !== "ひとりで" ? 1 : 0, why: why.length ? (rnd() < .75 ? 2 : 1) : 0, change: finds.some(f => f !== "とくにない") ? (rnd() < .7 ? 2 : 1) : (rnd() < .2 ? 1 : 0), next: next.length ? (rnd() < .4 ? 2 : 1) : 0 };
+        const ok = e.what >= 2 && e.why >= 2 && e.who >= 1 && (e.change >= 1 || e.next >= 1);
+        return { "AI 何を": e.what, "AI 誰の立場": e.who, "AI なぜ": e.why, "AI 変化": e.change, "AI 次の一歩": e.next, "分析に使える": ok ? "はい" : "いいえ", "AI 5W1H": `何を${e.what} 誰の立場${e.who} なぜ${e.why} 変化${e.change} 次の一歩${e.next}` }; })() };
+    const ends = drop ? ["途中離脱"] : rnd() < .8 ? ["完了", "コピー"].concat(rating ? ["感想"] : []) : ["完了"];
     ends.forEach((e, k) => { const r = { ...base, "終了": e, "タイムスタンプ": new Date(t0.getTime() + (dur + k * 30) * 1000).toISOString(), "最後の問い": drop ? stopAt : early ? `途中で投稿文へ（${stopAt}）` : "最後まで" }; rows.push(H.map(c => r[c] ?? "")); });
   }
   return { header: H, rows };
@@ -1002,7 +1063,7 @@ const VAL_PRESETS = [[1, "◎ とてもポジティブ"], [0.8, "◎ ポジテ�
 const clone = o => JSON.parse(JSON.stringify(o));
 const W0 = () => ({ c1: 0, c2: 0, c3: 0, att: 0 });
 const isBuiltin = (kind, id) => (DEFAULT_SETTINGS[kind] || []).some(x => x.id === id);
-const FIXED_IDS = ["alone", "other", "none", "futsuu", "zannen"];
+const FIXED_IDS = ["alone", "other", "none", "futsuu", "zannen", "unknown"];
 const newId = pre => pre + "_" + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 5);
 
 /** 設定の形をそろえる（チャットの normSettings と同じ考え方） */
@@ -1017,12 +1078,14 @@ function normSet(raw) {
   const r = s.rank || {};
   return {
     schema: "drop_coach_settings_v1",
-    rank: { feel: rk(r.feel, d.rank.feel), why: rk(r.why, d.rank.why), next: rk(r.next, d.rank.next) },
+    rank: { feel: rk(r.feel, d.rank.feel), why: rk(r.why, d.rank.why), next: rk(r.next, d.rank.next), find: rk(r.find, d.rank.find || [1, 0.8]) },
     why_q_default: String(s.why_q_default ?? d.why_q_default ?? "").slice(0, 60),
     feel: list(s.feel, d.feel, x => ({ id: String(x.id || newId("uf")), label: lab(x.label), val: n(x.val, -1, 1, 0), w: w(x.w), off: !!x.off, q: String(x.q || "").slice(0, 60), targets: (Array.isArray(x.targets) ? x.targets : []).map(tg) })),
     why_default: list(s.why_default, d.why_default, tg),
     who: list(s.who, d.who, x => ({ id: String(x.id || newId("uw")), label: lab(x.label), w: w(x.w), off: !!x.off })),
     next: list(s.next, d.next, x => ({ id: String(x.id || newId("un")), label: lab(x.label), w: w(x.w), off: !!x.off })),
+    find: list(Array.isArray(s.find) && s.find.length ? s.find : null, d.find, x => ({ id: String(x.id || newId("ui")), label: lab(x.label), w: w(x.w), off: !!x.off })),
+    face: list(Array.isArray(s.face) && s.face.length ? s.face : null, d.face, x => ({ id: String(x.id || newId("ua")), label: lab(x.label), w: w(x.w), off: !!x.off })),
     profile: list(s.profile, d.profile, x => ({ id: String(x.id || newId("up")), label: lab(x.label), off: !!x.off }))
   };
 }
@@ -1037,6 +1100,8 @@ function calcKpi(set, a) {
   (a.why || []).forEach((l, i) => { const t = tl.find(x => x.label === l) || set.why_default.find(x => x.label === l); add("どこが", l, t && t.w, rk("why", i)); });
   if (a.who) { const w = set.who.find(x => x.label === a.who); add("だれと", a.who, w && w.w, 1); }
   (a.next || []).forEach((l, i) => { const x = set.next.find(y => y.label === l); add("このあと", l, x && x.w, rk("next", i)); });
+  (a.find || []).forEach((l, i) => { const x = (set.find || []).find(y => y.label === l); add("今日の発見", l, x && x.w, rk("find", i)); });
+  if (a.face) { const x = (set.face || []).find(y => y.label === a.face); add("その人のふだん", a.face, x && x.w, 1); }
   const total = Object.values(raw).reduce((x, y) => x + y, 0), share = {};
   Object.keys(raw).forEach(k => { share[k] = total ? raw[k] / total : 0; });
   let vs = 0, vw = 0; (a.feel || []).forEach((l, i) => { const f = fl(l); if (!f) return; const k = rk("feel", i); vs += f.val * k; vw += k; });
@@ -1050,11 +1115,11 @@ function validateSet(c) {
     if (min && list.filter(x => !x.off).length < min) errs.push(`${what}：表示するものを ${min} つ以上にしてください`);
   };
   chk(c.feel, "気持ち", 2); c.feel.forEach(f => chk(f.targets, `「${f.label}」の「どこが」の候補`, 0));
-  chk(c.why_default, "「どこが」の共通の候補", 2); chk(c.who, "だれと", 2); chk(c.next, "このあと", 2); chk(c.profile, "あなたについて", 2);
+  chk(c.why_default, "「どこが」の共通の候補", 2); chk(c.who, "だれと", 2); chk(c.next, "このあと", 2); chk(c.find, "今日の発見", 2); chk(c.face, "その人のふだん", 2); chk(c.profile, "あなたについて", 2);
   return errs;
 }
 
-const ED = { base: null, cur: null, version: "", savedAt: "", savedBy: "", source: "", dirty: false, tab: "feel", open: -1, msg: "", hist: null, sim: { feel: [], why: [], who: "", next: [] } };
+const ED = { base: null, cur: null, version: "", savedAt: "", savedBy: "", source: "", dirty: false, tab: "feel", open: -1, msg: "", hist: null, sim: { feel: [], why: [], who: "", next: [], find: [], face: "" } };
 const getP = (o, path) => path.split(".").reduce((a, k) => (a == null ? a : a[k]), o);
 function setP(o, path, v) { const ks = path.split("."), last = ks.pop(); ks.reduce((a, k) => a[k], o)[last] = v; }
 const fmtTime = iso => { const d = new Date(iso); return isNaN(d) ? "" : `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
@@ -1112,19 +1177,20 @@ function bodyHtml() {
       <div class="field"><label>共通の問い文（{話題} はひとことの話題に置きかわる）</label><input type="text" maxlength="60" value="${esc(c.why_q_default)}" data-path="why_q_default" style="max-width:520px"></div>
       ${targetsTable("why_default", c.why_default)}`;
   }
-  if (t === "who" || t === "next") {
-    const what = t === "who" ? "だれと" : "このあと";
-    return `<p class="note" style="margin-top:0">「${what}」の選択肢と、それぞれの KPI の重み（0〜1）。${t === "next" ? "このあと は任意の問い（最低限の問いのあと、本人が「もう1つ答える」を選んだときだけ聞く）。" : ""}</p>
+  if (["who", "next", "find", "face"].includes(t)) {
+    const what = { who: "だれと", next: "このあと", find: "今日の発見", face: "その人のふだん" }[t];
+    const extraNote = { next: "任意の問い（最低限の問いのあとに、そのまま続けて聞く。本人はいつでも「ここで投稿文をつくる」で終われる）。", find: "任意の問い。選んだことばは、自分の言葉の文では「こんな人がいたなんて」のような一文になります（初期値の選択肢のみ）。", face: "任意の問い。人と関わった答えがあり、「どんな人」を書いていない人だけに聞きます。" }[t] || "";
+    return `<p class="note" style="margin-top:0">「${what}」の選択肢と、それぞれの KPI の重み（0〜1）。${extraNote}</p>
       <div class="set-scroll"><table class="set-tbl"><thead><tr><th>表示</th><th>表示名</th>${kpiHead()}<th></th></tr></thead><tbody>
       ${c[t].map((x, i) => `<tr class="${x.off ? "off" : ""}">${showCell(`${t}.${i}`, x.off)}${labCell(`${t}.${i}`, x.label)}${wCells(`${t}.${i}`, x.w)}${opsCell(t, i, c[t].length, !isBuiltin(t, x.id))}</tr>`).join("")}
       </tbody></table></div><button type="button" class="btn add-btn" data-act="add" data-list="${t}" data-kind="item">＋ 選択肢を足す</button>
-      <p class="note">${t === "who" ? "「ひとりで」「その他」" : "「とくにない」"}は、チャットでいつも最後に表示されます。</p>`;
+      <p class="note">${{ who: "「ひとりで」「その他」", next: "「とくにない」", find: "「とくにない」", face: "「わからない」" }[t]}は、チャットでいつも最後に表示されます。</p>`;
   }
   if (t === "rank") {
     const row = (k, what, nn) => `<tr><th style="text-align:left">${what}</th>${Array.from({ length: nn }, (_, i) => `<td><input type="number" class="wnum nz" min="0" max="1" step="0.05" value="${c.rank[k][i] ?? 0}" data-path="rank.${k}.${i}" data-num aria-label="${what} ${i + 1}番目"></td>`).join("")}${nn < 4 ? "<td></td>".repeat(4 - nn) : ""}</tr>`;
     return `<p class="note" style="margin-top:0">いくつか選べる問いで、先に選んだものほど本人にとって大事、と考えて重みをつけます。1 番目を 1 としたときの、2 番目・3 番目・4 番目の重みです。「どこが」の重みは記録の「どこがの重み」にそのまま入ります。</p>
       <table class="set-tbl" style="max-width:560px"><thead><tr><th></th><th>1 番目</th><th>2 番目</th><th>3 番目</th><th>4 番目</th></tr></thead><tbody>
-      ${row("feel", "気持ち", 4)}${row("why", "どこが", 4)}${row("next", "このあと", 2)}</tbody></table>`;
+      ${row("feel", "気持ち", 4)}${row("why", "どこが", 4)}${row("find", "今日の発見", 2)}${row("next", "このあと", 2)}</tbody></table>`;
   }
   if (t === "profile") {
     return `<p class="note" style="margin-top:0">「あなたについて」（端末ごとに 1 回だけ聞く属性）。KPI の重みはありません。</p>
@@ -1139,7 +1205,8 @@ function simHtml() {
   sm.feel = sm.feel.filter(l => vis(c.feel).some(x => x.label === l));
   const ff = c.feel.find(x => x.label === sm.feel[0]), useT = ff && vis(ff.targets).length, tl = vis(useT ? ff.targets : c.why_default);
   sm.why = sm.why.filter(l => tl.some(x => x.label === l));
-  const res = calcKpi(c, { feel: sm.feel, why: sm.why, whyFor: useT ? ff.label : "", who: sm.who, next: sm.next });
+  sm.find = sm.find || []; sm.face = sm.face || "";
+  const res = calcKpi(c, { feel: sm.feel, why: sm.why, whyFor: useT ? ff.label : "", who: sm.who, next: sm.next, find: sm.find, face: sm.face });
   const chips = (kind, labels, sel, single) => `<div class="chips">${labels.map(l => { const k = single ? (sel === l ? 0 : -1) : sel.indexOf(l); return `<button type="button" class="chip${k >= 0 ? " on" : ""}" data-sim="${kind}" data-l="${esc(l)}">${k >= 0 && !single ? `<span class="ord">${k + 1}</span>` : ""}${esc(l)}</button>`; }).join("")}</div>`;
   const e = res.total ? argmax(KPI.map(([k]) => res.share[k])) : -1;
   const v = res.valence, vs = valStyle(v == null ? null : v >= .75 ? 1 : v > .25 ? .5 : v >= -.25 ? 0 : -1);
@@ -1149,6 +1216,8 @@ function simHtml() {
       <h4>気持ち（近い順に押す・4 つまで）</h4>${chips("feel", vis(c.feel).map(x => x.label), sm.feel)}
       <h4>${esc(useT ? `「${ff.label}」の「どこが」` : "「どこが」（共通の候補）")}（近い順・4 つまで）</h4>${chips("why", tl.map(x => x.label), sm.why)}
       <h4>だれと</h4>${chips("who", vis(c.who).map(x => x.label), sm.who, true)}
+      <h4>今日の発見（任意・2 つまで）</h4>${chips("find", vis(c.find).map(x => x.label), sm.find)}
+      <h4>その人のふだん（任意）</h4>${chips("face", vis(c.face).map(x => x.label), sm.face, true)}
       <h4>このあと（任意・2 つまで）</h4>${chips("next", vis(c.next).map(x => x.label), sm.next)}
       <button type="button" class="btn" data-act="simclear">選んだものを消す</button>
     </div><div>
@@ -1178,7 +1247,7 @@ function guideHtml() {
 }
 function renderSettings() {
   const tok = getToken();
-  const tabs = [["feel", "気持ちと「どこが」"], ["why", "「どこが」の共通の候補"], ["who", "だれと"], ["next", "このあと"], ["rank", "選んだ順の重み"], ["profile", "あなたについて"], ["sim", "ためしに計算"]];
+  const tabs = [["feel", "気持ちと「どこが」"], ["why", "「どこが」の共通の候補"], ["who", "だれと"], ["find", "今日の発見（任意）"], ["face", "その人のふだん（任意）"], ["next", "このあと（任意）"], ["rank", "選んだ順の重み"], ["profile", "あなたについて"], ["sim", "ためしに計算"]];
   $("setPane").innerHTML = `
     <div class="card"><h2>チャットの設定（選択肢と重み）</h2>
       <p class="why">ここで変えて「保存する」を押すと、全員のチャットに反映されます（チャットを開きなおしたとき・次の投稿から。最大 5 分ほど）。答えている途中の人には影響しません。保存するたびに履歴が残るので、前の版にもどせます。</p>
@@ -1240,13 +1309,13 @@ $("setPane").addEventListener("click", async e => {
   const b = e.target.closest("button, [data-sim]"); if (!b) return;
   const act = b.dataset.act, c = ED.cur;
   if (b.dataset.sim) {
-    const k = b.dataset.sim, l = b.dataset.l, sm = ED.sim, max = { feel: 4, why: 4, next: 2 }[k];
-    if (k === "who") sm.who = sm.who === l ? "" : l;
+    const k = b.dataset.sim, l = b.dataset.l, sm = ED.sim, max = { feel: 4, why: 4, next: 2, find: 2 }[k];
+    if (k === "who" || k === "face") sm[k] = sm[k] === l ? "" : l;
     else { const a = sm[k], i = a.indexOf(l); if (i >= 0) a.splice(i, 1); else if (a.length < max) a.push(l); if (k === "feel") sm.why = []; }
     rerenderBody(); return;
   }
   if (act === "tab") { ED.tab = b.dataset.t; renderSettings(); return; }
-  if (act === "simclear") { ED.sim = { feel: [], why: [], who: "", next: [] }; rerenderBody(); return; }
+  if (act === "simclear") { ED.sim = { feel: [], why: [], who: "", next: [], find: [], face: "" }; rerenderBody(); return; }
   if (act === "open") { const i = Number(b.dataset.i); ED.open = ED.open === i ? -1 : i; rerenderBody(); return; }
   if (act === "up" || act === "down" || act === "del") {
     const list = getP(c, b.dataset.list), i = Number(b.dataset.i);
@@ -1256,7 +1325,7 @@ $("setPane").addEventListener("click", async e => {
   }
   if (act === "add") {
     const list = getP(c, b.dataset.list), kind = b.dataset.kind;
-    const pre = { feel: "uf", who: "uw", next: "un", profile: "up" }[b.dataset.list] || "u";
+    const pre = { feel: "uf", who: "uw", next: "un", find: "ui", face: "ua", profile: "up" }[b.dataset.list] || "u";
     list.push(kind === "target" ? { label: "", layer: "コンテンツ", w: W0(), off: false } : kind === "feel" ? { id: newId(pre), label: "", val: 1, w: W0(), off: false, q: "", targets: [] } : kind === "profile" ? { id: newId(pre), label: "", off: false } : { id: newId(pre), label: "", w: W0(), off: false });
     rerenderBody();
     const ins = $("setBody").querySelectorAll(`input[data-path^="${b.dataset.list}.${list.length - 1}.label"]`); if (ins.length) ins[ins.length - 1].focus();

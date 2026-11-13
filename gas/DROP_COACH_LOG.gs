@@ -10,8 +10,10 @@
  *   - チャットの設定（選択肢の言葉・KPI の重み・気持ちの向き・「どこが」の候補・選んだ順の重み）を GAS で預かる
  *     action:"settings"（だれでも読める・チャットが起動時に読む）／"save_settings"・"settings_history"（管理者だけ）
  *     保存のたびに settings シートへ 1 行（保存日時・版・保存した人・メモ・設定JSON）。いちばん下の行がいまの設定
- *   - 記録の列を 5 つ足した（記録JSON の右）：どこがの気持ち／どこがの重み（例「商品 1 / ショッパー（袋） 0.75」）／設定版／
- *     任意の問い（最低限の問いのあと「もう1つ答える」を選んだか）／この端末で何本目（その日にコピーした本数。もう 1 本つくりたくなる仕掛けの効果を見る）
+ *   - 記録の列を 15 足した（記録JSON の右）：どこがの気持ち／どこがの重み（例「商品 1 / ショッパー（袋） 0.75」）／設定版／
+ *     任意の問い（最低限の問いのあと任意の問いに答えたか：答えた／投稿文へ）／この端末で何本目（その日にコピーした本数。もう 1 本つくりたくなる仕掛けの効果を見る）／
+ *     今日の発見・その人のふだん（任意の問い）／チャットの評価（使いごこち 5 段階・任意）・運営へのコメント（コピー後に聞く。終了＝「感想」の行で届く）／
+ *     AI 何を・誰の立場・なぜ・変化・次の一歩（0〜2）・分析に使える（何を・なぜが具体的、誰の立場あり、変化か次の一歩あり）
  *     v7 の chat_v3 シートは、次の記録のときに見出しが自動で書き足される
  *
  * ■ v7 の変更（チャット v3 に合わせた作り直し）
@@ -52,9 +54,15 @@ const LOG_HEADER = [
   'AI分類', 'AIソフト', 'AI感情の向き', 'AI行動', 'AIコンテンツ', 'AI空間', 'AI 5W1H', 'AI評価', 'AIひとこと', '写真と本文', 'AI注意',
   'ヒント状態', 'ほかの人の例を見た', '投稿イメージを開いた', '表示順', '問いごとの秒', 'AIモデル', 'プロンプト版', 'AI秒', 'アプリ版', '記録JSON',
   // v8 で追加（記録JSON の右に足す。v7 のシートは見出しを自動で書き足す）
-  'どこがの気持ち', 'どこがの重み', '設定版', '任意の問い', 'この端末で何本目'
+  'どこがの気持ち', 'どこがの重み', '設定版', '任意の問い', 'この端末で何本目',
+  '今日の発見', 'その人のふだん', 'チャットの評価', '運営へのコメント',
+  'AI 何を', 'AI 誰の立場', 'AI なぜ', 'AI 変化', 'AI 次の一歩', '分析に使える'
 ];
-const END_LABEL = { copy: 'コピー', finish: '完了', abandon: '途中離脱', reset: 'やり直し' };
+const END_LABEL = { copy: 'コピー', finish: '完了', abandon: '途中離脱', reset: 'やり直し', feedback: '感想' };
+// 分析に使える投稿か：5 つの要素（AI の読み取り 0＝無い／1＝あいまい／2＝具体的）
+const ELEMENTS = [['what', '何を'], ['who', '誰の立場'], ['why', 'なぜ'], ['change', '変化'], ['next', '次の一歩']];
+/** 「分析に使える」：何を・なぜ が具体的（2）で、誰の立場が書けていて（1 以上）、変化か次の一歩のどちらかがある（1 以上） */
+function analyzable_(e) { const v = k => Number(e[k]) || 0; return v('what') >= 2 && v('why') >= 2 && v('who') >= 1 && (v('change') >= 1 || v('next') >= 1); }
 const ACT_LABEL = { watch: '見た・聴いた', eat: '食べた・飲んだ', make: '作った・体験した', buy: '買った', talk: '話した', host: '出展・出演・お手伝い', stroll: 'ぶらぶら回った' };
 const DEFAULTS = { LOG_SHEET_NAME: 'chat_v3', SETTINGS_SHEET_NAME: 'settings', SETTINGS_CACHE_SEC: 300, TOKEN_TTL_SEC: 21600, MAX_FAILS: 30, MAX_LOGS_PER_TOKEN: 300, EXPORT_MAX_ROWS: 5000 };
 const CACHE_MAX_SEC = 21600;
@@ -257,7 +265,7 @@ function buildRow_(name, s) {
     ai.status === 'OK' ? t(ACT_LABEL[ar.act] || '', 20) : '',
     strs(ar.content, 20, 3).join('、'),
     strs(ar.space, 20, 2).join('、'),
-    t(ar.w5h, MAX_LEN.SHORT),
+    o(ar.elements) && Object.keys(o(ar.elements)).length ? ELEMENTS.map(([k, l]) => l + num(o(ar.elements)[k], 0, 2)).join(' ') : t(ar.w5h, MAX_LEN.SHORT),   // v8：AI 5W1H の列には 5 つの要素の要約を入れる
     t(ar.level, 4),
     t(ar.headline, MAX_LEN.SHORT),
     ar.photo ? [t(o(ar.photo).match, 10), t(o(ar.photo).summary, MAX_LEN.SHORT)].filter(Boolean).join('：') : '',
@@ -276,7 +284,13 @@ function buildRow_(name, s) {
     arr(a.why).slice(0, MAX_LEN.ITEMS).map(x => { const y = o(x); const w = num(y.rank_w, 0, 1); return t(y.label, MAX_LEN.SHORT) + (w === '' ? '' : ' ' + Math.round(w * 100) / 100); }).filter(v => v.trim()).join(' / '),
     t(s.settings_version, 40),
     t(s.extra, 20),   // 最低限の問いのあと：答えた（もう1つ答えた）／投稿文へ（任意の問いはとばした）／空（その前に終わった）
-    num(s.post_no, 0, 999)
+    num(s.post_no, 0, 999),
+    labels(a.find).join('、'),
+    t(o(a.face).label, MAX_LEN.SHORT),
+    num(s.chat_rating, 1, 5),
+    t(s.chat_comment, 300),
+    ...ELEMENTS.map(([k]) => (ai.status === 'OK' ? num(o(ar.elements)[k], 0, 2) : '')),
+    ai.status === 'OK' && o(ar.elements).what != null ? (analyzable_(o(ar.elements)) ? 'はい' : 'いいえ') : ''
   ];
 }
 
@@ -486,12 +500,14 @@ function sanitizeSettings_(raw) {
   }), what), 2, what);
   return {
     schema: 'drop_coach_settings_v1',
-    rank: { feel: rk(r.feel, [1, 0.6, 0.45, 0.35]), why: rk(r.why, [1, 0.75, 0.5, 0.25]), next: rk(r.next, [1, 0.8]) },
+    rank: { feel: rk(r.feel, [1, 0.6, 0.45, 0.35]), why: rk(r.why, [1, 0.75, 0.5, 0.25]), next: rk(r.next, [1, 0.8]), find: rk(r.find, [1, 0.8]) },
     why_q_default: clean_(s.why_q_default, 60) || 'とくに印象に残ったのは、どこですか？',
     feel: feel,
     why_default: visible(uniq(arr(s.why_default, 12).map(tgt), '「どこが」の共通の候補'), 2, '「どこが」の共通の候補'),
     who: simple(s.who, 15, 'uw', 'だれと', true),
     next: simple(s.next, 15, 'un', 'このあと', true),
+    find: Array.isArray(s.find) ? simple(s.find, 12, 'ui', '今日の発見', true) : [],
+    face: Array.isArray(s.face) ? simple(s.face, 12, 'ua', 'その人のふだん', true) : [],
     profile: simple(s.profile, 12, 'up', 'あなたについて', false)
   };
 }
